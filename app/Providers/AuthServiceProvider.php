@@ -1,0 +1,24 @@
+<?php
+
+namespace App\Providers;
+
+use App\Models\User;
+use App\Policies\UserPolicy;
+use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
+
+class AuthServiceProvider extends ServiceProvider
+{
+    /**
+     * Register your model to policy mappings.
+     *
+     * @var array<class-string, class-string>
+     */
+    protected $policies = [
+        User::class => UserPolicy::class,
+    ];
+
+    public function boot(): void
+    {
+        $this->registerPolicies();
+    }
+}
