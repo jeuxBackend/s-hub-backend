@@ -61,6 +61,7 @@ use PHPUnit\TextUI\CliArguments\Configuration as CliConfiguration;
 use PHPUnit\TextUI\CliArguments\Exception as ArgumentsException;
 use PHPUnit\TextUI\CliArguments\XmlConfigurationFileFinder;
 use PHPUnit\TextUI\Command\AtLeastVersionCommand;
+use PHPUnit\TextUI\Command\CheckPhpConfigurationCommand;
 use PHPUnit\TextUI\Command\GenerateConfigurationCommand;
 use PHPUnit\TextUI\Command\ListGroupsCommand;
 use PHPUnit\TextUI\Command\ListTestFilesCommand;
@@ -463,6 +464,10 @@ final readonly class Application
             $this->execute(new ShowVersionCommand);
         }
 
+        if ($cliConfiguration->checkPhpConfiguration()) {
+            $this->execute(new CheckPhpConfigurationCommand);
+        }
+
         if ($cliConfiguration->checkVersion()) {
             $this->execute(new VersionCheckCommand(new PhpDownloader, Version::majorVersionNumber(), Version::id()));
         }
@@ -847,6 +852,8 @@ final readonly class Application
             ];
         }
 
-        ErrorHandler::instance()->useDeprecationTriggers($deprecationTriggers);
+        if ($deprecationTriggers !== ['functions' => [], 'methods' => []]) {
+            ErrorHandler::instance()->useDeprecationTriggers($deprecationTriggers);
+        }
     }
 }
