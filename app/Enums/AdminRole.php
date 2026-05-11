@@ -2,14 +2,14 @@
 
 namespace App\Enums;
 
-enum UserRole: string
+enum AdminRole: string
 {
-    case Principal = 'principal';
-    case Teacher = 'teacher';
-    case Parent = 'parent';
+    case Admin = 'admin';
+    case SubAdmin = 'sub_admin';
+    case Manager = 'manager';
 
     /**
-     * Get all role values as array (for migrations, validation, etc.)
+     * Get all role values as array (Required for migration)
      */
     public static function values(): array
     {
@@ -17,7 +17,7 @@ enum UserRole: string
     }
 
     /**
-     * Get options for dropdowns / forms
+     * Get options for dropdowns / Filament / Forms
      */
     public static function options(): array
     {
@@ -36,9 +36,9 @@ enum UserRole: string
     public function label(): string
     {
         return match ($this) {
-            self::Principal => 'Principal',
-            self::Teacher => 'Teacher',
-            self::Parent => 'Parent',
+            self::Admin => 'Admin',
+            self::SubAdmin => 'Sub Admin',
+            self::Manager => 'Manager',
         };
     }
 }

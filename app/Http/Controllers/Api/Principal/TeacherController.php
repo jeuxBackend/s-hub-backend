@@ -6,26 +6,16 @@ use App\Http\Controllers\Controller;
 use App\Actions\Teacher\ListTeachersAction;
 use App\Http\Requests\User\ListUserRequest;
 use App\Http\Resources\UserResource;
-use Illuminate\Http\Resources\Json\ResourceCollection;
 use Throwable;
 
 class TeacherController extends Controller
 {
-    public function __invoke(ListUserRequest $request, ListTeachersAction $action)
+    public function __invoke(ListTeachersRequest $request, ListTeachersAction $action)
     {
-        try {
-            $requester = auth()->user();
+        $this->authorize('viewAny', Teacher::class);   // or User with teacher scope
 
-            // ✅ Policy check: only allow allowed roles
-            $this->authorize('viewAny', \App\Models\User::class);
+        $teachers = $action->handle($request);
 
-            $result = $action->handle($request, $requester);
-
-            return $this->paginatedResponse(
-                UserResource::collection($result)
-            );
-        } catch (Throwable $e) {
-            return $this->exceptionResponse($e);
-        }
+        return $this->paginatedResponse($teachers);
     }
 }

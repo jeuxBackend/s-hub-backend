@@ -1,4 +1,5 @@
 <?php
+use App\Enums\UserRole;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -12,8 +13,12 @@ return new class extends Migration {
             // Auth & Identification
             $table->string('email')->unique();
             $table->string('phone_number')->unique();
+            $table->foreignId('institution_id')->nullable()->constrained('institutions')->onDelete(null)->index();
             $table->string('password');
-            $table->enum('role', ['admin', 'sub_admin', 'principal', 'teacher', 'parent', 'school_admin'])->index();
+            $table->enum('role', UserRole::values())
+                ->index()
+                ->default(UserRole::Parent->value);
+            $table->boolean('is_school_admin')->default(false);
 
             // OTP & Device Info
             $table->string('otp_code')->nullable();
@@ -47,7 +52,12 @@ return new class extends Migration {
             $table->string('alternative_phone_number')->nullable();
 
             // User Relations
-            $table->foreignId('created_by')->nullable()->constrained('users')->onDelete('set null')->index();
+            $table->foreignId('created_by')
+                ->nullable()
+                ->constrained('users')
+                ->onDelete('set null')
+                ->index()
+                ->name('users_created_by_foreign');
 
             $table->boolean('status')->default(true);
             $table->boolean('notifications_enabled')->default(true);

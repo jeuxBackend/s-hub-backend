@@ -42,10 +42,10 @@ class UserController extends Controller
             // $this->authorize('view', $user);
             $result = $getUser->handle($user->id);
 
-            return $this->successResponse([
-                'user'=> new UserResource($result)
-                ]
-               ,
+            return $this->successResponse(
+                [
+                    'user' => new UserResource($result)
+                ],
                 'User fetched successfully'
             );
         } catch (Throwable $e) {
@@ -56,14 +56,7 @@ class UserController extends Controller
     public function update(UpdateUserRequest $request, User $user, UpdateUserAction $updateUser)
     {
         try {
-            // dd($request);
-
-        //    $this->authorize('update', $user);
-        //    dd($user->id);
-            // dd($request->all());
             $updated = $updateUser->handle($user->id, $request->validated(), auth()->user());
-
-
             return $this->successResponse(
                 [
                     'user' => new UserResource($updated),
@@ -98,14 +91,14 @@ class UserController extends Controller
             $updated = $toggleNotification->handle($user, auth()->user());
 
             return $this->successResponse(
-              ['user'=>new UserResource($updated)],
+                ['user' => new UserResource($updated)],
                 'Notification status updated'
             );
         } catch (Throwable $e) {
             return $this->exceptionResponse($e);
         }
     }
-        public function updateContact(UpdateContactRequest $request, UpdateContactAction $action)
+    public function updateContact(UpdateContactRequest $request, UpdateContactAction $action)
     {
         try {
             $user = auth()->user();

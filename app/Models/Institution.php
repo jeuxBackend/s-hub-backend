@@ -6,11 +6,12 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo; // ✅ required
 use App\Models\User;
 use App\Models\Category;
+use App\Models\Admin;
 
 class Institution extends Model
 {
     protected $fillable = [
-        'principal_id',
+        'manager_id',
         'category_id',
         'name',
         'slogan',
@@ -31,22 +32,25 @@ class Institution extends Model
     protected $casts = [
         'email_verified' => 'boolean',
         'phone_verified' => 'boolean',
-        'subjects'       => 'array',
+        'subjects' => 'array',
     ];
 
-    // ✅ Logo accessor
     public function getLogoUrlAttribute(): ?string
     {
-        return $this->logo ? asset('storage/' . $this->logo) : asset('defaults/user.png');;
+        return $this->logo ? asset('storage/' . $this->logo) : asset('defaults/user.png');
+        ;
     }
 
-    // ✅ Principal (user)
-    public function principal(): BelongsTo
+    public function principal()
     {
-        return $this->belongsTo(User::class, 'principal_id');
+        return $this->hasOne(User::class, 'institution_id')->where('role', \App\Enums\UserRole::Principal->value);
     }
 
-    // ✅ Category
+    public function manager(): BelongsTo
+    {
+        return $this->belongsTo(Admin::class, 'manager_id');
+    }
+
     public function category(): BelongsTo
     {
         return $this->belongsTo(Category::class);

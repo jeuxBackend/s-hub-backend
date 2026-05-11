@@ -115,9 +115,9 @@ class User extends Authenticatable
         return $this->hasMany(User::class, 'created_by');
     }
 
-    public function institution()
+    public function principal()
     {
-        return $this->hasOne(Institution::class, 'principal_id');
+        return $this->belongsTo(Institution::class, 'principal_id');
     }
 
     public function classrooms()
@@ -127,7 +127,7 @@ class User extends Authenticatable
             ->withPivot('assigned_by', 'term', 'year', 'section')
             ->withTimestamps();
     }
-    
+
     public function guardianStudents()
     {
         return $this->hasMany(Student::class, 'guardian_id');
