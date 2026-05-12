@@ -46,6 +46,10 @@ class User extends Authenticatable
         'alternative_email',
         'alternative_phone_number',
 
+
+        'institution_id',
+        'principal_id',
+
         'created_by',
 
         'status',
@@ -118,6 +122,11 @@ class User extends Authenticatable
     public function principal()
     {
         return $this->belongsTo(Institution::class, 'principal_id');
+    }
+
+    public function institution()
+    {
+        return $this->belongsTo(Institution::class, 'institution_id');
     }
 
     public function classrooms()

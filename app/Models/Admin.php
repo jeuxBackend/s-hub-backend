@@ -18,16 +18,23 @@ class Admin extends Model
         'first_name',
         'sure_name',
         'email',
+        'region',
         'phone_number',
         'password',
         'role',
         'status',
         'permissions',
         'fcm_token',
+        'profile_image',
     ];
 
     protected $hidden = [
         'password',
+    ];
+
+    protected $casts = [
+        'permissions' => 'array',
+        'region' => 'array',
     ];
 
     public function getNameAttribute()

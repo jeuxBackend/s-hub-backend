@@ -7,9 +7,23 @@ use App\Models\User;
 
 class GetSchoolsAction
 {
-    public function handle($data)
+    public function handle(array $data = [])
     {
-        $schools = Institution::with('manager:id,first_name,sure_name,email')->with('category')->get();
-        return $schools;
+        $query = Institution::with('manager:id,first_name,sure_name,email')->with('category');
+
+        if (!empty($data['name'])) {
+            $query->where('name', 'like', '%' . $data['name'] . '%');
+        }
+        if (!empty($data['email'])) {
+            $query->where('email', 'like', '%' . $data['email'] . '%');
+        }
+        if (!empty($data['manager_id'])) {
+            $query->where('manager_id', $data['manager_id']);
+        }
+        if (!empty($data['category_id'])) {
+            $query->where('category_id', $data['category_id']);
+        }
+
+        return $query->get();
     }
 }

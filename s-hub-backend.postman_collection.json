@@ -1,1885 +1,1541 @@
 {
-    "info": {
-        "_postman_id": "s-hub-backend-collection",
-        "name": "S-Hub Backend",
-        "description": "Complete API collection for S-Hub School Management System (Laravel 12 + Sanctum)",
-        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  "info": {
+    "_postman_id": "s-hub-backend-collection-v2",
+    "name": "S-Hub Backend",
+    "description": "Complete API collection for S-Hub School Management System (Laravel 12 + Sanctum). Base URL variable: {{base_url}}. Token is auto-saved on login.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8000/api/v1",
+      "type": "string"
     },
-    "variable": [
-        {
-            "key": "base_url",
-            "value": "http://localhost:8000/api/v1",
-            "type": "string"
-        },
-        {
-            "key": "token",
-            "value": "",
-            "type": "string",
-            "description": "Bearer token set automatically on login"
-        }
-    ],
-    "auth": {
-        "type": "bearer",
-        "bearer": [
-            {
-                "key": "token",
-                "value": "{{token}}",
-                "type": "string"
-            }
-        ]
-    },
-    "item": [
-        {
-            "name": "Auth",
-            "item": [
-                {
-                    "name": "Ping",
-                    "request": {
-                        "method": "GET",
-                        "header": [],
-                        "url": {
-                            "raw": "{{base_url}}/ping",
-                            "host": [
-                                "{{base_url}}"
-                            ],
-                            "path": [
-                                "ping"
-                            ]
-                        }
-                    }
-                },
-                {
-                    "name": "Signup (Principal)",
-                    "request": {
-                        "auth": {
-                            "type": "noauth"
-                        },
-                        "method": "POST",
-                        "header": [
-                            {
-                                "key": "Accept",
-                                "value": "application/json"
-                            },
-                            {
-                                "key": "Content-Type",
-                                "value": "application/json"
-                            }
-                        ],
-                        "body": {
-                            "mode": "raw",
-                            "raw": "{\n  \"email\": \"principal@school.com\",\n  \"phone_number\": \"+1234567890\",\n  \"password\": \"password123\",\n  \"password_confirmation\": \"password123\",\n  \"role\": \"principal\",\n  \"title\": \"Mr\",\n  \"first_name\": \"John\",\n  \"sur_name\": \"Doe\",\n  \"position\": \"Principal\",\n  \"staff_number\": \"STAFF001\",\n  \"institution_name\": \"Greenwood Academy\",\n  \"institution_email\": \"info@greenwood.com\",\n  \"institution_phone_number\": \"+1987654321\",\n  \"slogan\": \"Excellence in Education\",\n  \"academic_year\": \"2025/2026\",\n  \"examination_system\": \"WAEC\",\n  \"physical_address\": \"123 School Street, City\"\n}",
-                            "options": {
-                                "raw": {
-                                    "language": "json"
-                                }
-                            }
-                        },
-                        "url": {
-                            "raw": "{{base_url}}/signup",
-                            "host": [
-                                "{{base_url}}"
-                            ],
-                            "path": [
-                                "signup"
-                            ]
-                        }
-                    }
-                },
-                {
-                    "name": "Signup (Teacher)",
-                    "request": {
-                        "method": "POST",
-                        "header": [
-                            {
-                                "key": "Accept",
-                                "value": "application/json"
-                            },
-                            {
-                                "key": "Content-Type",
-                                "value": "application/json"
-                            }
-                        ],
-                        "body": {
-                            "mode": "raw",
-                            "raw": "{\n  \"email\": \"teacher@school.com\",\n  \"phone_number\": \"+1234567891\",\n  \"password\": \"password123\",\n  \"password_confirmation\": \"password123\",\n  \"role\": \"teacher\",\n  \"first_name\": \"Jane\",\n  \"sur_name\": \"Smith\",\n  \"position\": \"Math Teacher\",\n  \"staff_number\": \"STAFF002\"\n}",
-                            "options": {
-                                "raw": {
-                                    "language": "json"
-                                }
-                            }
-                        },
-                        "url": {
-                            "raw": "{{base_url}}/signup",
-                            "host": [
-                                "{{base_url}}"
-                            ],
-                            "path": [
-                                "signup"
-                            ]
-                        }
-                    }
-                },
-                {
-                    "name": "Signup (Parent)",
-                    "request": {
-                        "method": "POST",
-                        "header": [
-                            {
-                                "key": "Accept",
-                                "value": "application/json"
-                            },
-                            {
-                                "key": "Content-Type",
-                                "value": "application/json"
-                            }
-                        ],
-                        "body": {
-                            "mode": "raw",
-                            "raw": "{\n  \"email\": \"parent@example.com\",\n  \"phone_number\": \"+1234567892\",\n  \"password\": \"password123\",\n  \"password_confirmation\": \"password123\",\n  \"role\": \"parent\",\n  \"first_name\": \"Mary\",\n  \"sur_name\": \"Johnson\",\n  \"guardian_type\": \"mother\",\n  \"guardian_name\": \"Mary Johnson\",\n  \"guardian_phone_number\": \"+1234567892\",\n  \"guardian_relation\": \"Mother\"\n}",
-                            "options": {
-                                "raw": {
-                                    "language": "json"
-                                }
-                            }
-                        },
-                        "url": {
-                            "raw": "{{base_url}}/signup",
-                            "host": [
-                                "{{base_url}}"
-                            ],
-                            "path": [
-                                "signup"
-                            ]
-                        }
-                    }
-                },
-                {
-                    "name": "Signup (School Admin)",
-                    "request": {
-                        "method": "POST",
-                        "header": [
-                            {
-                                "key": "Accept",
-                                "value": "application/json"
-                            },
-                            {
-                                "key": "Content-Type",
-                                "value": "application/json"
-                            }
-                        ],
-                        "body": {
-                            "mode": "raw",
-                            "raw": "{\n  \"email\": \"schooladmin@school.com\",\n  \"phone_number\": \"+1234567893\",\n  \"password\": \"password123\",\n  \"password_confirmation\": \"password123\",\n  \"role\": \"school_admin\",\n  \"first_name\": \"Alice\",\n  \"sur_name\": \"Brown\",\n  \"position\": \"Admin Officer\",\n  \"permissions\": [\"manage_students\", \"manage_classrooms\"]\n}",
-                            "options": {
-                                "raw": {
-                                    "language": "json"
-                                }
-                            }
-                        },
-                        "url": {
-                            "raw": "{{base_url}}/signup",
-                            "host": [
-                                "{{base_url}}"
-                            ],
-                            "path": [
-                                "signup"
-                            ]
-                        }
-                    }
-                },
-                {
-                    "name": "Login",
-                    "event": [
-                        {
-                            "listen": "test",
-                            "script": {
-                                "exec": [
-                                    "const res = pm.response.json();",
-                                    "if (res.data && res.data.token) {",
-                                    "    pm.collectionVariables.set('token', res.data.token);",
-                                    "}"
-                                ],
-                                "type": "text/javascript"
-                            }
-                        }
-                    ],
-                    "request": {
-                        "auth": {
-                            "type": "noauth"
-                        },
-                        "method": "POST",
-                        "header": [
-                            {
-                                "key": "Accept",
-                                "value": "application/json"
-                            },
-                            {
-                                "key": "Content-Type",
-                                "value": "application/json"
-                            }
-                        ],
-                        "body": {
-                            "mode": "raw",
-                            "raw": "{\n  \"login\": \"principal@school.com\",\n  \"password\": \"password123\",\n  \"device_id\": \"device-abc-123\",\n  \"fcm_token\": \"fcm-token-here\"\n}",
-                            "options": {
-                                "raw": {
-                                    "language": "json"
-                                }
-                            }
-                        },
-                        "url": {
-                            "raw": "{{base_url}}/login",
-                            "host": [
-                                "{{base_url}}"
-                            ],
-                            "path": [
-                                "login"
-                            ]
-                        },
-                        "description": "Login with email or phone_number. Token is auto-saved to collection variable."
-                    }
-                },
-                {
-                    "name": "Web Login (Admin / Principal / SchoolAdmin)",
-                    "event": [
-                        {
-                            "listen": "test",
-                            "script": {
-                                "exec": [
-                                    "const res = pm.response.json();",
-                                    "if (res.data && res.data.token) {",
-                                    "    pm.collectionVariables.set('token', res.data.token);",
-                                    "}"
-                                ],
-                                "type": "text/javascript"
-                            }
-                        }
-                    ],
-                    "request": {
-                        "auth": {
-                            "type": "noauth"
-                        },
-                        "method": "POST",
-                        "header": [
-                            {
-                                "key": "Accept",
-                                "value": "application/json"
-                            },
-                            {
-                                "key": "Content-Type",
-                                "value": "application/json"
-                            }
-                        ],
-                        "body": {
-                            "mode": "raw",
-                            "raw": "{\n  \"login\": \"admin@school.com\",\n  \"password\": \"password123\",\n  \"institution_id\": null\n}",
-                            "options": {
-                                "raw": {
-                                    "language": "json"
-                                }
-                            }
-                        },
-                        "url": {
-                            "raw": "{{base_url}}/web/login",
-                            "host": [
-                                "{{base_url}}"
-                            ],
-                            "path": [
-                                "web",
-                                "login"
-                            ]
-                        }
-                    }
-                },
-                {
-                    "name": "Verify OTP",
-                    "request": {
-                        "auth": {
-                            "type": "noauth"
-                        },
-                        "method": "POST",
-                        "header": [
-                            {
-                                "key": "Accept",
-                                "value": "application/json"
-                            },
-                            {
-                                "key": "Content-Type",
-                                "value": "application/json"
-                            }
-                        ],
-                        "body": {
-                            "mode": "raw",
-                            "raw": "{\n  \"email\": \"principal@school.com\",\n  \"otp\": \"123456\"\n}",
-                            "options": {
-                                "raw": {
-                                    "language": "json"
-                                }
-                            }
-                        },
-                        "url": {
-                            "raw": "{{base_url}}/otp/verify",
-                            "host": [
-                                "{{base_url}}"
-                            ],
-                            "path": [
-                                "otp",
-                                "verify"
-                            ]
-                        }
-                    }
-                },
-                {
-                    "name": "Resend OTP",
-                    "request": {
-                        "auth": {
-                            "type": "noauth"
-                        },
-                        "method": "POST",
-                        "header": [
-                            {
-                                "key": "Accept",
-                                "value": "application/json"
-                            },
-                            {
-                                "key": "Content-Type",
-                                "value": "application/json"
-                            }
-                        ],
-                        "body": {
-                            "mode": "raw",
-                            "raw": "{\n  \"type\": \"email\",\n  \"email\": \"principal@school.com\"\n}",
-                            "options": {
-                                "raw": {
-                                    "language": "json"
-                                }
-                            }
-                        },
-                        "url": {
-                            "raw": "{{base_url}}/otp/resend",
-                            "host": [
-                                "{{base_url}}"
-                            ],
-                            "path": [
-                                "otp",
-                                "resend"
-                            ]
-                        },
-                        "description": "Rate limited: 5 requests per hour per IP.\ntype: 'email' or 'phone'"
-                    }
-                },
-                {
-                    "name": "Logout",
-                    "request": {
-                        "method": "POST",
-                        "header": [
-                            {
-                                "key": "Accept",
-                                "value": "application/json"
-                            }
-                        ],
-                        "url": {
-                            "raw": "{{base_url}}/logout",
-                            "host": [
-                                "{{base_url}}"
-                            ],
-                            "path": [
-                                "logout"
-                            ]
-                        }
-                    }
-                }
-            ]
-        },
-        {
-            "name": "Users",
-            "item": [
-                {
-                    "name": "List Users",
-                    "request": {
-                        "method": "GET",
-                        "header": [
-                            {
-                                "key": "Accept",
-                                "value": "application/json"
-                            }
-                        ],
-                        "url": {
-                            "raw": "{{base_url}}/users?role=teacher&search=john&page=1&limit=15",
-                            "host": [
-                                "{{base_url}}"
-                            ],
-                            "path": [
-                                "users"
-                            ],
-                            "query": [
-                                {
-                                    "key": "role",
-                                    "value": "teacher",
-                                    "description": "admin | sub_admin | principal | teacher | parent | school_admin"
-                                },
-                                {
-                                    "key": "search",
-                                    "value": "john"
-                                },
-                                {
-                                    "key": "page",
-                                    "value": "1"
-                                },
-                                {
-                                    "key": "limit",
-                                    "value": "15"
-                                }
-                            ]
-                        }
-                    }
-                },
-                {
-                    "name": "Get User",
-                    "request": {
-                        "method": "GET",
-                        "header": [
-                            {
-                                "key": "Accept",
-                                "value": "application/json"
-                            }
-                        ],
-                        "url": {
-                            "raw": "{{base_url}}/users/1",
-                            "host": [
-                                "{{base_url}}"
-                            ],
-                            "path": [
-                                "users",
-                                "1"
-                            ]
-                        }
-                    }
-                },
-                {
-                    "name": "Update User",
-                    "request": {
-                        "method": "PATCH",
-                        "header": [
-                            {
-                                "key": "Accept",
-                                "value": "application/json"
-                            }
-                        ],
-                        "body": {
-                            "mode": "formdata",
-                            "formdata": [
-                                {
-                                    "key": "first_name",
-                                    "value": "John",
-                                    "type": "text"
-                                },
-                                {
-                                    "key": "sur_name",
-                                    "value": "Doe",
-                                    "type": "text"
-                                },
-                                {
-                                    "key": "email",
-                                    "value": "john.doe@school.com",
-                                    "type": "text"
-                                },
-                                {
-                                    "key": "phone_number",
-                                    "value": "+1234567890",
-                                    "type": "text"
-                                },
-                                {
-                                    "key": "title",
-                                    "value": "Dr",
-                                    "type": "text"
-                                },
-                                {
-                                    "key": "position",
-                                    "value": "Senior Teacher",
-                                    "type": "text"
-                                },
-                                {
-                                    "key": "staff_number",
-                                    "value": "STAFF001",
-                                    "type": "text"
-                                },
-                                {
-                                    "key": "alternative_email",
-                                    "value": "alt@email.com",
-                                    "type": "text"
-                                },
-                                {
-                                    "key": "alternative_phone_number",
-                                    "value": "+1987654321",
-                                    "type": "text"
-                                },
-                                {
-                                    "key": "profile_picture",
-                                    "value": "",
-                                    "type": "file",
-                                    "disabled": true
-                                },
-                                {
-                                    "key": "permissions",
-                                    "value": "[\"manage_students\"]",
-                                    "type": "text",
-                                    "description": "JSON array — for school_admin only"
-                                }
-                            ]
-                        },
-                        "url": {
-                            "raw": "{{base_url}}/users/1",
-                            "host": [
-                                "{{base_url}}"
-                            ],
-                            "path": [
-                                "users",
-                                "1"
-                            ]
-                        }
-                    }
-                },
-                {
-                    "name": "Delete User",
-                    "request": {
-                        "method": "DELETE",
-                        "header": [
-                            {
-                                "key": "Accept",
-                                "value": "application/json"
-                            }
-                        ],
-                        "url": {
-                            "raw": "{{base_url}}/users/1",
-                            "host": [
-                                "{{base_url}}"
-                            ],
-                            "path": [
-                                "users",
-                                "1"
-                            ]
-                        }
-                    }
-                },
-                {
-                    "name": "Change Password",
-                    "request": {
-                        "method": "PUT",
-                        "header": [
-                            {
-                                "key": "Accept",
-                                "value": "application/json"
-                            },
-                            {
-                                "key": "Content-Type",
-                                "value": "application/json"
-                            }
-                        ],
-                        "body": {
-                            "mode": "raw",
-                            "raw": "{\n  \"current_password\": \"oldpassword123\",\n  \"password\": \"newpassword123\",\n  \"password_confirmation\": \"newpassword123\"\n}",
-                            "options": {
-                                "raw": {
-                                    "language": "json"
-                                }
-                            }
-                        },
-                        "url": {
-                            "raw": "{{base_url}}/change-password",
-                            "host": [
-                                "{{base_url}}"
-                            ],
-                            "path": [
-                                "change-password"
-                            ]
-                        }
-                    }
-                },
-                {
-                    "name": "Update Contact",
-                    "request": {
-                        "method": "PUT",
-                        "header": [
-                            {
-                                "key": "Accept",
-                                "value": "application/json"
-                            },
-                            {
-                                "key": "Content-Type",
-                                "value": "application/json"
-                            }
-                        ],
-                        "body": {
-                            "mode": "raw",
-                            "raw": "{\n  \"email\": \"newemail@school.com\",\n  \"phone_number\": \"+1999888777\"\n}",
-                            "options": {
-                                "raw": {
-                                    "language": "json"
-                                }
-                            }
-                        },
-                        "url": {
-                            "raw": "{{base_url}}/update-contact",
-                            "host": [
-                                "{{base_url}}"
-                            ],
-                            "path": [
-                                "update-contact"
-                            ]
-                        }
-                    }
-                },
-                {
-                    "name": "Toggle Notifications",
-                    "request": {
-                        "method": "PATCH",
-                        "header": [
-                            {
-                                "key": "Accept",
-                                "value": "application/json"
-                            }
-                        ],
-                        "url": {
-                            "raw": "{{base_url}}/users/1/notifications/toggle",
-                            "host": [
-                                "{{base_url}}"
-                            ],
-                            "path": [
-                                "users",
-                                "1",
-                                "notifications",
-                                "toggle"
-                            ]
-                        }
-                    }
-                }
-            ]
-        },
-        {
-            "name": "Classrooms",
-            "item": [
-                {
-                    "name": "List Classrooms",
-                    "request": {
-                        "method": "GET",
-                        "header": [
-                            {
-                                "key": "Accept",
-                                "value": "application/json"
-                            }
-                        ],
-                        "url": {
-                            "raw": "{{base_url}}/classrooms?search=grade",
-                            "host": [
-                                "{{base_url}}"
-                            ],
-                            "path": [
-                                "classrooms"
-                            ],
-                            "query": [
-                                {
-                                    "key": "search",
-                                    "value": "grade",
-                                    "description": "Filter by classroom name"
-                                }
-                            ]
-                        }
-                    }
-                },
-                {
-                    "name": "Get Classroom",
-                    "request": {
-                        "method": "GET",
-                        "header": [
-                            {
-                                "key": "Accept",
-                                "value": "application/json"
-                            }
-                        ],
-                        "url": {
-                            "raw": "{{base_url}}/classrooms/1",
-                            "host": [
-                                "{{base_url}}"
-                            ],
-                            "path": [
-                                "classrooms",
-                                "1"
-                            ]
-                        }
-                    }
-                },
-                {
-                    "name": "Create Classroom",
-                    "request": {
-                        "method": "POST",
-                        "header": [
-                            {
-                                "key": "Accept",
-                                "value": "application/json"
-                            },
-                            {
-                                "key": "Content-Type",
-                                "value": "application/json"
-                            }
-                        ],
-                        "body": {
-                            "mode": "raw",
-                            "raw": "{\n  \"name\": \"Grade 5A\",\n  \"code\": \"GR5A\"\n}",
-                            "options": {
-                                "raw": {
-                                    "language": "json"
-                                }
-                            }
-                        },
-                        "url": {
-                            "raw": "{{base_url}}/classrooms",
-                            "host": [
-                                "{{base_url}}"
-                            ],
-                            "path": [
-                                "classrooms"
-                            ]
-                        }
-                    }
-                },
-                {
-                    "name": "Update Classroom",
-                    "request": {
-                        "method": "PATCH",
-                        "header": [
-                            {
-                                "key": "Accept",
-                                "value": "application/json"
-                            },
-                            {
-                                "key": "Content-Type",
-                                "value": "application/json"
-                            }
-                        ],
-                        "body": {
-                            "mode": "raw",
-                            "raw": "{\n  \"name\": \"Grade 5B\",\n  \"code\": \"GR5B\"\n}",
-                            "options": {
-                                "raw": {
-                                    "language": "json"
-                                }
-                            }
-                        },
-                        "url": {
-                            "raw": "{{base_url}}/classrooms/1",
-                            "host": [
-                                "{{base_url}}"
-                            ],
-                            "path": [
-                                "classrooms",
-                                "1"
-                            ]
-                        }
-                    }
-                },
-                {
-                    "name": "Delete Classroom",
-                    "request": {
-                        "method": "DELETE",
-                        "header": [
-                            {
-                                "key": "Accept",
-                                "value": "application/json"
-                            }
-                        ],
-                        "url": {
-                            "raw": "{{base_url}}/classrooms/1",
-                            "host": [
-                                "{{base_url}}"
-                            ],
-                            "path": [
-                                "classrooms",
-                                "1"
-                            ]
-                        }
-                    }
-                },
-                {
-                    "name": "Allocate Teacher",
-                    "request": {
-                        "method": "POST",
-                        "header": [
-                            {
-                                "key": "Accept",
-                                "value": "application/json"
-                            },
-                            {
-                                "key": "Content-Type",
-                                "value": "application/json"
-                            }
-                        ],
-                        "body": {
-                            "mode": "raw",
-                            "raw": "{\n  \"teacher_id\": 2,\n  \"classroom_id\": 1,\n  \"term\": \"first\",\n  \"year\": 2026,\n  \"section\": \"A\"\n}",
-                            "options": {
-                                "raw": {
-                                    "language": "json"
-                                }
-                            }
-                        },
-                        "url": {
-                            "raw": "{{base_url}}/classroom-teachers/allocate",
-                            "host": [
-                                "{{base_url}}"
-                            ],
-                            "path": [
-                                "classroom-teachers",
-                                "allocate"
-                            ]
-                        }
-                    }
-                },
-                {
-                    "name": "Unallocate Teacher",
-                    "request": {
-                        "method": "POST",
-                        "header": [
-                            {
-                                "key": "Accept",
-                                "value": "application/json"
-                            },
-                            {
-                                "key": "Content-Type",
-                                "value": "application/json"
-                            }
-                        ],
-                        "body": {
-                            "mode": "raw",
-                            "raw": "{\n  \"teacher_id\": 2,\n  \"classroom_id\": 1\n}",
-                            "options": {
-                                "raw": {
-                                    "language": "json"
-                                }
-                            }
-                        },
-                        "url": {
-                            "raw": "{{base_url}}/classroom-teachers/unallocate",
-                            "host": [
-                                "{{base_url}}"
-                            ],
-                            "path": [
-                                "classroom-teachers",
-                                "unallocate"
-                            ]
-                        }
-                    }
-                }
-            ]
-        },
-        {
-            "name": "Students",
-            "item": [
-                {
-                    "name": "List Students",
-                    "request": {
-                        "method": "GET",
-                        "header": [
-                            {
-                                "key": "Accept",
-                                "value": "application/json"
-                            }
-                        ],
-                        "url": {
-                            "raw": "{{base_url}}/students?classroom_id=1&term=first&gender=male&search=john&page=1",
-                            "host": [
-                                "{{base_url}}"
-                            ],
-                            "path": [
-                                "students"
-                            ],
-                            "query": [
-                                {
-                                    "key": "classroom_id",
-                                    "value": "1"
-                                },
-                                {
-                                    "key": "term",
-                                    "value": "first",
-                                    "description": "first | second | third | final"
-                                },
-                                {
-                                    "key": "gender",
-                                    "value": "male",
-                                    "description": "male | female"
-                                },
-                                {
-                                    "key": "search",
-                                    "value": "john"
-                                },
-                                {
-                                    "key": "page",
-                                    "value": "1"
-                                }
-                            ]
-                        }
-                    }
-                },
-                {
-                    "name": "Get Student",
-                    "request": {
-                        "method": "GET",
-                        "header": [
-                            {
-                                "key": "Accept",
-                                "value": "application/json"
-                            }
-                        ],
-                        "url": {
-                            "raw": "{{base_url}}/students/1",
-                            "host": [
-                                "{{base_url}}"
-                            ],
-                            "path": [
-                                "students",
-                                "1"
-                            ]
-                        }
-                    }
-                },
-                {
-                    "name": "Create Student",
-                    "request": {
-                        "method": "POST",
-                        "header": [
-                            {
-                                "key": "Accept",
-                                "value": "application/json"
-                            }
-                        ],
-                        "body": {
-                            "mode": "formdata",
-                            "formdata": [
-                                {
-                                    "key": "first_name",
-                                    "value": "Michael",
-                                    "type": "text"
-                                },
-                                {
-                                    "key": "sur_name",
-                                    "value": "Johnson",
-                                    "type": "text"
-                                },
-                                {
-                                    "key": "gender",
-                                    "value": "male",
-                                    "type": "text",
-                                    "description": "male | female"
-                                },
-                                {
-                                    "key": "age",
-                                    "value": "10",
-                                    "type": "text"
-                                },
-                                {
-                                    "key": "term",
-                                    "value": "first",
-                                    "type": "text",
-                                    "description": "first | second | third | final"
-                                },
-                                {
-                                    "key": "classroom_id",
-                                    "value": "1",
-                                    "type": "text"
-                                },
-                                {
-                                    "key": "guardian_id",
-                                    "value": "3",
-                                    "type": "text"
-                                },
-                                {
-                                    "key": "student_phone_number",
-                                    "value": "+1234567890",
-                                    "type": "text"
-                                },
-                                {
-                                    "key": "religion",
-                                    "value": "Christianity",
-                                    "type": "text"
-                                },
-                                {
-                                    "key": "address",
-                                    "value": "456 Elm Street",
-                                    "type": "text"
-                                },
-                                {
-                                    "key": "profile_picture",
-                                    "value": "",
-                                    "type": "file",
-                                    "disabled": true
-                                }
-                            ]
-                        },
-                        "url": {
-                            "raw": "{{base_url}}/students",
-                            "host": [
-                                "{{base_url}}"
-                            ],
-                            "path": [
-                                "students"
-                            ]
-                        }
-                    }
-                },
-                {
-                    "name": "Update Student",
-                    "request": {
-                        "method": "PATCH",
-                        "header": [
-                            {
-                                "key": "Accept",
-                                "value": "application/json"
-                            }
-                        ],
-                        "body": {
-                            "mode": "formdata",
-                            "formdata": [
-                                {
-                                    "key": "first_name",
-                                    "value": "Michael",
-                                    "type": "text"
-                                },
-                                {
-                                    "key": "sur_name",
-                                    "value": "Johnson",
-                                    "type": "text"
-                                },
-                                {
-                                    "key": "age",
-                                    "value": "11",
-                                    "type": "text"
-                                },
-                                {
-                                    "key": "classroom_id",
-                                    "value": "2",
-                                    "type": "text"
-                                },
-                                {
-                                    "key": "term",
-                                    "value": "second",
-                                    "type": "text"
-                                },
-                                {
-                                    "key": "religion",
-                                    "value": "Christianity",
-                                    "type": "text"
-                                },
-                                {
-                                    "key": "address",
-                                    "value": "789 Oak Avenue",
-                                    "type": "text"
-                                },
-                                {
-                                    "key": "profile_picture",
-                                    "value": "",
-                                    "type": "file",
-                                    "disabled": true
-                                }
-                            ]
-                        },
-                        "url": {
-                            "raw": "{{base_url}}/students/1",
-                            "host": [
-                                "{{base_url}}"
-                            ],
-                            "path": [
-                                "students",
-                                "1"
-                            ]
-                        }
-                    }
-                },
-                {
-                    "name": "Delete Student",
-                    "request": {
-                        "method": "DELETE",
-                        "header": [
-                            {
-                                "key": "Accept",
-                                "value": "application/json"
-                            }
-                        ],
-                        "url": {
-                            "raw": "{{base_url}}/students/1",
-                            "host": [
-                                "{{base_url}}"
-                            ],
-                            "path": [
-                                "students",
-                                "1"
-                            ]
-                        }
-                    }
-                }
-            ]
-        },
-        {
-            "name": "Subjects",
-            "item": [
-                {
-                    "name": "List Subjects",
-                    "request": {
-                        "method": "GET",
-                        "header": [
-                            {
-                                "key": "Accept",
-                                "value": "application/json"
-                            }
-                        ],
-                        "url": {
-                            "raw": "{{base_url}}/subjects?classroom_id=1",
-                            "host": [
-                                "{{base_url}}"
-                            ],
-                            "path": [
-                                "subjects"
-                            ],
-                            "query": [
-                                {
-                                    "key": "classroom_id",
-                                    "value": "1"
-                                }
-                            ]
-                        }
-                    }
-                },
-                {
-                    "name": "Get Subject",
-                    "request": {
-                        "method": "GET",
-                        "header": [
-                            {
-                                "key": "Accept",
-                                "value": "application/json"
-                            }
-                        ],
-                        "url": {
-                            "raw": "{{base_url}}/subjects/1",
-                            "host": [
-                                "{{base_url}}"
-                            ],
-                            "path": [
-                                "subjects",
-                                "1"
-                            ]
-                        }
-                    }
-                },
-                {
-                    "name": "Create Subject",
-                    "request": {
-                        "method": "POST",
-                        "header": [
-                            {
-                                "key": "Accept",
-                                "value": "application/json"
-                            },
-                            {
-                                "key": "Content-Type",
-                                "value": "application/json"
-                            }
-                        ],
-                        "body": {
-                            "mode": "raw",
-                            "raw": "{\n  \"name\": \"Mathematics\",\n  \"code\": \"MTH101\",\n  \"classroom_id\": 1\n}",
-                            "options": {
-                                "raw": {
-                                    "language": "json"
-                                }
-                            }
-                        },
-                        "url": {
-                            "raw": "{{base_url}}/subjects",
-                            "host": [
-                                "{{base_url}}"
-                            ],
-                            "path": [
-                                "subjects"
-                            ]
-                        }
-                    }
-                },
-                {
-                    "name": "Update Subject",
-                    "request": {
-                        "method": "PATCH",
-                        "header": [
-                            {
-                                "key": "Accept",
-                                "value": "application/json"
-                            },
-                            {
-                                "key": "Content-Type",
-                                "value": "application/json"
-                            }
-                        ],
-                        "body": {
-                            "mode": "raw",
-                            "raw": "{\n  \"name\": \"Advanced Mathematics\",\n  \"code\": \"MTH201\",\n  \"classroom_id\": 1\n}",
-                            "options": {
-                                "raw": {
-                                    "language": "json"
-                                }
-                            }
-                        },
-                        "url": {
-                            "raw": "{{base_url}}/subjects/1",
-                            "host": [
-                                "{{base_url}}"
-                            ],
-                            "path": [
-                                "subjects",
-                                "1"
-                            ]
-                        }
-                    }
-                },
-                {
-                    "name": "Delete Subject",
-                    "request": {
-                        "method": "DELETE",
-                        "header": [
-                            {
-                                "key": "Accept",
-                                "value": "application/json"
-                            }
-                        ],
-                        "url": {
-                            "raw": "{{base_url}}/subjects/1",
-                            "host": [
-                                "{{base_url}}"
-                            ],
-                            "path": [
-                                "subjects",
-                                "1"
-                            ]
-                        }
-                    }
-                }
-            ]
-        },
-        {
-            "name": "Attendance",
-            "item": [
-                {
-                    "name": "Mark Attendance",
-                    "request": {
-                        "method": "PATCH",
-                        "header": [
-                            {
-                                "key": "Accept",
-                                "value": "application/json"
-                            },
-                            {
-                                "key": "Content-Type",
-                                "value": "application/json"
-                            }
-                        ],
-                        "body": {
-                            "mode": "raw",
-                            "raw": "{\n  \"classroom_id\": 1,\n  \"student_id\": 1,\n  \"date\": \"2026-05-08\",\n  \"status\": \"present\",\n  \"remarks\": \"On time\"\n}",
-                            "options": {
-                                "raw": {
-                                    "language": "json"
-                                }
-                            }
-                        },
-                        "url": {
-                            "raw": "{{base_url}}/attendances/mark",
-                            "host": [
-                                "{{base_url}}"
-                            ],
-                            "path": [
-                                "attendances",
-                                "mark"
-                            ]
-                        },
-                        "description": "status: present | absent | leave"
-                    }
-                },
-                {
-                    "name": "Get Attendance By Date",
-                    "request": {
-                        "method": "GET",
-                        "header": [
-                            {
-                                "key": "Accept",
-                                "value": "application/json"
-                            }
-                        ],
-                        "url": {
-                            "raw": "{{base_url}}/attendances/by-date?date=2026-05-08&classroom_id=1&student_id=1&paginate=true&per_page=15",
-                            "host": [
-                                "{{base_url}}"
-                            ],
-                            "path": [
-                                "attendances",
-                                "by-date"
-                            ],
-                            "query": [
-                                {
-                                    "key": "date",
-                                    "value": "2026-05-08"
-                                },
-                                {
-                                    "key": "classroom_id",
-                                    "value": "1"
-                                },
-                                {
-                                    "key": "student_id",
-                                    "value": "1"
-                                },
-                                {
-                                    "key": "paginate",
-                                    "value": "true"
-                                },
-                                {
-                                    "key": "per_page",
-                                    "value": "15"
-                                }
-                            ]
-                        }
-                    }
-                },
-                {
-                    "name": "Get Attendance By Month",
-                    "request": {
-                        "method": "GET",
-                        "header": [
-                            {
-                                "key": "Accept",
-                                "value": "application/json"
-                            }
-                        ],
-                        "url": {
-                            "raw": "{{base_url}}/attendances/by-month?student_id=1&classroom_id=1&month=5&year=2026&term=first&paginate=true&per_page=30",
-                            "host": [
-                                "{{base_url}}"
-                            ],
-                            "path": [
-                                "attendances",
-                                "by-month"
-                            ],
-                            "query": [
-                                {
-                                    "key": "student_id",
-                                    "value": "1"
-                                },
-                                {
-                                    "key": "classroom_id",
-                                    "value": "1"
-                                },
-                                {
-                                    "key": "month",
-                                    "value": "5",
-                                    "description": "1-12"
-                                },
-                                {
-                                    "key": "year",
-                                    "value": "2026"
-                                },
-                                {
-                                    "key": "term",
-                                    "value": "first",
-                                    "description": "first | second | third | final"
-                                },
-                                {
-                                    "key": "paginate",
-                                    "value": "true"
-                                },
-                                {
-                                    "key": "per_page",
-                                    "value": "30"
-                                }
-                            ]
-                        }
-                    }
-                }
-            ]
-        },
-        {
-            "name": "Grades",
-            "item": [
-                {
-                    "name": "List Grades",
-                    "request": {
-                        "method": "GET",
-                        "header": [
-                            {
-                                "key": "Accept",
-                                "value": "application/json"
-                            }
-                        ],
-                        "url": {
-                            "raw": "{{base_url}}/classrooms/1/grades?student_id=1&subject_id=1&term=first",
-                            "host": [
-                                "{{base_url}}"
-                            ],
-                            "path": [
-                                "classrooms",
-                                "1",
-                                "grades"
-                            ],
-                            "query": [
-                                {
-                                    "key": "student_id",
-                                    "value": "1"
-                                },
-                                {
-                                    "key": "subject_id",
-                                    "value": "1"
-                                },
-                                {
-                                    "key": "term",
-                                    "value": "first",
-                                    "description": "first | second | third | final"
-                                }
-                            ]
-                        }
-                    }
-                },
-                {
-                    "name": "Store Grades (Bulk)",
-                    "request": {
-                        "method": "POST",
-                        "header": [
-                            {
-                                "key": "Accept",
-                                "value": "application/json"
-                            },
-                            {
-                                "key": "Content-Type",
-                                "value": "application/json"
-                            }
-                        ],
-                        "body": {
-                            "mode": "raw",
-                            "raw": "{\n  \"classroom_id\": 1,\n  \"subject_id\": 1,\n  \"term\": \"first\",\n  \"type\": \"exam\",\n  \"total\": 100,\n  \"date\": \"2026-05-08\",\n  \"remarks\": \"End of term exam\"\n}",
-                            "options": {
-                                "raw": {
-                                    "language": "json"
-                                }
-                            }
-                        },
-                        "url": {
-                            "raw": "{{base_url}}/classrooms/1/grades",
-                            "host": [
-                                "{{base_url}}"
-                            ],
-                            "path": [
-                                "classrooms",
-                                "1",
-                                "grades"
-                            ]
-                        },
-                        "description": "type: exam | assignment | quiz"
-                    }
-                },
-                {
-                    "name": "Update Grade",
-                    "request": {
-                        "method": "PATCH",
-                        "header": [
-                            {
-                                "key": "Accept",
-                                "value": "application/json"
-                            },
-                            {
-                                "key": "Content-Type",
-                                "value": "application/json"
-                            }
-                        ],
-                        "body": {
-                            "mode": "raw",
-                            "raw": "{\n  \"score\": 85,\n  \"total\": 100,\n  \"remarks\": \"Good performance\",\n  \"type\": \"exam\",\n  \"date\": \"2026-05-08\"\n}",
-                            "options": {
-                                "raw": {
-                                    "language": "json"
-                                }
-                            }
-                        },
-                        "url": {
-                            "raw": "{{base_url}}/classrooms/1/grades/1",
-                            "host": [
-                                "{{base_url}}"
-                            ],
-                            "path": [
-                                "classrooms",
-                                "1",
-                                "grades",
-                                "1"
-                            ]
-                        }
-                    }
-                }
-            ]
-        },
-        {
-            "name": "Student Fees",
-            "item": [
-                {
-                    "name": "Assign Fee",
-                    "request": {
-                        "method": "POST",
-                        "header": [
-                            {
-                                "key": "Accept",
-                                "value": "application/json"
-                            },
-                            {
-                                "key": "Content-Type",
-                                "value": "application/json"
-                            }
-                        ],
-                        "body": {
-                            "mode": "raw",
-                            "raw": "{\n  \"student_id\": 1,\n  \"term\": \"first\",\n  \"tuition_fee\": 500.00,\n  \"uniform_fee\": 50.00,\n  \"meals_fee\": 100.00,\n  \"books_fee\": 75.00,\n  \"other_fee\": 25.00,\n  \"paid_amount\": 300.00,\n  \"due_date\": \"2026-06-30\",\n  \"status\": \"partial\"\n}",
-                            "options": {
-                                "raw": {
-                                    "language": "json"
-                                }
-                            }
-                        },
-                        "url": {
-                            "raw": "{{base_url}}/student-fees/assign",
-                            "host": [
-                                "{{base_url}}"
-                            ],
-                            "path": [
-                                "student-fees",
-                                "assign"
-                            ]
-                        },
-                        "description": "status: paid | unpaid | partial"
-                    }
-                }
-            ]
-        },
-        {
-            "name": "Teachers",
-            "item": [
-                {
-                    "name": "List Teachers",
-                    "request": {
-                        "method": "GET",
-                        "header": [
-                            {
-                                "key": "Accept",
-                                "value": "application/json"
-                            }
-                        ],
-                        "url": {
-                            "raw": "{{base_url}}/teachers",
-                            "host": [
-                                "{{base_url}}"
-                            ],
-                            "path": [
-                                "teachers"
-                            ]
-                        }
-                    }
-                },
-                {
-                    "name": "Get Teacher",
-                    "request": {
-                        "method": "GET",
-                        "header": [
-                            {
-                                "key": "Accept",
-                                "value": "application/json"
-                            }
-                        ],
-                        "url": {
-                            "raw": "{{base_url}}/teachers/1",
-                            "host": [
-                                "{{base_url}}"
-                            ],
-                            "path": [
-                                "teachers",
-                                "1"
-                            ]
-                        }
-                    }
-                }
-            ]
-        },
-        {
-            "name": "Guardians",
-            "item": [
-                {
-                    "name": "List Guardians",
-                    "request": {
-                        "method": "GET",
-                        "header": [
-                            {
-                                "key": "Accept",
-                                "value": "application/json"
-                            }
-                        ],
-                        "url": {
-                            "raw": "{{base_url}}/guardians",
-                            "host": [
-                                "{{base_url}}"
-                            ],
-                            "path": [
-                                "guardians"
-                            ]
-                        }
-                    }
-                },
-                {
-                    "name": "Get Guardian",
-                    "request": {
-                        "method": "GET",
-                        "header": [
-                            {
-                                "key": "Accept",
-                                "value": "application/json"
-                            }
-                        ],
-                        "url": {
-                            "raw": "{{base_url}}/guardians/1",
-                            "host": [
-                                "{{base_url}}"
-                            ],
-                            "path": [
-                                "guardians",
-                                "1"
-                            ]
-                        }
-                    }
-                }
-            ]
-        },
-        {
-            "name": "School Admins",
-            "item": [
-                {
-                    "name": "List School Admins",
-                    "request": {
-                        "method": "GET",
-                        "header": [
-                            {
-                                "key": "Accept",
-                                "value": "application/json"
-                            }
-                        ],
-                        "url": {
-                            "raw": "{{base_url}}/school-admins",
-                            "host": [
-                                "{{base_url}}"
-                            ],
-                            "path": [
-                                "school-admins"
-                            ]
-                        }
-                    }
-                },
-                {
-                    "name": "Get School Admin",
-                    "request": {
-                        "method": "GET",
-                        "header": [
-                            {
-                                "key": "Accept",
-                                "value": "application/json"
-                            }
-                        ],
-                        "url": {
-                            "raw": "{{base_url}}/school-admins/1",
-                            "host": [
-                                "{{base_url}}"
-                            ],
-                            "path": [
-                                "school-admins",
-                                "1"
-                            ]
-                        }
-                    }
-                }
-            ]
-        },
-        {
-            "name": "Dashboard",
-            "item": [
-                {
-                    "name": "Dashboard Stats",
-                    "request": {
-                        "method": "GET",
-                        "header": [
-                            {
-                                "key": "Accept",
-                                "value": "application/json"
-                            }
-                        ],
-                        "url": {
-                            "raw": "{{base_url}}/dashboard-stats",
-                            "host": [
-                                "{{base_url}}"
-                            ],
-                            "path": [
-                                "dashboard-stats"
-                            ]
-                        }
-                    }
-                }
-            ]
-        },
-        {
-            "name": "Institution",
-            "item": [
-                {
-                    "name": "Get Institution",
-                    "request": {
-                        "method": "GET",
-                        "header": [
-                            {
-                                "key": "Accept",
-                                "value": "application/json"
-                            }
-                        ],
-                        "url": {
-                            "raw": "{{base_url}}/institute/1",
-                            "host": [
-                                "{{base_url}}"
-                            ],
-                            "path": [
-                                "institute",
-                                "1"
-                            ]
-                        }
-                    }
-                },
-                {
-                    "name": "Update Institution",
-                    "request": {
-                        "method": "PATCH",
-                        "header": [
-                            {
-                                "key": "Accept",
-                                "value": "application/json"
-                            }
-                        ],
-                        "body": {
-                            "mode": "formdata",
-                            "formdata": [
-                                {
-                                    "key": "name",
-                                    "value": "Greenwood Academy",
-                                    "type": "text"
-                                },
-                                {
-                                    "key": "slogan",
-                                    "value": "Excellence in Education",
-                                    "type": "text"
-                                },
-                                {
-                                    "key": "academic_year",
-                                    "value": "2026/2027",
-                                    "type": "text"
-                                },
-                                {
-                                    "key": "examination_system",
-                                    "value": "WAEC",
-                                    "type": "text"
-                                },
-                                {
-                                    "key": "physical_address",
-                                    "value": "123 School Street, City",
-                                    "type": "text"
-                                },
-                                {
-                                    "key": "email",
-                                    "value": "info@greenwood.com",
-                                    "type": "text"
-                                },
-                                {
-                                    "key": "alternate_email",
-                                    "value": "alt@greenwood.com",
-                                    "type": "text"
-                                },
-                                {
-                                    "key": "phone_number",
-                                    "value": "+1987654321",
-                                    "type": "text"
-                                },
-                                {
-                                    "key": "alternate_phone",
-                                    "value": "+1987654322",
-                                    "type": "text"
-                                },
-                                {
-                                    "key": "telephone",
-                                    "value": "+1987654323",
-                                    "type": "text"
-                                },
-                                {
-                                    "key": "category_id",
-                                    "value": "1",
-                                    "type": "text"
-                                },
-                                {
-                                    "key": "subjects[]",
-                                    "value": "Mathematics",
-                                    "type": "text"
-                                },
-                                {
-                                    "key": "subjects[]",
-                                    "value": "English",
-                                    "type": "text"
-                                },
-                                {
-                                    "key": "logo",
-                                    "value": "",
-                                    "type": "file",
-                                    "disabled": true
-                                }
-                            ]
-                        },
-                        "url": {
-                            "raw": "{{base_url}}/institute/1",
-                            "host": [
-                                "{{base_url}}"
-                            ],
-                            "path": [
-                                "institute",
-                                "1"
-                            ]
-                        }
-                    }
-                }
-            ]
-        },
-        {
-            "name": "Settings",
-            "item": [
-                {
-                    "name": "Get Settings",
-                    "request": {
-                        "method": "GET",
-                        "header": [
-                            {
-                                "key": "Accept",
-                                "value": "application/json"
-                            }
-                        ],
-                        "url": {
-                            "raw": "{{base_url}}/settings",
-                            "host": [
-                                "{{base_url}}"
-                            ],
-                            "path": [
-                                "settings"
-                            ]
-                        }
-                    }
-                }
-            ]
-        }
+    {
+      "key": "token",
+      "value": "",
+      "type": "string",
+      "description": "Bearer token — auto-saved by Login requests"
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
     ]
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Ping",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{base_url}}/ping",
+              "host": ["{{base_url}}"],
+              "path": ["ping"]
+            }
+          }
+        },
+        {
+          "name": "Signup — Principal (self-register)",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"principal@school.com\",\n  \"phone_number\": \"+1234567890\",\n  \"password\": \"password123\",\n  \"password_confirmation\": \"password123\",\n  \"role\": \"principal\",\n  \"title\": \"Mr\",\n  \"first_name\": \"John\",\n  \"sur_name\": \"Doe\",\n  \"position\": \"Principal\",\n  \"staff_number\": \"STAFF001\",\n  \"institution_name\": \"Greenwood Academy\",\n  \"institution_email\": \"info@greenwood.com\",\n  \"institution_phone_number\": \"+1987654321\",\n  \"slogan\": \"Excellence in Education\",\n  \"academic_year\": \"2025/2026\",\n  \"examination_system\": \"WAEC\",\n  \"physical_address\": \"123 School Street, City\",\n  \"category_id\": 1\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/signup",
+              "host": ["{{base_url}}"],
+              "path": ["signup"]
+            }
+          }
+        },
+        {
+          "name": "Signup — Teacher",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"teacher@school.com\",\n  \"phone_number\": \"+1234567891\",\n  \"password\": \"password123\",\n  \"password_confirmation\": \"password123\",\n  \"role\": \"teacher\",\n  \"first_name\": \"Jane\",\n  \"sur_name\": \"Smith\",\n  \"position\": \"Math Teacher\",\n  \"staff_number\": \"STAFF002\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/signup",
+              "host": ["{{base_url}}"],
+              "path": ["signup"]
+            }
+          }
+        },
+        {
+          "name": "Signup — Parent",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"parent@example.com\",\n  \"phone_number\": \"+1234567892\",\n  \"password\": \"password123\",\n  \"password_confirmation\": \"password123\",\n  \"role\": \"parent\",\n  \"first_name\": \"Mary\",\n  \"sur_name\": \"Johnson\",\n  \"guardian_type\": \"mother\",\n  \"guardian_name\": \"Mary Johnson\",\n  \"guardian_phone_number\": \"+1234567892\",\n  \"guardian_relation\": \"Mother\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/signup",
+              "host": ["{{base_url}}"],
+              "path": ["signup"]
+            }
+          }
+        },
+        {
+          "name": "Signup — School Admin",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"schooladmin@school.com\",\n  \"phone_number\": \"+1234567893\",\n  \"password\": \"password123\",\n  \"password_confirmation\": \"password123\",\n  \"role\": \"school_admin\",\n  \"first_name\": \"Alice\",\n  \"sur_name\": \"Brown\",\n  \"position\": \"Admin Officer\",\n  \"permissions\": [\"manage_students\", \"manage_classrooms\"]\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/signup",
+              "host": ["{{base_url}}"],
+              "path": ["signup"]
+            }
+          }
+        },
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.data && res.data.token) {",
+                  "    pm.collectionVariables.set('token', res.data.token);",
+                  "    console.log('Token saved:', res.data.token);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"login\": \"principal@school.com\",\n  \"password\": \"password123\",\n  \"institution_id\": null,\n  \"device_id\": \"device-abc-123\",\n  \"fcm_token\": \"fcm-token-here\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/login",
+              "host": ["{{base_url}}"],
+              "path": ["login"]
+            },
+            "description": "Accepts email or phone_number as `login`. Token is auto-saved to {{token}} collection variable."
+          }
+        },
+        {
+          "name": "Web Login (Admin / Principal / SchoolAdmin)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.data && res.data.token) {",
+                  "    pm.collectionVariables.set('token', res.data.token);",
+                  "    console.log('Token saved:', res.data.token);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"login\": \"admin@shub.com\",\n  \"password\": \"password123\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/web/login",
+              "host": ["{{base_url}}"],
+              "path": ["web", "login"]
+            }
+          }
+        },
+        {
+          "name": "Verify OTP",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"principal@school.com\",\n  \"otp\": \"123456\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/otp/verify",
+              "host": ["{{base_url}}"],
+              "path": ["otp", "verify"]
+            }
+          }
+        },
+        {
+          "name": "Resend OTP",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"type\": \"email\",\n  \"email\": \"principal@school.com\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/otp/resend",
+              "host": ["{{base_url}}"],
+              "path": ["otp", "resend"]
+            },
+            "description": "Rate limited: 5 requests/hour per IP.\ntype: email | phone"
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{base_url}}/logout",
+              "host": ["{{base_url}}"],
+              "path": ["logout"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Users",
+      "item": [
+        {
+          "name": "List Users",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{base_url}}/users?role=teacher&search=john&page=1&limit=15",
+              "host": ["{{base_url}}"],
+              "path": ["users"],
+              "query": [
+                { "key": "role", "value": "teacher", "description": "admin | sub_admin | principal | teacher | parent | school_admin" },
+                { "key": "search", "value": "john" },
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "15" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get User",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{base_url}}/users/1",
+              "host": ["{{base_url}}"],
+              "path": ["users", "1"]
+            }
+          }
+        },
+        {
+          "name": "Update User",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "first_name", "value": "John", "type": "text" },
+                { "key": "sur_name", "value": "Doe", "type": "text" },
+                { "key": "email", "value": "john.doe@school.com", "type": "text" },
+                { "key": "phone_number", "value": "+1234567890", "type": "text" },
+                { "key": "title", "value": "Dr", "type": "text" },
+                { "key": "position", "value": "Senior Teacher", "type": "text" },
+                { "key": "staff_number", "value": "STAFF001", "type": "text" },
+                { "key": "alternative_email", "value": "alt@email.com", "type": "text" },
+                { "key": "alternative_phone_number", "value": "+1987654321", "type": "text" },
+                { "key": "guardian_name", "value": "", "type": "text", "disabled": true },
+                { "key": "guardian_relation", "value": "", "type": "text", "disabled": true },
+                { "key": "alternative_guardian_phone_number", "value": "", "type": "text", "disabled": true },
+                { "key": "permissions", "value": "[\"manage_students\"]", "type": "text", "description": "JSON array — school_admin only" },
+                { "key": "profile_picture", "value": "", "type": "file", "disabled": true }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/users/1",
+              "host": ["{{base_url}}"],
+              "path": ["users", "1"]
+            }
+          }
+        },
+        {
+          "name": "Delete User",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{base_url}}/users/1",
+              "host": ["{{base_url}}"],
+              "path": ["users", "1"]
+            }
+          }
+        },
+        {
+          "name": "Change Password",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"current_password\": \"oldpassword123\",\n  \"password\": \"newpassword123\",\n  \"password_confirmation\": \"newpassword123\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/change-password",
+              "host": ["{{base_url}}"],
+              "path": ["change-password"]
+            }
+          }
+        },
+        {
+          "name": "Update Contact",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"newemail@school.com\",\n  \"phone_number\": \"+1999888777\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/update-contact",
+              "host": ["{{base_url}}"],
+              "path": ["update-contact"]
+            }
+          }
+        },
+        {
+          "name": "Toggle Notifications",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{base_url}}/users/1/notifications/toggle",
+              "host": ["{{base_url}}"],
+              "path": ["users", "1", "notifications", "toggle"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Classrooms",
+      "item": [
+        {
+          "name": "List Classrooms",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{base_url}}/classrooms?search=grade",
+              "host": ["{{base_url}}"],
+              "path": ["classrooms"],
+              "query": [
+                { "key": "search", "value": "grade" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Classroom",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{base_url}}/classrooms/1",
+              "host": ["{{base_url}}"],
+              "path": ["classrooms", "1"]
+            }
+          }
+        },
+        {
+          "name": "Create Classroom",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Grade 5A\",\n  \"code\": \"GR5A\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/classrooms",
+              "host": ["{{base_url}}"],
+              "path": ["classrooms"]
+            }
+          }
+        },
+        {
+          "name": "Update Classroom",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Grade 5B\",\n  \"code\": \"GR5B\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/classrooms/1",
+              "host": ["{{base_url}}"],
+              "path": ["classrooms", "1"]
+            }
+          }
+        },
+        {
+          "name": "Delete Classroom",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{base_url}}/classrooms/1",
+              "host": ["{{base_url}}"],
+              "path": ["classrooms", "1"]
+            }
+          }
+        },
+        {
+          "name": "Allocate Teacher",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"teacher_id\": 2,\n  \"classroom_id\": 1,\n  \"term\": \"first\",\n  \"year\": 2026,\n  \"section\": \"A\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/classroom-teachers/allocate",
+              "host": ["{{base_url}}"],
+              "path": ["classroom-teachers", "allocate"]
+            }
+          }
+        },
+        {
+          "name": "Unallocate Teacher",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"teacher_id\": 2,\n  \"classroom_id\": 1\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/classroom-teachers/unallocate",
+              "host": ["{{base_url}}"],
+              "path": ["classroom-teachers", "unallocate"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Students",
+      "item": [
+        {
+          "name": "List Students",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{base_url}}/students?classroom_id=1&term=first&gender=male&search=john&page=1",
+              "host": ["{{base_url}}"],
+              "path": ["students"],
+              "query": [
+                { "key": "classroom_id", "value": "1" },
+                { "key": "term", "value": "first", "description": "first | second | third | final" },
+                { "key": "gender", "value": "male", "description": "male | female" },
+                { "key": "search", "value": "john" },
+                { "key": "page", "value": "1" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Student",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{base_url}}/students/1",
+              "host": ["{{base_url}}"],
+              "path": ["students", "1"]
+            }
+          }
+        },
+        {
+          "name": "Create Student",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "first_name", "value": "Michael", "type": "text" },
+                { "key": "sur_name", "value": "Johnson", "type": "text" },
+                { "key": "gender", "value": "male", "type": "text", "description": "male | female" },
+                { "key": "age", "value": "10", "type": "text" },
+                { "key": "term", "value": "first", "type": "text", "description": "first | second | third | final" },
+                { "key": "classroom_id", "value": "1", "type": "text" },
+                { "key": "guardian_id", "value": "3", "type": "text" },
+                { "key": "student_phone_number", "value": "+1234567890", "type": "text" },
+                { "key": "religion", "value": "Christianity", "type": "text" },
+                { "key": "address", "value": "456 Elm Street", "type": "text" },
+                { "key": "profile_picture", "value": "", "type": "file", "disabled": true }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/students",
+              "host": ["{{base_url}}"],
+              "path": ["students"]
+            }
+          }
+        },
+        {
+          "name": "Update Student",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "first_name", "value": "Michael", "type": "text" },
+                { "key": "sur_name", "value": "Johnson", "type": "text" },
+                { "key": "age", "value": "11", "type": "text" },
+                { "key": "classroom_id", "value": "2", "type": "text" },
+                { "key": "term", "value": "second", "type": "text" },
+                { "key": "religion", "value": "Christianity", "type": "text" },
+                { "key": "address", "value": "789 Oak Avenue", "type": "text" },
+                { "key": "profile_picture", "value": "", "type": "file", "disabled": true }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/students/1",
+              "host": ["{{base_url}}"],
+              "path": ["students", "1"]
+            }
+          }
+        },
+        {
+          "name": "Delete Student",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{base_url}}/students/1",
+              "host": ["{{base_url}}"],
+              "path": ["students", "1"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Subjects",
+      "item": [
+        {
+          "name": "List Subjects",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{base_url}}/subjects?classroom_id=1",
+              "host": ["{{base_url}}"],
+              "path": ["subjects"],
+              "query": [
+                { "key": "classroom_id", "value": "1" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Subject",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{base_url}}/subjects/1",
+              "host": ["{{base_url}}"],
+              "path": ["subjects", "1"]
+            }
+          }
+        },
+        {
+          "name": "Create Subject",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Mathematics\",\n  \"code\": \"MTH101\",\n  \"classroom_id\": 1\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/subjects",
+              "host": ["{{base_url}}"],
+              "path": ["subjects"]
+            }
+          }
+        },
+        {
+          "name": "Update Subject",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Advanced Mathematics\",\n  \"code\": \"MTH201\",\n  \"classroom_id\": 1\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/subjects/1",
+              "host": ["{{base_url}}"],
+              "path": ["subjects", "1"]
+            }
+          }
+        },
+        {
+          "name": "Delete Subject",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{base_url}}/subjects/1",
+              "host": ["{{base_url}}"],
+              "path": ["subjects", "1"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Attendance",
+      "item": [
+        {
+          "name": "Mark Attendance",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"classroom_id\": 1,\n  \"student_id\": 1,\n  \"date\": \"2026-05-12\",\n  \"status\": \"present\",\n  \"remarks\": \"On time\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/attendances/mark",
+              "host": ["{{base_url}}"],
+              "path": ["attendances", "mark"]
+            },
+            "description": "status: present | absent | leave"
+          }
+        },
+        {
+          "name": "Get Attendance By Date",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{base_url}}/attendances/by-date?date=2026-05-12&classroom_id=1&student_id=1&paginate=true&per_page=15",
+              "host": ["{{base_url}}"],
+              "path": ["attendances", "by-date"],
+              "query": [
+                { "key": "date", "value": "2026-05-12" },
+                { "key": "classroom_id", "value": "1" },
+                { "key": "student_id", "value": "1" },
+                { "key": "paginate", "value": "true" },
+                { "key": "per_page", "value": "15" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Attendance By Month",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{base_url}}/attendances/by-month?student_id=1&classroom_id=1&month=5&year=2026&term=first&paginate=true&per_page=30",
+              "host": ["{{base_url}}"],
+              "path": ["attendances", "by-month"],
+              "query": [
+                { "key": "student_id", "value": "1" },
+                { "key": "classroom_id", "value": "1" },
+                { "key": "month", "value": "5", "description": "1-12" },
+                { "key": "year", "value": "2026" },
+                { "key": "term", "value": "first", "description": "first | second | third | final" },
+                { "key": "paginate", "value": "true" },
+                { "key": "per_page", "value": "30" }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Grades",
+      "item": [
+        {
+          "name": "List Grades",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{base_url}}/classrooms/1/grades?student_id=1&subject_id=1&term=first",
+              "host": ["{{base_url}}"],
+              "path": ["classrooms", "1", "grades"],
+              "query": [
+                { "key": "student_id", "value": "1" },
+                { "key": "subject_id", "value": "1" },
+                { "key": "term", "value": "first", "description": "first | second | third | final" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Store Grades (Bulk)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"classroom_id\": 1,\n  \"subject_id\": 1,\n  \"term\": \"first\",\n  \"type\": \"exam\",\n  \"total\": 100,\n  \"date\": \"2026-05-12\",\n  \"remarks\": \"End of term exam\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/classrooms/1/grades",
+              "host": ["{{base_url}}"],
+              "path": ["classrooms", "1", "grades"]
+            },
+            "description": "type: exam | assignment | quiz"
+          }
+        },
+        {
+          "name": "Update Grade",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"score\": 85,\n  \"total\": 100,\n  \"remarks\": \"Good performance\",\n  \"type\": \"exam\",\n  \"date\": \"2026-05-12\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/classrooms/1/grades/1",
+              "host": ["{{base_url}}"],
+              "path": ["classrooms", "1", "grades", "1"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Student Fees",
+      "item": [
+        {
+          "name": "Assign Fee",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"student_id\": 1,\n  \"term\": \"first\",\n  \"tuition_fee\": 500.00,\n  \"uniform_fee\": 50.00,\n  \"meals_fee\": 100.00,\n  \"books_fee\": 75.00,\n  \"other_fee\": 25.00,\n  \"paid_amount\": 300.00,\n  \"due_date\": \"2026-06-30\",\n  \"status\": \"partial\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/student-fees/assign",
+              "host": ["{{base_url}}"],
+              "path": ["student-fees", "assign"]
+            },
+            "description": "status: paid | unpaid | partial"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Teachers",
+      "item": [
+        {
+          "name": "List Teachers",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{base_url}}/teachers",
+              "host": ["{{base_url}}"],
+              "path": ["teachers"]
+            }
+          }
+        },
+        {
+          "name": "Get Teacher",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{base_url}}/teachers/1",
+              "host": ["{{base_url}}"],
+              "path": ["teachers", "1"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Guardians",
+      "item": [
+        {
+          "name": "List Guardians",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{base_url}}/guardians",
+              "host": ["{{base_url}}"],
+              "path": ["guardians"]
+            }
+          }
+        },
+        {
+          "name": "Get Guardian",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{base_url}}/guardians/1",
+              "host": ["{{base_url}}"],
+              "path": ["guardians", "1"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "School Admins",
+      "item": [
+        {
+          "name": "List School Admins",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{base_url}}/school-admins",
+              "host": ["{{base_url}}"],
+              "path": ["school-admins"]
+            }
+          }
+        },
+        {
+          "name": "Get School Admin",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{base_url}}/school-admins/1",
+              "host": ["{{base_url}}"],
+              "path": ["school-admins", "1"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Dashboard",
+      "item": [
+        {
+          "name": "Principal Dashboard Stats",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{base_url}}/dashboard-stats",
+              "host": ["{{base_url}}"],
+              "path": ["dashboard-stats"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Institution",
+      "item": [
+        {
+          "name": "Get Institution",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{base_url}}/institute/1",
+              "host": ["{{base_url}}"],
+              "path": ["institute", "1"]
+            }
+          }
+        },
+        {
+          "name": "Update Institution",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "name", "value": "Greenwood Academy", "type": "text" },
+                { "key": "slogan", "value": "Excellence in Education", "type": "text" },
+                { "key": "academic_year", "value": "2026/2027", "type": "text" },
+                { "key": "examination_system", "value": "WAEC", "type": "text" },
+                { "key": "physical_address", "value": "123 School Street, City", "type": "text" },
+                { "key": "email", "value": "info@greenwood.com", "type": "text" },
+                { "key": "alternate_email", "value": "alt@greenwood.com", "type": "text" },
+                { "key": "phone_number", "value": "+1987654321", "type": "text" },
+                { "key": "alternate_phone", "value": "+1987654322", "type": "text" },
+                { "key": "telephone", "value": "+1987654323", "type": "text" },
+                { "key": "category_id", "value": "1", "type": "text" },
+                { "key": "subjects[]", "value": "Mathematics", "type": "text" },
+                { "key": "subjects[]", "value": "English", "type": "text" },
+                { "key": "logo", "value": "", "type": "file", "disabled": true }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/institute/1",
+              "host": ["{{base_url}}"],
+              "path": ["institute", "1"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Settings",
+      "item": [
+        {
+          "name": "Get Settings",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{base_url}}/settings",
+              "host": ["{{base_url}}"],
+              "path": ["settings"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin Panel",
+      "description": "All routes under /v1/admin/ — requires role: admin or sub_admin",
+      "item": [
+        {
+          "name": "Admin Dashboard",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{base_url}}/admin/dashboard",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "dashboard"]
+            },
+            "description": "Returns: total_institutions, total_students, total_teachers, total_parents, total_school_admins, total_users, recent_institutions, recent_students. Cached for 5 minutes."
+          }
+        },
+        {
+          "name": "Managers",
+          "item": [
+            {
+              "name": "List Managers",
+              "request": {
+                "method": "GET",
+                "header": [{ "key": "Accept", "value": "application/json" }],
+                "url": {
+                  "raw": "{{base_url}}/admin/managers",
+                  "host": ["{{base_url}}"],
+                  "path": ["admin", "managers"]
+                }
+              }
+            },
+            {
+              "name": "Get Manager",
+              "request": {
+                "method": "GET",
+                "header": [{ "key": "Accept", "value": "application/json" }],
+                "url": {
+                  "raw": "{{base_url}}/admin/managers/1",
+                  "host": ["{{base_url}}"],
+                  "path": ["admin", "managers", "1"]
+                }
+              }
+            },
+            {
+              "name": "Create Manager",
+              "request": {
+                "method": "POST",
+                "header": [
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Content-Type", "value": "application/json" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"first_name\": \"Robert\",\n  \"sure_name\": \"Williams\",\n  \"email\": \"manager@shub.com\",\n  \"phone_number\": \"+1234500001\",\n  \"password\": \"password123\"\n}",
+                  "options": { "raw": { "language": "json" } }
+                },
+                "url": {
+                  "raw": "{{base_url}}/admin/managers",
+                  "host": ["{{base_url}}"],
+                  "path": ["admin", "managers"]
+                }
+              }
+            },
+            {
+              "name": "Update Manager",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Content-Type", "value": "application/json" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"first_name\": \"Robert\",\n  \"sure_name\": \"Williams\",\n  \"email\": \"manager.updated@shub.com\",\n  \"phone_number\": \"+1234500002\",\n  \"password\": null\n}",
+                  "options": { "raw": { "language": "json" } }
+                },
+                "url": {
+                  "raw": "{{base_url}}/admin/managers/1",
+                  "host": ["{{base_url}}"],
+                  "path": ["admin", "managers", "1"]
+                }
+              }
+            },
+            {
+              "name": "Delete Manager",
+              "request": {
+                "method": "DELETE",
+                "header": [{ "key": "Accept", "value": "application/json" }],
+                "url": {
+                  "raw": "{{base_url}}/admin/managers/1",
+                  "host": ["{{base_url}}"],
+                  "path": ["admin", "managers", "1"]
+                }
+              }
+            },
+            {
+              "name": "Get Manager's Schools",
+              "request": {
+                "method": "GET",
+                "header": [{ "key": "Accept", "value": "application/json" }],
+                "url": {
+                  "raw": "{{base_url}}/admin/managers/1/schools",
+                  "host": ["{{base_url}}"],
+                  "path": ["admin", "managers", "1", "schools"]
+                },
+                "description": "Returns all institutions linked to this manager."
+              }
+            }
+          ]
+        },
+        {
+          "name": "Sub-Admins",
+          "item": [
+            {
+              "name": "List Sub-Admins",
+              "request": {
+                "method": "GET",
+                "header": [{ "key": "Accept", "value": "application/json" }],
+                "url": {
+                  "raw": "{{base_url}}/admin/sub-admins",
+                  "host": ["{{base_url}}"],
+                  "path": ["admin", "sub-admins"]
+                }
+              }
+            },
+            {
+              "name": "Get Sub-Admin",
+              "request": {
+                "method": "GET",
+                "header": [{ "key": "Accept", "value": "application/json" }],
+                "url": {
+                  "raw": "{{base_url}}/admin/sub-admins/1",
+                  "host": ["{{base_url}}"],
+                  "path": ["admin", "sub-admins", "1"]
+                }
+              }
+            },
+            {
+              "name": "Create Sub-Admin",
+              "request": {
+                "method": "POST",
+                "header": [{ "key": "Accept", "value": "application/json" }],
+                "body": {
+                  "mode": "formdata",
+                  "formdata": [
+                    { "key": "first_name", "value": "Sarah", "type": "text" },
+                    { "key": "sure_name", "value": "Connor", "type": "text" },
+                    { "key": "email", "value": "subadmin@shub.com", "type": "text" },
+                    { "key": "phone_number", "value": "+1234500010", "type": "text" },
+                    { "key": "password", "value": "password123", "type": "text" },
+                    { "key": "region[]", "value": "North", "type": "text" },
+                    { "key": "region[]", "value": "South", "type": "text" },
+                    { "key": "permissions[]", "value": "manage_schools", "type": "text" },
+                    { "key": "school_ids[]", "value": "1", "type": "text" },
+                    { "key": "profile_image", "value": "", "type": "file", "disabled": true }
+                  ]
+                },
+                "url": {
+                  "raw": "{{base_url}}/admin/sub-admins",
+                  "host": ["{{base_url}}"],
+                  "path": ["admin", "sub-admins"]
+                }
+              }
+            },
+            {
+              "name": "Update Sub-Admin",
+              "request": {
+                "method": "PUT",
+                "header": [{ "key": "Accept", "value": "application/json" }],
+                "body": {
+                  "mode": "formdata",
+                  "formdata": [
+                    { "key": "first_name", "value": "Sarah", "type": "text" },
+                    { "key": "sure_name", "value": "Connor", "type": "text" },
+                    { "key": "email", "value": "subadmin.updated@shub.com", "type": "text" },
+                    { "key": "phone_number", "value": "+1234500011", "type": "text" },
+                    { "key": "region[]", "value": "East", "type": "text" },
+                    { "key": "permissions[]", "value": "manage_schools", "type": "text" },
+                    { "key": "school_ids[]", "value": "2", "type": "text" },
+                    { "key": "profile_image", "value": "", "type": "file", "disabled": true }
+                  ]
+                },
+                "url": {
+                  "raw": "{{base_url}}/admin/sub-admins/1",
+                  "host": ["{{base_url}}"],
+                  "path": ["admin", "sub-admins", "1"]
+                }
+              }
+            },
+            {
+              "name": "Delete Sub-Admin",
+              "request": {
+                "method": "DELETE",
+                "header": [{ "key": "Accept", "value": "application/json" }],
+                "url": {
+                  "raw": "{{base_url}}/admin/sub-admins/1",
+                  "host": ["{{base_url}}"],
+                  "path": ["admin", "sub-admins", "1"]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "Schools",
+          "item": [
+            {
+              "name": "List Schools",
+              "request": {
+                "method": "GET",
+                "header": [{ "key": "Accept", "value": "application/json" }],
+                "url": {
+                  "raw": "{{base_url}}/admin/schools",
+                  "host": ["{{base_url}}"],
+                  "path": ["admin", "schools"]
+                }
+              }
+            },
+            {
+              "name": "Get School",
+              "request": {
+                "method": "GET",
+                "header": [{ "key": "Accept", "value": "application/json" }],
+                "url": {
+                  "raw": "{{base_url}}/admin/schools/1",
+                  "host": ["{{base_url}}"],
+                  "path": ["admin", "schools", "1"]
+                },
+                "description": "Returns school with manager, category, and principal relationships."
+              }
+            },
+            {
+              "name": "Update School",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Content-Type", "value": "application/json" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Greenwood Academy\",\n  \"manager_id\": 1,\n  \"category_id\": 1,\n  \"email\": \"info@greenwood.com\",\n  \"phone_number\": \"+1987654321\",\n  \"physical_address\": \"123 School Street\"\n}",
+                  "options": { "raw": { "language": "json" } }
+                },
+                "url": {
+                  "raw": "{{base_url}}/admin/schools/1",
+                  "host": ["{{base_url}}"],
+                  "path": ["admin", "schools", "1"]
+                }
+              }
+            },
+            {
+              "name": "Delete School",
+              "request": {
+                "method": "DELETE",
+                "header": [{ "key": "Accept", "value": "application/json" }],
+                "url": {
+                  "raw": "{{base_url}}/admin/schools/1",
+                  "host": ["{{base_url}}"],
+                  "path": ["admin", "schools", "1"]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "Manager Invoices",
+          "item": [
+            {
+              "name": "List Invoices",
+              "request": {
+                "method": "GET",
+                "header": [{ "key": "Accept", "value": "application/json" }],
+                "url": {
+                  "raw": "{{base_url}}/admin/manager-invoices?manager_id=1",
+                  "host": ["{{base_url}}"],
+                  "path": ["admin", "manager-invoices"],
+                  "query": [
+                    { "key": "manager_id", "value": "1", "description": "Filter by manager" }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Get Invoice",
+              "request": {
+                "method": "GET",
+                "header": [{ "key": "Accept", "value": "application/json" }],
+                "url": {
+                  "raw": "{{base_url}}/admin/manager-invoices/1",
+                  "host": ["{{base_url}}"],
+                  "path": ["admin", "manager-invoices", "1"]
+                }
+              }
+            },
+            {
+              "name": "Create Invoice",
+              "request": {
+                "method": "POST",
+                "header": [
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Content-Type", "value": "application/json" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"manager_id\": 1,\n  \"number_of_instutes\": 3,\n  \"price_per_instute\": 500.00,\n  \"due_date\": \"2026-07-01\",\n  \"status\": \"pending\"\n}",
+                  "options": { "raw": { "language": "json" } }
+                },
+                "url": {
+                  "raw": "{{base_url}}/admin/manager-invoices",
+                  "host": ["{{base_url}}"],
+                  "path": ["admin", "manager-invoices"]
+                },
+                "description": "status: pending | paid | overdue. due_date must be after today."
+              }
+            },
+            {
+              "name": "Update Invoice",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Content-Type", "value": "application/json" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"status\": \"paid\",\n  \"due_date\": \"2026-08-01\"\n}",
+                  "options": { "raw": { "language": "json" } }
+                },
+                "url": {
+                  "raw": "{{base_url}}/admin/manager-invoices/1",
+                  "host": ["{{base_url}}"],
+                  "path": ["admin", "manager-invoices", "1"]
+                }
+              }
+            },
+            {
+              "name": "Delete Invoice",
+              "request": {
+                "method": "DELETE",
+                "header": [{ "key": "Accept", "value": "application/json" }],
+                "url": {
+                  "raw": "{{base_url}}/admin/manager-invoices/1",
+                  "host": ["{{base_url}}"],
+                  "path": ["admin", "manager-invoices", "1"]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "Global Teachers (Admin)",
+          "item": [
+            {
+              "name": "List Teachers",
+              "request": {
+                "method": "GET",
+                "header": [{ "key": "Accept", "value": "application/json" }],
+                "url": {
+                  "raw": "{{base_url}}/admin/teachers",
+                  "host": ["{{base_url}}"],
+                  "path": ["admin", "teachers"]
+                }
+              }
+            },
+            {
+              "name": "Get Teacher",
+              "request": {
+                "method": "GET",
+                "header": [{ "key": "Accept", "value": "application/json" }],
+                "url": {
+                  "raw": "{{base_url}}/admin/teachers/1",
+                  "host": ["{{base_url}}"],
+                  "path": ["admin", "teachers", "1"]
+                }
+              }
+            },
+            {
+              "name": "Create Teacher",
+              "request": {
+                "method": "POST",
+                "header": [
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Content-Type", "value": "application/json" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"first_name\": \"David\",\n  \"sur_name\": \"Clark\",\n  \"email\": \"teacher.admin@school.com\",\n  \"phone_number\": \"+1234500020\",\n  \"password\": \"password123\",\n  \"institution_id\": 1\n}",
+                  "options": { "raw": { "language": "json" } }
+                },
+                "url": {
+                  "raw": "{{base_url}}/admin/teachers",
+                  "host": ["{{base_url}}"],
+                  "path": ["admin", "teachers"]
+                }
+              }
+            },
+            {
+              "name": "Update Teacher",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Content-Type", "value": "application/json" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"first_name\": \"David\",\n  \"sur_name\": \"Clark\",\n  \"email\": \"teacher.updated@school.com\",\n  \"phone_number\": \"+1234500021\",\n  \"institution_id\": 2\n}",
+                  "options": { "raw": { "language": "json" } }
+                },
+                "url": {
+                  "raw": "{{base_url}}/admin/teachers/1",
+                  "host": ["{{base_url}}"],
+                  "path": ["admin", "teachers", "1"]
+                }
+              }
+            },
+            {
+              "name": "Delete Teacher",
+              "request": {
+                "method": "DELETE",
+                "header": [{ "key": "Accept", "value": "application/json" }],
+                "url": {
+                  "raw": "{{base_url}}/admin/teachers/1",
+                  "host": ["{{base_url}}"],
+                  "path": ["admin", "teachers", "1"]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "Global Students (Admin)",
+          "item": [
+            {
+              "name": "List Students",
+              "request": {
+                "method": "GET",
+                "header": [{ "key": "Accept", "value": "application/json" }],
+                "url": {
+                  "raw": "{{base_url}}/admin/students",
+                  "host": ["{{base_url}}"],
+                  "path": ["admin", "students"]
+                }
+              }
+            },
+            {
+              "name": "Get Student",
+              "request": {
+                "method": "GET",
+                "header": [{ "key": "Accept", "value": "application/json" }],
+                "url": {
+                  "raw": "{{base_url}}/admin/students/1",
+                  "host": ["{{base_url}}"],
+                  "path": ["admin", "students", "1"]
+                }
+              }
+            },
+            {
+              "name": "Create Student",
+              "request": {
+                "method": "POST",
+                "header": [
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Content-Type", "value": "application/json" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"first_name\": \"Emily\",\n  \"sur_name\": \"Davis\",\n  \"gender\": \"female\",\n  \"term\": \"first\",\n  \"classroom_id\": 1,\n  \"institution_id\": 1,\n  \"guardian_id\": 3,\n  \"age\": 12,\n  \"student_phone_number\": \"+1234500030\",\n  \"religion\": \"Christianity\",\n  \"address\": \"321 Pine Street\"\n}",
+                  "options": { "raw": { "language": "json" } }
+                },
+                "url": {
+                  "raw": "{{base_url}}/admin/students",
+                  "host": ["{{base_url}}"],
+                  "path": ["admin", "students"]
+                }
+              }
+            },
+            {
+              "name": "Update Student",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  { "key": "Accept", "value": "application/json" },
+                  { "key": "Content-Type", "value": "application/json" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"first_name\": \"Emily\",\n  \"sur_name\": \"Davis\",\n  \"age\": 13,\n  \"classroom_id\": 2,\n  \"institution_id\": 1,\n  \"term\": \"second\"\n}",
+                  "options": { "raw": { "language": "json" } }
+                },
+                "url": {
+                  "raw": "{{base_url}}/admin/students/1",
+                  "host": ["{{base_url}}"],
+                  "path": ["admin", "students", "1"]
+                }
+              }
+            },
+            {
+              "name": "Delete Student",
+              "request": {
+                "method": "DELETE",
+                "header": [{ "key": "Accept", "value": "application/json" }],
+                "url": {
+                  "raw": "{{base_url}}/admin/students/1",
+                  "host": ["{{base_url}}"],
+                  "path": ["admin", "students", "1"]
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
 }

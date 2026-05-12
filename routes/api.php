@@ -2,6 +2,11 @@
 
 use App\Http\Controllers\Api\Admin\ActivityControler;
 use App\Http\Controllers\Api\Admin\ManagerInvoiceController;
+use App\Http\Controllers\Api\Admin\SchoolController;
+use App\Http\Controllers\Api\Admin\ManagerController;
+use App\Http\Controllers\Api\Admin\SubAdminController;
+use App\Http\Controllers\Api\Admin\TeacherController as AdminTeacherController;
+use App\Http\Controllers\Api\Admin\StudentController as AdminStudentController;
 use App\Http\Controllers\Auth\AdminLoginController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\RateLimiter;
@@ -104,12 +109,24 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'active.user'])->group(function
     });
 
     // ===================== ADMIN ONLY =====================
-    Route::middleware('role:admin,sub_admin')->group(function () {
+    Route::prefix('admin')->middleware('role:admin,sub_admin')->group(function () {
         Route::get('dashboard', [ActivityControler::class, 'dashboard']);
-        Route::get('managers', [ActivityControler::class, 'getManagers']);
-        Route::get('managers/{id}/schools', [ActivityControler::class, 'getManagerSchools']);
+
+        Route::apiResource('managers', ManagerController::class);
+        Route::get('managers/{id}/schools', [ManagerController::class, 'getManagerSchools']);
+        
+        Route::apiResource('sub-admins', SubAdminController::class);
+
         Route::apiResource('manager-invoices', ManagerInvoiceController::class);
-        Route::apiResource('schools', SchoolController::class);
+        Route::apiResource('schools', SchoolController::class)->middleware('subadmin.permission:School');
+
+        Route::apiResource('teachers', AdminTeacherController::class)->middleware('subadmin.permission:Teachers');
+        Route::apiResource('students', AdminStudentController::class)->middleware('subadmin.permission:Students');
+        Route::apiResource('sub-admin', StudentController::class);
+    });
+
+    Route::prefix('manager')->middleware('role:manager')->group(function () {
+        Route::get('', [ActivityControler::class, '']);
     });
 });
 

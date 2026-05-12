@@ -9,9 +9,9 @@ use App\Enums\UserRole;
 
 class GetManagerAction
 {
-    public function handle()
+    public function handle(array $data = [])
     {
-        $managers = Admin::select(['id', 'name', 'email', 'role', 'status'])
+        $query = Admin::select(['id', 'first_name', 'sure_name', 'email', 'role', 'status'])
             ->where('role', AdminRole::Manager)
             ->withCount([
                 'institutions as total_schools',
@@ -22,10 +22,18 @@ class GetManagerAction
                 'users as total_school_sub_admin' => function ($query) {
                     $query->where('is_school_admin', true);
                 }
-            ])
-            ->orderBy('name', 'desc')
-            ->get();
+            ]);
 
-        return $managers;
+        if (!empty($data['name'])) {
+            $query->where(function($q) use ($data) {
+                $q->where('first_name', 'like', '%' . $data['name'] . '%')
+                  ->orWhere('sure_name', 'like', '%' . $data['name'] . '%');
+            });
+        }
+        if (!empty($data['email'])) {
+            $query->where('email', 'like', '%' . $data['email'] . '%');
+        }
+
+        return $query->orderBy('first_name', 'desc')->get();
     }
 }

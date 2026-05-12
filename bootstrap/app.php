@@ -16,6 +16,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'role'         => \App\Http\Middleware\RoleMiddleware::class,
             'otp.verified' => \App\Http\Middleware\EnsureOtpVerified::class,
             'active.user'  => \App\Http\Middleware\EnsureActiveUser::class,
+            'subadmin.permission' => \App\Http\Middleware\CheckSubAdminPermission::class,
         ]);
     })
     ->withExceptions(function () {

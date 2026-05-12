@@ -2,48 +2,69 @@
 
 namespace App\Http\Controllers\Api\Admin;
 
+use App\Actions\Admin\CreateSchoolAction;
+use App\Actions\Admin\DeleteSchoolAction;
+use App\Actions\Admin\GetSchoolsAction;
+use App\Actions\Admin\UpdateSchoolAction;
 use App\Http\Controllers\Controller;
+use App\Models\Institution;
 use Illuminate\Http\Request;
 
 class SchoolController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
-    {
-        
+    public function __construct(
+        protected GetSchoolsAction $getSchoolsAction,
+        // protected CreateSchoolAction $createSchoolAction,
+        protected UpdateSchoolAction $updateSchoolAction,
+        protected DeleteSchoolAction $deleteSchoolAction
+    ) {
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
+    public function index(Request $request)
     {
-        //
+        $schools = $this->getSchoolsAction->handle($request->all());
+        return $this->successResponse($schools, 'Schools retrieved successfully');
     }
 
-    /**
-     * Display the specified resource.
-     */
+    // public function store(Request $request)
+    // {
+    //     $data = $request->validate([
+    //         'name' => 'required|string|max:255',
+    //         'manager_id' => 'required|exists:admins,id',
+    //         'category_id' => 'nullable|exists:categories,id',
+    //         'email' => 'required|email|unique:institutions,email',
+    //         'phone_number' => 'required|string|unique:institutions,phone_number',
+    //         'physical_address' => 'nullable|string',
+    //     ]);
+
+    //     $school = $this->createSchoolAction->handle($data);
+    //     return $this->successResponse($school, 'School created successfully', 201);
+    // }
+
     public function show(string $id)
     {
-        //
+        $school = Institution::with(['manager', 'category', 'principal'])->findOrFail($id);
+        return $this->successResponse($school, 'School retrieved successfully');
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(Request $request, string $id)
     {
-        //
+        $data = $request->validate([
+            'name' => 'sometimes|string|max:255',
+            'manager_id' => 'sometimes|exists:admins,id',
+            'category_id' => 'nullable|exists:categories,id',
+            'email' => 'sometimes|email|unique:institutions,email,' . $id,
+            'phone_number' => 'sometimes|string|unique:institutions,phone_number,' . $id,
+            'physical_address' => 'nullable|string',
+        ]);
+
+        $school = $this->updateSchoolAction->handle($data, $id);
+        return $this->successResponse($school, 'School updated successfully');
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
     public function destroy(string $id)
     {
-        //
+        $this->deleteSchoolAction->handle($id);
+        return $this->successResponse(null, 'School deleted successfully');
     }
 }

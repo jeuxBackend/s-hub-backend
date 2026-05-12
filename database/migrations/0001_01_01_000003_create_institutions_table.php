@@ -13,6 +13,7 @@ return new class extends Migration {
         Schema::create('institutions', function (Blueprint $table) {
             $table->id();
             $table->foreignId('manager_id')->constrained('admins')->onDelete('cascade');
+            $table->foreignId('subadmin_id')->nullable()->constrained('admins')->onDelete('set null');
             $table->foreignId('category_id')->nullable()->constrained('categories')->onDelete('set null');
             $table->string('name');
             $table->string('slogan')->nullable();
@@ -20,6 +21,7 @@ return new class extends Migration {
             $table->string('academic_year')->nullable();
             $table->string('examination_system')->nullable();
             $table->string('physical_address')->nullable();
+            $table->string('region')->nullable();
             $table->json('subjects')->nullable();
             $table->string('email')->unique();
             $table->string('alternate_email')->nullable();

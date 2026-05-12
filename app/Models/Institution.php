@@ -12,6 +12,7 @@ class Institution extends Model
 {
     protected $fillable = [
         'manager_id',
+        'subadmin_id',
         'category_id',
         'name',
         'slogan',
@@ -19,6 +20,7 @@ class Institution extends Model
         'academic_year',
         'examination_system',
         'physical_address',
+        'region',
         'email',
         'alternate_email',
         'phone_number',

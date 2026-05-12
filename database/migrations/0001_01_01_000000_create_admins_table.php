@@ -21,6 +21,8 @@ return new class extends Migration {
             $table->enum('role', AdminRole::values())
                 ->index()
                 ->default(AdminRole::SubAdmin->value);
+            $table->json('region')->nullable();
+            $table->string('profile_image')->nullable();
             $table->enum('status', ['active', 'inactive'])->default('active');
             $table->json('permissions')->nullable();
             $table->string('fcm_token')->nullable();
