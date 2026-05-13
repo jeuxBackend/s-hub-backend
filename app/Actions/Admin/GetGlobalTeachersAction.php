@@ -13,9 +13,9 @@ class GetGlobalTeachersAction
             ->with('institution');
 
         if (!empty($data['name'])) {
-            $query->where(function($q) use ($data) {
+            $query->where(function ($q) use ($data) {
                 $q->where('first_name', 'like', '%' . $data['name'] . '%')
-                  ->orWhere('sur_name', 'like', '%' . $data['name'] . '%');
+                    ->orWhere('sur_name', 'like', '%' . $data['name'] . '%');
             });
         }
         if (!empty($data['email'])) {
@@ -26,6 +26,14 @@ class GetGlobalTeachersAction
         }
         if (!empty($data['institution_id'])) {
             $query->where('institution_id', $data['institution_id']);
+        }
+        if (!empty($data['manager_id'])) {
+            $query->whereHas('institution', function ($q) use ($data) {
+                $q->where('manager_id', $data['manager_id']);
+            });
+        }
+        if (!empty($data['status'])) {
+            $query->where('status', $data['status']);
         }
 
         return $query->orderBy('id', 'desc')->get();

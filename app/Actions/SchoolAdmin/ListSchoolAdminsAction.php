@@ -4,31 +4,44 @@ namespace App\Actions\SchoolAdmin;
 
 use Illuminate\Http\Request;
 use App\Models\User;
+use App\Enums\UserRole;
 
 class ListSchoolAdminsAction
 {
-    public function handle(Request $request)
+    public function handle(Request $request, $requester)
     {
-        $requester = auth()->user();
+        $query = User::query()->where('role', UserRole::SchoolAdmin->value);
 
-        $query = User::query()->where('created_by', $requester->id)->where('role', 'school_admin');
-
-        // if ($requester->role === 'principal') {
-        //     // Only school_admins created by this principal
-        //     $query->where('created_by', $requester->id);
-        // // } else {
-        // //     // Block all other roles
-        // //     $query->whereRaw('1 = 0');
-        // }
+        if ($requester instanceof \App\Models\User && $requester->isRole(UserRole::Principal)) {
+            // Principal can see school admins in their school
+            $query->where('institution_id', $requester->institution_id);
+        } elseif ($requester instanceof \App\Models\Admin && $requester->role->value === 'manager') {
+            // Manager can see school admins in schools they manage
+            $query->whereHas('institution', function ($q) use ($requester) {
+                $q->where('manager_id', $requester->id);
+            });
+        } else {
+            // Block all other roles
+            $query->whereRaw('1 = 0');
+        }
 
         return $query
-            ->when($request->filled('name'), fn ($q) =>
-                $q->where('name', 'like', '%' . $request->name . '%')
+            ->when(
+                $request->filled('name'),
+                fn($q) =>
+                $q->where(function ($sub) use ($request) {
+                    $sub->where('first_name', 'like', '%' . $request->name . '%')
+                        ->orWhere('sur_name', 'like', '%' . $request->name . '%');
+                })
             )
-            ->when($request->filled('phone'), fn ($q) =>
-                $q->where('phone', 'like', '%' . $request->phone . '%')
+            ->when(
+                $request->filled('phone'),
+                fn($q) =>
+                $q->where('phone_number', 'like', '%' . $request->phone . '%')
             )
-            ->when($request->filled('email'), fn ($q) =>
+            ->when(
+                $request->filled('email'),
+                fn($q) =>
                 $q->where('email', 'like', '%' . $request->email . '%')
             )
             ->latest()

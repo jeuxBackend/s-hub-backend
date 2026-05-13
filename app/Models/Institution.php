@@ -14,6 +14,7 @@ class Institution extends Model
         'manager_id',
         'subadmin_id',
         'category_id',
+        'status',
         'name',
         'slogan',
         'logo',

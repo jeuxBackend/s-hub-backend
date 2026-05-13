@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers\Api\Admin;
 
-use App\Actions\Admin\CreateSchoolAction;
-use App\Actions\Admin\DeleteSchoolAction;
-use App\Actions\Admin\GetSchoolsAction;
-use App\Actions\Admin\UpdateSchoolAction;
+use App\Actions\Institution\CreateSchoolAction;
+use App\Actions\Institution\DeleteSchoolAction;
+use App\Actions\Institution\GetSchoolsAction;
+use App\Actions\Institution\UpdateSchoolAction;
 use App\Http\Controllers\Controller;
 use App\Models\Institution;
 use Illuminate\Http\Request;

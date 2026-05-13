@@ -6,7 +6,12 @@ use App\Http\Controllers\Api\Admin\SchoolController;
 use App\Http\Controllers\Api\Admin\ManagerController;
 use App\Http\Controllers\Api\Admin\SubAdminController;
 use App\Http\Controllers\Api\Admin\TeacherController as AdminTeacherController;
+use App\Http\Controllers\Api\Manager\ActivitiesController;
+use App\Http\Controllers\Api\Manager\TeacherController as ManagerTeacherController;
 use App\Http\Controllers\Api\Admin\StudentController as AdminStudentController;
+use App\Http\Controllers\Api\Manager\SchoolController as ManagerSchoolController;
+use App\Http\Controllers\Api\Manager\PrincipalController as ManagerPrincipalController;
+use App\Http\Controllers\Api\Manager\StudentController as ManagerStudentController;
 use App\Http\Controllers\Auth\AdminLoginController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\RateLimiter;
@@ -56,9 +61,14 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'active.user'])->group(function
 
     Route::post('/logout', LogoutController::class);
 
-    // ===================== PRINCIPAL + SCHOOL ADMIN + TEACHER =====================
-    Route::middleware(['otp.verified', 'role:principal,school_admin,teacher'])->group(function () {
+    Route::middleware(['otp.verified', 'role:principal'])->group(function () {
+        Route::apiResource('school-admins', SchoolAdminController::class);
+    });
 
+    // ===================== PRINCIPAL + SCHOOL ADMIN + TEACHER =====================
+    Route::middleware(['otp.verified', 'role:principal,school_admin'])->group(function () {
+        Route::post('users/change-role', [SchoolAdminController::class, 'makeSubAdmin']);
+        
         // Users
         Route::apiResource('users', UserController::class)->only(['index', 'show', 'update', 'destroy']);
 
@@ -74,7 +84,6 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'active.user'])->group(function
         // Teachers / Guardians / School Admins (better separation)
         Route::apiResource('teachers', TeacherController::class);
         Route::apiResource('guardians', GuardianController::class);
-        Route::apiResource('school-admins', SchoolAdminController::class);
 
         // Other resources
         Route::post('classroom-teachers/allocate', [ClassroomTeacherController::class, 'allocate']);
@@ -100,7 +109,7 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'active.user'])->group(function
     });
 
     // ===================== VIEW-ONLY FOR ALL AUTH USERS =====================
-    Route::middleware('otp.verified')->group(function () {   // or without if not needed
+    Route::middleware('otp.verified')->group(function () {
         Route::get('institute/{institute}', [InstituteController::class, 'show']);
         Route::get('classrooms', [ClassroomController::class, 'index']);
         Route::get('classrooms/{classroom}', [ClassroomController::class, 'show']);
@@ -114,7 +123,7 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'active.user'])->group(function
 
         Route::apiResource('managers', ManagerController::class);
         Route::get('managers/{id}/schools', [ManagerController::class, 'getManagerSchools']);
-        
+
         Route::apiResource('sub-admins', SubAdminController::class);
 
         Route::apiResource('manager-invoices', ManagerInvoiceController::class);
@@ -126,8 +135,14 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'active.user'])->group(function
     });
 
     Route::prefix('manager')->middleware('role:manager')->group(function () {
-        Route::get('', [ActivityControler::class, '']);
+        Route::apiResource('schools', ManagerSchoolController::class);
+        Route::post('schools/{school}/principals', [ManagerPrincipalController::class, 'store']);
+        Route::apiResource('teachers', ManagerTeacherController::class);
+        Route::get('toggle-block-student/{id}', [ManagerStudentController::class, 'toggleBlockStudent']);
+
+        Route::get('my-invoices', [ActivitiesController::class, 'getInvoices']);
     });
+
 });
 
 

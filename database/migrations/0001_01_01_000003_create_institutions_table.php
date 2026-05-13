@@ -21,6 +21,7 @@ return new class extends Migration {
             $table->string('academic_year')->nullable();
             $table->string('examination_system')->nullable();
             $table->string('physical_address')->nullable();
+            $table->enum('status', ['pending', 'approved', 'rejected'])->default('pending');
             $table->string('region')->nullable();
             $table->json('subjects')->nullable();
             $table->string('email')->unique();

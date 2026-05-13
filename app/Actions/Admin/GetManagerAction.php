@@ -20,14 +20,14 @@ class GetManagerAction
                     $query->where('role', UserRole::Teacher->value);
                 },
                 'users as total_school_sub_admin' => function ($query) {
-                    $query->where('is_school_admin', true);
+                    $query->where('role', UserRole::SchoolAdmin->value);
                 }
             ]);
 
         if (!empty($data['name'])) {
-            $query->where(function($q) use ($data) {
+            $query->where(function ($q) use ($data) {
                 $q->where('first_name', 'like', '%' . $data['name'] . '%')
-                  ->orWhere('sure_name', 'like', '%' . $data['name'] . '%');
+                    ->orWhere('sure_name', 'like', '%' . $data['name'] . '%');
             });
         }
         if (!empty($data['email'])) {

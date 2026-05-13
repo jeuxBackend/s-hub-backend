@@ -31,7 +31,7 @@ class Student extends Model
     protected $casts = [
         'status' => 'boolean',
         'gender' => \App\Enums\GenderType::class,
-        'term'   => \App\Enums\TermType::class,
+        'term' => \App\Enums\TermType::class,
     ];
 
     protected $appends = ['profile_picture_url'];
@@ -92,5 +92,10 @@ class Student extends Model
     public function attendanceOn($date)
     {
         return $this->hasOne(StudentAttendance::class)->whereDate('date', $date);
+    }
+
+    public function toggleStatus()
+    {
+        return !$this->status;
     }
 }

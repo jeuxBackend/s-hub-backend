@@ -18,7 +18,6 @@ return new class extends Migration {
             $table->enum('role', UserRole::values())
                 ->index()
                 ->default(UserRole::Parent->value);
-            $table->boolean('is_school_admin')->default(false);
 
             // OTP & Device Info
             $table->string('otp_code')->nullable();

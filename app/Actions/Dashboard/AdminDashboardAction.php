@@ -19,9 +19,7 @@ class AdminDashboardAction
 
             $teachersCount = User::where('role', UserRole::Teacher->value)->count();
             $parentsCount = User::where('role', UserRole::Parent->value)->count();
-            $schoolAdminsCount = User::where('role', UserRole::SchoolAdmin->value)
-                ->orWhere('is_school_admin', true)
-                ->count();
+            $schoolAdminsCount = User::where('role', UserRole::SchoolAdmin->value)->count();
 
             $studentsCount = Student::count();
             $institutionsCount = Institution::count();

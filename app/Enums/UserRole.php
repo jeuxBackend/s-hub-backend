@@ -7,6 +7,7 @@ enum UserRole: string
     case Principal = 'principal';
     case Teacher = 'teacher';
     case Parent = 'parent';
+    case SchoolAdmin = 'school-admin';
 
     /**
      * Get all role values as array (for migrations, validation, etc.)
@@ -39,6 +40,7 @@ enum UserRole: string
             self::Principal => 'Principal',
             self::Teacher => 'Teacher',
             self::Parent => 'Parent',
+            self::SchoolAdmin => 'School Admin'
         };
     }
 }
