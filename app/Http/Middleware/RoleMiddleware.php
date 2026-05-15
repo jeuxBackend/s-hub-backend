@@ -12,7 +12,9 @@ class RoleMiddleware
     {
         $user = $request->user();
 
-        if (! $user || ! in_array($user->role->value, $roles)) {
+        $roleValue = $user && $user->role instanceof \BackedEnum ? $user->role->value : ($user ? $user->role : null);
+
+        if (! $user || ! in_array($roleValue, $roles)) {
             abort(403, 'Unauthorized role access');
         }
 

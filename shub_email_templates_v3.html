@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>S HUB — Email Templates</title>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;600;700;800&family=Merriweather:wght@700;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      /* ── EXACT BRAND COLORS ── */
+      --blue:         #1461AE;
+      --blue-dark:    #0f4d8a;
+      --blue-deep:    #0a3360;
+      --blue-light:   #e6f0fa;
+      --blue-mid:     #1870c4;
+
+      --gold:         #E4B53D;
+      --gold-dark:    #c99d2a;
+      --gold-light:   #fdf3d5;
+
+      --orange:       #DC5800;
+      --orange-dark:  #b84900;
+      --orange-light: #fff0e6;
+      --orange-mid:   #f06420;
+
+      --white:        #ffffff;
+      --off-white:    #f6f9fd;
+      --text-dark:    #0a1e34;
+      --text-mid:     #3d5166;
+      --text-soft:    #7f96ad;
+      --border:       #d8e5f2;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Nunito', sans-serif;
+      background: #c8d8ec;
+      min-height: 100vh;
+    }
+
+    /* ── PREVIEW SHELL ── */
+    .shell {
+      max-width: 660px;
+      margin: 0 auto;
+      padding: 32px 16px 64px;
+    }
+
+    /* Shell header */
+    .shell-header {
+      text-align: center;
+      margin-bottom: 26px;
+      padding: 20px 0 14px;
+    }
+    .shell-brand-name {
+      font-family: 'Merriweather', serif;
+      font-size: 22px;
+      font-weight: 900;
+      color: var(--blue-deep);
+      letter-spacing: 0.05em;
+    }
+    .shell-brand-name span { color: var(--gold); }
+    .shell-brand-sub {
+      font-size: 10.5px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--text-mid);
+      font-weight: 700;
+      margin-top: 4px;
+    }
+
+    /* ── TABS ── */
+    .tabs {
+      display: flex;
+      background: #fff;
+      border-radius: 14px;
+      padding: 5px;
+      margin-bottom: 26px;
+      box-shadow: 0 3px 16px rgba(20,97,174,0.13);
+      gap: 4px;
+    }
+    .tab-btn {
+      flex: 1;
+      padding: 12px 0;
+      border-radius: 10px;
+      border: none;
+      font-family: 'Nunito', sans-serif;
+      font-size: 13.5px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: all 0.22s;
+      color: var(--text-soft);
+      background: transparent;
+      letter-spacing: 0.01em;
+    }
+    .tab-btn.paid.active {
+      background: var(--gold);
+      color: #fff;
+      box-shadow: 0 4px 14px rgba(228,181,61,0.40);
+    }
+    .tab-btn.unpaid.active {
+      background: var(--orange);
+      color: #fff;
+      box-shadow: 0 4px 14px rgba(220,88,0,0.35);
+    }
+    .tab-btn:not(.active):hover { background: var(--off-white); color: var(--text-mid); }
+
+    /* ── TEMPLATE TOGGLE ── */
+    .tpl { display: none; }
+    .tpl.active { display: block; animation: rise 0.32s ease; }
+    @keyframes rise {
+      from { opacity: 0; transform: translateY(12px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── EMAIL CARD ── */
+    .email-card {
+      background: var(--white);
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 16px 56px rgba(20,97,174,0.18);
+    }
+
+    /* ══════════ HEADER ══════════ */
+    .email-header {
+      background: linear-gradient(145deg, var(--blue-deep) 0%, var(--blue) 55%, var(--blue-mid) 100%);
+      padding: 30px 40px 26px;
+      position: relative;
+      overflow: hidden;
+    }
+    .email-header::before {
+      content: '';
+      position: absolute;
+      width: 230px; height: 230px;
+      border-radius: 50%;
+      border: 1.5px solid rgba(255,255,255,0.06);
+      top: -70px; right: -50px;
+    }
+    .email-header::after {
+      content: '';
+      position: absolute;
+      width: 100px; height: 100px;
+      border-radius: 50%;
+      background: rgba(228,181,61,0.07);
+      bottom: -20px; left: 20px;
+    }
+
+    /* gold top stripe */
+    .header-stripe {
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, var(--gold) 0%, var(--gold-dark) 50%, transparent 100%);
+    }
+
+    /* orange top stripe for unpaid */
+    .header-stripe-orange {
+      background: linear-gradient(90deg, var(--orange) 0%, var(--orange-mid) 50%, transparent 100%);
+    }
+
+    .header-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+      position: relative;
+      z-index: 2;
+    }
+
+    /* Logo */
+    .logo-wrap { display: flex; align-items: center; gap: 11px; }
+    .logo-svg-wrap svg { width: 50px; height: 58px; }
+    .logo-title {
+      font-family: 'Merriweather', serif;
+      font-size: 19px;
+      font-weight: 900;
+      color: #fff;
+      letter-spacing: 0.07em;
+      line-height: 1;
+    }
+    .logo-title span { color: var(--gold); }
+    .logo-tagline {
+      font-size: 9.5px;
+      color: rgba(255,255,255,0.45);
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      margin-top: 4px;
+    }
+
+    /* Badge */
+    .header-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 13px;
+      border-radius: 999px;
+      font-size: 10.5px;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      position: relative;
+      z-index: 2;
+    }
+    .badge-paid {
+      background: rgba(228,181,61,0.18);
+      border: 1px solid rgba(228,181,61,0.50);
+      color: var(--gold);
+    }
+    .badge-paid::before {
+      content: '';
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--gold);
+    }
+    .badge-unpaid {
+      background: rgba(220,88,0,0.2);
+      border: 1px solid rgba(220,88,0,0.5);
+      color: #ff9a60;
+    }
+    .badge-unpaid::before {
+      content: '';
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--orange-mid);
+      animation: blink 1.6s infinite;
+    }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
+
+    .header-title {
+      font-family: 'Merriweather', serif;
+      font-size: 22px;
+      font-weight: 900;
+      color: #fff;
+      line-height: 1.25;
+      position: relative;
+      z-index: 2;
+    }
+    .header-title .accent-gold   { color: var(--gold); }
+    .header-title .accent-orange { color: #ff9a60; }
+
+    .header-subtitle {
+      font-size: 13px;
+      color: rgba(255,255,255,0.52);
+      margin-top: 5px;
+      position: relative;
+      z-index: 2;
+    }
+    .accent-bar {
+      height: 3px;
+      width: 52px;
+      border-radius: 4px;
+      margin-top: 14px;
+      position: relative;
+      z-index: 2;
+    }
+    .accent-bar-gold   { background: linear-gradient(90deg, var(--gold), transparent); }
+    .accent-bar-orange { background: linear-gradient(90deg, var(--orange), transparent); }
+
+    /* ══════════ BODY ══════════ */
+    .email-body { padding: 30px 40px 34px; }
+
+    .greeting {
+      font-size: 14.5px;
+      color: var(--text-mid);
+      line-height: 1.75;
+      margin-bottom: 22px;
+    }
+    .greeting strong { color: var(--text-dark); font-weight: 800; }
+
+    /* Student card */
+    .student-card {
+      border-radius: 12px;
+      overflow: hidden;
+      margin-bottom: 22px;
+      border: 1px solid var(--border);
+      background: var(--off-white);
+    }
+    .card-head {
+      background: var(--blue);
+      padding: 9px 18px;
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.88);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .card-head::before {
+      content: '';
+      width: 4px; height: 14px;
+      background: var(--gold);
+      border-radius: 3px;
+    }
+    .card-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 9px 18px;
+      border-bottom: 1px solid var(--border);
+      font-size: 13.5px;
+    }
+    .card-row:last-child { border-bottom: none; }
+    .row-label { color: var(--text-soft); font-weight: 600; }
+    .row-value { color: var(--text-dark); font-weight: 700; }
+
+    /* Fee table */
+    .section-label {
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--blue);
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .section-label::after {
+      content: ''; flex: 1;
+      height: 1px; background: var(--border);
+    }
+
+    table.fee-tbl {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 4px;
+    }
+    table.fee-tbl thead th {
+      font-size: 10.5px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-soft);
+      padding: 5px 0 10px;
+      border-bottom: 2px solid var(--border);
+      text-align: left;
+    }
+    table.fee-tbl thead th:last-child { text-align: right; }
+    table.fee-tbl tbody td {
+      padding: 10px 0;
+      font-size: 13.5px;
+      color: var(--text-mid);
+      border-bottom: 1px dashed #e0eaf4;
+      text-align: left;
+    }
+    table.fee-tbl tbody td:last-child {
+      text-align: right;
+      font-weight: 700;
+      color: var(--text-dark);
+    }
+    table.fee-tbl tfoot td {
+      padding: 13px 0 0;
+      font-size: 15.5px;
+      font-weight: 800;
+      color: var(--blue-deep);
+      border-top: 2.5px solid var(--blue);
+      text-align: left;
+    }
+    table.fee-tbl tfoot td:last-child { text-align: right; }
+
+    /* Status box */
+    .status-box {
+      border-radius: 12px;
+      padding: 15px 18px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin: 22px 0;
+    }
+    .status-paid {
+      background: var(--gold-light);
+      border: 1.5px solid rgba(228,181,61,0.45);
+    }
+    .status-unpaid {
+      background: var(--orange-light);
+      border: 1.5px solid rgba(220,88,0,0.30);
+    }
+    .status-icon {
+      width: 42px; height: 42px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px; flex-shrink: 0;
+    }
+    .status-paid .status-icon   { background: rgba(228,181,61,0.15); }
+    .status-unpaid .status-icon { background: rgba(220,88,0,0.12); }
+    .status-info strong {
+      display: block; font-size: 14.5px; font-weight: 800; margin-bottom: 2px;
+    }
+    .status-paid .status-info strong   { color: var(--gold-dark); }
+    .status-unpaid .status-info strong { color: var(--orange-dark); }
+    .status-info span { font-size: 12.5px; color: var(--text-soft); }
+
+    /* Due date strip */
+    .due-strip {
+      background: linear-gradient(90deg, var(--orange) 0%, var(--orange-mid) 100%);
+      border-radius: 11px;
+      padding: 14px 20px;
+      display: flex;
+      align-items: center;
+      gap: 13px;
+      margin: 22px 0;
+    }
+    .due-strip-icon { font-size: 21px; flex-shrink: 0; }
+    .due-strip-text strong { display: block; font-size: 14.5px; font-weight: 800; color: #fff; }
+    .due-strip-text span  { font-size: 12px; color: rgba(255,255,255,0.82); }
+
+    /* CTA buttons */
+    .cta {
+      display: block;
+      text-align: center;
+      padding: 15px;
+      border-radius: 11px;
+      font-family: 'Nunito', sans-serif;
+      font-size: 15px;
+      font-weight: 800;
+      text-decoration: none;
+      margin: 22px 0 16px;
+      letter-spacing: 0.02em;
+      cursor: pointer;
+      border: none;
+    }
+    .cta-paid {
+      background: linear-gradient(135deg, var(--gold-dark) 0%, var(--gold) 100%);
+      color: #fff;
+      box-shadow: 0 6px 20px rgba(228,181,61,0.38);
+    }
+    .cta-unpaid {
+      background: linear-gradient(135deg, var(--blue-deep) 0%, var(--blue) 100%);
+      color: #fff;
+      box-shadow: 0 6px 20px rgba(20,97,174,0.30);
+    }
+
+    .body-note {
+      font-size: 13px;
+      color: var(--text-soft);
+      line-height: 1.7;
+      text-align: center;
+    }
+    .body-note a { color: var(--blue); font-weight: 700; text-decoration: none; }
+
+    .divider { height: 1px; background: var(--border); margin: 22px 0; }
+
+    .invoice-ref {
+      text-align: center;
+      font-size: 12px;
+      color: #aabccc;
+      letter-spacing: 0.04em;
+    }
+
+    /* ══════════ FOOTER ══════════ */
+    .email-footer {
+      background: var(--blue-deep);
+      padding: 24px 40px 28px;
+      text-align: center;
+      position: relative;
+    }
+    .footer-stripe {
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--gold), var(--blue-mid));
+    }
+    .footer-logo-name {
+      font-family: 'Merriweather', serif;
+      font-size: 17px;
+      font-weight: 900;
+      color: #fff;
+      letter-spacing: 0.07em;
+      margin-bottom: 6px;
+    }
+    .footer-logo-name span { color: var(--gold); }
+    .footer-divider { height: 1px; background: rgba(255,255,255,0.08); margin: 12px 0; }
+    .footer-info { font-size: 12px; color: rgba(255,255,255,0.42); line-height: 1.8; }
+    .footer-links {
+      display: flex;
+      justify-content: center;
+      gap: 18px;
+      margin-top: 10px;
+    }
+    .footer-links a {
+      font-size: 12px;
+      color: rgba(255,255,255,0.38);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+    .footer-links a:hover { color: var(--gold); }
+  </style>
+</head>
+<body>
+<div class="shell">
+
+  <!-- Shell Header -->
+  <div class="shell-header">
+    <div class="shell-brand-name">S <span>HUB</span></div>
+    <div class="shell-brand-sub">Email Template Preview</div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab-btn paid active" onclick="switchTab('paid')">✓ &nbsp; Paid Invoice</button>
+    <button class="tab-btn unpaid" onclick="switchTab('unpaid')">⚠ &nbsp; Unpaid Fee Reminder</button>
+  </div>
+
+
+  <!-- ═══════════════════════ PAID TEMPLATE ═══════════════════════ -->
+  <div class="tpl active" id="tpl-paid">
+    <div class="email-card">
+
+      <div class="email-header">
+        <div class="header-stripe"></div>
+
+        <div class="header-top">
+          <div class="logo-wrap">
+            <div class="logo-svg-wrap">
+              <svg viewBox="0 0 60 72" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <!-- Gold book spine -->
+                <path d="M8 58 L8 20 L15 13 L15 51 Z" fill="#E4B53D"/>
+                <!-- Book left page -->
+                <path d="M15 13 L31 22 L31 58 L15 51 Z" fill="white" opacity="0.92"/>
+                <!-- Book right page -->
+                <path d="M31 22 L48 15 L48 52 L31 58 Z" fill="white" opacity="0.70"/>
+                <!-- Student body -->
+                <path d="M35 32 Q45 25 51 33 Q49 41 43 47 Q39 51 35 47 Q31 43 33 37 Z" fill="white"/>
+                <!-- Student arm raised -->
+                <path d="M47 25 Q51 18 53 15" stroke="white" stroke-width="2.8" stroke-linecap="round"/>
+                <!-- Student head -->
+                <circle cx="40" cy="26" r="5.5" fill="white"/>
+                <!-- Cap board -->
+                <path d="M33 14 L47 14 L47 17 L33 17 Z" rx="1" fill="#E4B53D"/>
+                <!-- Cap top -->
+                <path d="M40 10 L47 14 L40 18 L33 14 Z" fill="#E4B53D"/>
+                <!-- Cap tassel -->
+                <line x1="47" y1="14" x2="47" y2="20" stroke="#E4B53D" stroke-width="1.8" stroke-linecap="round"/>
+              </svg>
+            </div>
+            <div>
+              <div class="logo-title">S <span>HUB</span></div>
+              <div class="logo-tagline">School Management System</div>
+            </div>
+          </div>
+          <div class="header-badge badge-paid">Payment Confirmed</div>
+        </div>
+
+        <div class="header-title">Fee Invoice — <span class="accent-gold">Paid ✓</span></div>
+        <div class="header-subtitle">Official receipt for your recent tuition payment</div>
+        <div class="accent-bar accent-bar-gold"></div>
+      </div>
+
+      <div class="email-body">
+
+        <p class="greeting">
+          Dear <strong>{{Parent Name}}</strong>,<br>
+          We are pleased to confirm that the tuition fee for your child has been received successfully. Please find the complete breakdown below for your records.
+        </p>
+
+        <div class="student-card">
+          <div class="card-head">Student Information</div>
+          <div class="card-row"><span class="row-label">Student Name</span><span class="row-value">{{Student Name}}</span></div>
+          <div class="card-row"><span class="row-label">Class / Grade</span><span class="row-value">{{Class}}</span></div>
+          <div class="card-row"><span class="row-label">Student No.</span><span class="row-value">{{Student No}}</span></div>
+          <div class="card-row"><span class="row-label">Academic Year</span><span class="row-value">{{Academic Year}}</span></div>
+          <div class="card-row"><span class="row-label">Semester</span><span class="row-value">{{Semester}}</span></div>
+        </div>
+
+        <div class="section-label">Fee Breakdown</div>
+        <table class="fee-tbl">
+          <thead><tr><th>Description</th><th>Amount (USD)</th></tr></thead>
+          <tbody>
+            <tr><td>Tuition Fee</td><td>{{Tuition Fee}}</td></tr>
+            <tr><td>Uniform Fee</td><td>{{Uniform Fee}}</td></tr>
+            <tr><td>Meals</td><td>{{Meals}}</td></tr>
+            <tr><td>Books</td><td>{{Books}}</td></tr>
+            <tr><td>Other Charges</td><td>{{Other}}</td></tr>
+          </tbody>
+          <tfoot><tr><td>Total Paid</td><td>{{Total Fee}}</td></tr></tfoot>
+        </table>
+
+        <div class="status-box status-paid">
+          <div class="status-icon">✅</div>
+          <div class="status-info">
+            <strong>Payment Successfully Received</strong>
+            <span>Paid on {{Payment Date}} &nbsp;·&nbsp; via {{Payment Method}}</span>
+          </div>
+        </div>
+
+        <p class="greeting" style="margin-bottom:0;">
+          Thank you for your timely payment. This email serves as your official receipt. For any queries, please contact the school administration office.
+        </p>
+
+        <a href="#" class="cta cta-paid">⬇ &nbsp; Download PDF Receipt</a>
+
+        <div class="divider"></div>
+        <p class="invoice-ref">Invoice ID: <strong>{{Invoice ID}}</strong> &nbsp;·&nbsp; S HUB School Management System</p>
+
+      </div>
+
+      <div class="email-footer">
+        <div class="footer-stripe"></div>
+        <div class="footer-logo-name">S <span>HUB</span></div>
+        <div class="footer-divider"></div>
+        <div class="footer-info">
+          {{School Name}} &nbsp;·&nbsp; {{School Address}}<br>
+          Tel: {{Phone}} &nbsp;·&nbsp; {{School Email}}
+        </div>
+        <div class="footer-links">
+          <a href="#">Privacy Policy</a>
+          <a href="#">Contact Us</a>
+          <a href="#">Unsubscribe</a>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+
+  <!-- ═══════════════════════ UNPAID TEMPLATE ═══════════════════════ -->
+  <div class="tpl" id="tpl-unpaid">
+    <div class="email-card">
+
+      <div class="email-header">
+        <div class="header-stripe header-stripe-orange"></div>
+
+        <div class="header-top">
+          <div class="logo-wrap">
+            <div class="logo-svg-wrap">
+              <svg viewBox="0 0 60 72" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M8 58 L8 20 L15 13 L15 51 Z" fill="#E4B53D"/>
+                <path d="M15 13 L31 22 L31 58 L15 51 Z" fill="white" opacity="0.92"/>
+                <path d="M31 22 L48 15 L48 52 L31 58 Z" fill="white" opacity="0.70"/>
+                <path d="M35 32 Q45 25 51 33 Q49 41 43 47 Q39 51 35 47 Q31 43 33 37 Z" fill="white"/>
+                <path d="M47 25 Q51 18 53 15" stroke="white" stroke-width="2.8" stroke-linecap="round"/>
+                <circle cx="40" cy="26" r="5.5" fill="white"/>
+                <path d="M33 14 L47 14 L47 17 L33 17 Z" rx="1" fill="#E4B53D"/>
+                <path d="M40 10 L47 14 L40 18 L33 14 Z" fill="#E4B53D"/>
+                <line x1="47" y1="14" x2="47" y2="20" stroke="#E4B53D" stroke-width="1.8" stroke-linecap="round"/>
+              </svg>
+            </div>
+            <div>
+              <div class="logo-title">S <span>HUB</span></div>
+              <div class="logo-tagline">School Management System</div>
+            </div>
+          </div>
+          <div class="header-badge badge-unpaid">Action Required</div>
+        </div>
+
+        <div class="header-title">Fee Invoice — <span class="accent-orange">Due ⚠</span></div>
+        <div class="header-subtitle">Tuition fee payment is outstanding for this term</div>
+        <div class="accent-bar accent-bar-orange"></div>
+      </div>
+
+      <div class="email-body">
+
+        <p class="greeting">
+          Dear <strong>{{Parent Name}}</strong>,<br>
+          We hope this message finds you well. This is a friendly reminder that the tuition fee for your child <strong>{{Student Name}}</strong> remains outstanding for the current term. Please review the details below.
+        </p>
+
+        <div class="student-card">
+          <div class="card-head">Student Information</div>
+          <div class="card-row"><span class="row-label">Student Name</span><span class="row-value">{{Student Name}}</span></div>
+          <div class="card-row"><span class="row-label">Class / Grade</span><span class="row-value">{{Class}}</span></div>
+          <div class="card-row"><span class="row-label">Student No.</span><span class="row-value">{{Student No}}</span></div>
+          <div class="card-row"><span class="row-label">Academic Year</span><span class="row-value">{{Academic Year}}</span></div>
+          <div class="card-row"><span class="row-label">Semester</span><span class="row-value">{{Semester}}</span></div>
+        </div>
+
+        <div class="section-label">Fee Breakdown</div>
+        <table class="fee-tbl">
+          <thead><tr><th>Description</th><th>Amount (USD)</th></tr></thead>
+          <tbody>
+            <tr><td>Tuition Fee</td><td>{{Tuition Fee}}</td></tr>
+            <tr><td>Uniform Fee</td><td>{{Uniform Fee}}</td></tr>
+            <tr><td>Meals</td><td>{{Meals}}</td></tr>
+            <tr><td>Books</td><td>{{Books}}</td></tr>
+            <tr><td>Other Charges</td><td>{{Other}}</td></tr>
+          </tbody>
+          <tfoot><tr><td>Total Due</td><td>{{Total Fee}}</td></tr></tfoot>
+        </table>
+
+        <div class="due-strip">
+          <div class="due-strip-icon">⏰</div>
+          <div class="due-strip-text">
+            <strong>Payment Due: {{Due Date}}</strong>
+            <span>Please complete payment before the due date to avoid late charges.</span>
+          </div>
+        </div>
+
+        <div class="status-box status-unpaid">
+          <div class="status-icon">⚠️</div>
+          <div class="status-info">
+            <strong>Payment Pending</strong>
+            <span>Invoice issued {{Invoice Date}} &nbsp;·&nbsp; {{Days Remaining}} days remaining</span>
+          </div>
+        </div>
+
+        <a href="#" class="cta cta-unpaid">💳 &nbsp; Pay Now via School Portal</a>
+
+        <p class="body-note">
+          Already paid? Please disregard this notice or contact us at <a href="#">{{School Email}}</a> with your payment reference.
+        </p>
+
+        <div class="divider"></div>
+        <p class="invoice-ref">Invoice ID: <strong>{{Invoice ID}}</strong> &nbsp;·&nbsp; S HUB School Management System</p>
+
+      </div>
+
+      <div class="email-footer">
+        <div class="footer-stripe"></div>
+        <div class="footer-logo-name">S <span>HUB</span></div>
+        <div class="footer-divider"></div>
+        <div class="footer-info">
+          {{School Name}} &nbsp;·&nbsp; {{School Address}}<br>
+          Tel: {{Phone}} &nbsp;·&nbsp; {{School Email}}
+        </div>
+        <div class="footer-links">
+          <a href="#">Privacy Policy</a>
+          <a href="#">Contact Us</a>
+          <a href="#">Unsubscribe</a>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<script>
+  function switchTab(type) {
+    document.querySelectorAll('.tpl').forEach(w => w.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('tpl-' + type).classList.add('active');
+    document.querySelector('.tab-btn.' + type).classList.add('active');
+  }
+</script>
+</body>
+</html>

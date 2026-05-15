@@ -14,6 +14,11 @@ class CreatePrincipalAction
         $data['role'] = UserRole::Principal->value;
         $data['institution_id'] = $institutionId;
 
+
+        $data['longitude'] = $data['longitude'] ?? null;
+        $data['latitude'] = $data['latitude'] ?? null;
+        $data['address'] = $data['address'] ?? null;
+
         return User::create($data);
     }
 }

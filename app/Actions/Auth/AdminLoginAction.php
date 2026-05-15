@@ -51,8 +51,11 @@ class AdminLoginAction
 
         $this->updateFcmToken($admin, $data['fcm_token'] ?? null);
         $token = $admin->createToken('admin_auth_token')->plainTextToken;
-        $admin->load(['institution']);
-        
+
+        if ($admin->role === AdminRole::Manager) {
+            $admin->load(['institutions']);
+        }
+
         return [
             'user' => new AdminResource($admin),
             'token' => $token,

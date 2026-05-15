@@ -24,9 +24,9 @@ class TeacherController extends Controller
         return $this->successResponse($teacher, 'Teacher retrieved successfully');
     }
 
-    public function update($id, ToggleUserStatusAction $action)
+    public function toggleBlock($id, ToggleUserStatusAction $action)
     {
         $teacher = $action->handle($id);
-        return $this->successResponse($teacher, 'Teacher updated successfully');
+        return $this->successResponse($teacher, 'Teacher status toggled successfully');
     }
 }

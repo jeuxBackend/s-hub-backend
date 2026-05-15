@@ -34,6 +34,10 @@ class User extends Authenticatable
         'profile_picture',
         'staff_number',
 
+        'address',
+        'latitude',
+        'longitude',
+
         'security_question',
         'answer_security_question',
 
@@ -63,6 +67,8 @@ class User extends Authenticatable
         'remember_token',
         'otp_code',
         'answer_security_question',
+        'fcm_token',
+        'device_id'
     ];
 
     // Attribute casting
@@ -81,21 +87,25 @@ class User extends Authenticatable
         ];
     }
 
-    // Appended accessors
-    protected $appends = [
-        'profile_picture_url',
-    ];
 
     /*
     |--------------------------------------------------------------------------
     | Accessors
     |--------------------------------------------------------------------------
     */
-    public function getProfilePictureUrlAttribute(): string
+    public function getProfilePictureAttribute($value): string
     {
-        return $this->profile_picture
-            ? asset(Storage::url($this->profile_picture))
-            : asset('defaults/user.png');
+        if (!$value) {
+            return asset('defaults/user.png');
+        }
+
+        // If already contains folder path
+        if (str_contains($value, '/')) {
+            return asset('storage/' . $value);
+        }
+
+        // Default folder
+        return asset('candidatefiles/' . $value);
     }
 
     public function getFullNameAttribute(): string

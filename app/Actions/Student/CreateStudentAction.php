@@ -20,20 +20,20 @@ class CreateStudentAction
 
             // Create student
             $student = Student::create([
-                'first_name'            => $data['first_name'],
-                'sur_name'              => $data['sur_name'],
-                'student_phone_number'  => $data['student_phone_number'] ?? null,
-                'term'                  => TermType::from($data['term']),
-                'classroom_id'          => $data['classroom_id'],
-                'gender'                => GenderType::from($data['gender']),
-                'age'                   => $data['age'] ?? null,
-                'religion'              => $data['religion'] ?? null,
-                'profile_picture'       => $data['profile_picture'] ?? null,
-                'guardian_id'           => $data['guardian_id'], // FK to users table
-                'address'               => $data['address'] ?? null,
-                'institution_id'        => auth()->user()->institution->id,
+                'first_name' => $data['first_name'],
+                'sur_name' => $data['sur_name'],
+                'student_phone_number' => $data['student_phone_number'] ?? null,
+                'term' => TermType::from($data['term']),
+                'classroom_id' => $data['classroom_id'],
+                'gender' => GenderType::from($data['gender']),
+                'age' => $data['age'] ?? null,
+                'religion' => $data['religion'] ?? null,
+                'profile_picture' => $data['profile_picture'] ?? null,
+                'guardian_id' => $data['guardian_id'], // FK to users table
+                'address' => $data['address'] ?? null,
+                'institution_id' => auth()->user()->institution->id,
                 'registration_number' => "student_" . time() . "_" . rand(1000, 9999), // Generate a unique registration number
-                'created_by'            => auth()->id(),
+                'created_by' => auth()->id(),
             ]);
 
             return $student;

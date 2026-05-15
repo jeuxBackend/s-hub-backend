@@ -17,13 +17,14 @@ class SchoolController extends Controller
         protected CreateSchoolAction $createSchoolAction,
         protected UpdateSchoolAction $updateSchoolAction,
         protected DeleteSchoolAction $deleteSchoolAction
-    ) {}
+    ) {
+    }
 
     public function index(Request $request)
     {
         $data = $request->all();
         $data['manager_id'] = auth()->id();
-        
+
         $schools = $this->getSchoolsAction->handle($data);
         return $this->successResponse($schools, 'Schools retrieved successfully');
     }
@@ -36,10 +37,15 @@ class SchoolController extends Controller
             'email' => 'required|email|unique:institutions,email',
             'phone_number' => 'required|string|unique:institutions,phone_number',
             'physical_address' => 'required|string',
+            'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
         $data['manager_id'] = auth()->id();
         $data['status'] = 'pending';
+
+        if ($request->hasFile('logo')) {
+            $data['logo'] = $this->handleFileUpload($request, 'logo', 'institutions/logos');
+        }
 
         $school = $this->createSchoolAction->handle($data);
         return $this->successResponse($school, 'School created successfully', 201);
@@ -63,10 +69,11 @@ class SchoolController extends Controller
             'email' => 'sometimes|email|unique:institutions,email,' . $id,
             'phone_number' => 'sometimes|string|unique:institutions,phone_number,' . $id,
             'physical_address' => 'sometimes|string',
+            'school_logo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
-        if (isset($data['status'])) {
-            unset($data['status']);
+        if ($request->hasFile('school_logo')) {
+            $data['school_logo'] = $this->handleFileUpload($request, 'school_logo', 'institutions/logos');
         }
 
         $school = $this->updateSchoolAction->handle($data, $id);

@@ -1,0 +1,29 @@
+
+   INFO  Running migrations.  
+
+  2026_05_14_052052_create_student_performances_table .......... 952.26ms FAIL
+
+   Illuminate\Database\QueryException 
+
+  SQLSTATE[HY000]: General error: 1824 Failed to open the referenced table 'terms' (Connection: mysql, Host: 127.0.0.1, Port: 3306, Database: S-Hub, SQL: alter table `student_performances` add constraint `student_performances_term_id_foreign` foreign key (`term_id`) references `terms` (`id`) on delete cascade)
+
+  at vendor/laravel/framework/src/Illuminate/Database/Connection.php:838
+    834▕             $exceptionType = $this->isUniqueConstraintError($e)
+    835▕                 ? UniqueConstraintViolationException::class
+    836▕                 : QueryException::class;
+    837▕ 
+  ➜ 838▕             throw new $exceptionType(
+    839▕                 $this->getNameWithReadWriteType(),
+    840▕                 $query,
+    841▕                 $this->prepareBindings($bindings),
+    842▕                 $e,
+
+      [2m+9 vendor frames [22m
+
+  10  database/migrations/2026_05_14_052052_create_student_performances_table.php:13
+      Illuminate\Support\Facades\Facade::__callStatic()
+      [2m+26 vendor frames [22m
+
+  37  artisan:16
+      Illuminate\Foundation\Application::handleCommand()
+

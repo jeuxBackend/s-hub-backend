@@ -38,10 +38,11 @@ class Institution extends Model
         'subjects' => 'array',
     ];
 
-    public function getLogoUrlAttribute(): ?string
+    public function getLogoAttribute($value): ?string
     {
-        return $this->logo ? asset('storage/' . $this->logo) : asset('defaults/user.png');
-        ;
+        return $value
+            ? asset('storage/' . $value)
+            : asset('defaults/user.png');
     }
 
     public function principal()

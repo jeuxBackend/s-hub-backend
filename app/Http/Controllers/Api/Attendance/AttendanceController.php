@@ -18,7 +18,7 @@ class AttendanceController extends Controller
     {
         $attendance = $action->execute($request->validated() + ['recorded_by' => auth()->id()]);
 
-        if (! $attendance) {
+        if (!$attendance) {
             return $this->errorResponse('Attendance record not found or unauthorized.', 404);
         }
 
@@ -36,7 +36,7 @@ class AttendanceController extends Controller
         $result = $action->handle($filters);
 
         // Case: single record for a student (non-paginated)
-        if (($filters['student_id'] ?? false) && ! $isPaginated) {
+        if (($filters['student_id'] ?? false) && !$isPaginated) {
             $attendance = $result->first();
 
             return $attendance

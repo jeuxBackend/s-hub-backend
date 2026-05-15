@@ -3,12 +3,12 @@
 namespace App\Models;
 
 use App\Traits\HasPermissions;
-use Illuminate\Database\Eloquent\Model;
+use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 
-class Admin extends Model
+class Admin extends Authenticatable
 {
     use HasApiTokens, Notifiable;
 
@@ -35,6 +35,7 @@ class Admin extends Model
     protected $casts = [
         'permissions' => 'array',
         'region' => 'array',
+        'role' => \App\Enums\AdminRole::class,
     ];
 
     public function getNameAttribute()

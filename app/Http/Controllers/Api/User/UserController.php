@@ -56,17 +56,15 @@ class UserController extends Controller
     public function update(UpdateUserRequest $request, User $user, UpdateUserAction $updateUser)
     {
         try {
-            $updated = $updateUser->handle($user->id, $request->validated(), auth()->user());
+
+            $data = $request->validated();
+            $updated = $updateUser->handle($user->id, $data, auth()->user());
             return $this->successResponse(
                 [
                     'user' => new UserResource($updated),
                 ],
                 'User updated successfully'
             );
-            // return $this->successResponse(
-
-            //     'User updated successfully'
-            // );
         } catch (Throwable $e) {
             return $this->exceptionResponse($e);
         }

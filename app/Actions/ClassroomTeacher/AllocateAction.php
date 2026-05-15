@@ -9,29 +9,32 @@ class AllocateAction
 {
     public function handle(array $data): bool
     {
-        $teacher = User::find($data['teacher_id']);
         $classroom = Classroom::find($data['classroom_id']);
-
-        if (!$teacher || !$classroom) {
+        if (!$classroom) {
             return false;
         }
 
-        // Check if already allocated
-        $alreadyAllocated = $teacher->classrooms()->where('classroom_id', $classroom->id)->exists();
+        $teacherIds = $data['teacher_ids'] ?? [$data['teacher_id']];
+        $success = false;
 
-        if ($alreadyAllocated) {
-            return false;
+        foreach ($teacherIds as $teacherId) {
+            $teacher = User::find($teacherId);
+            if (!$teacher) continue;
+
+            // Check if already allocated
+            $alreadyAllocated = $teacher->classrooms()->where('classroom_id', $classroom->id)->exists();
+
+            if (!$alreadyAllocated) {
+                $teacher->classrooms()->attach($classroom->id, [
+                    'assigned_by' => auth()->id(),
+                    'term'        => $data['term'] ?? null,
+                    'year'        => $data['year'] ?? date('Y'),
+                    'section'     => $data['section'] ?? null,
+                ]);
+                $success = true;
+            }
         }
 
-        $teacher->classrooms()->attach($classroom->id, [
-           
-            'assigned_by' => auth()->id(),
-            'term'        => $data['term'],
-            'year'        => $data['year'],
-            'section'     => $data['section'] ?? null,
-            'teacher_id'  => $data['teacher_id'],
-        ]);
-
-        return true;
+        return $success;
     }
 }

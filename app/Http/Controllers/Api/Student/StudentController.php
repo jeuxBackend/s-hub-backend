@@ -20,11 +20,11 @@ class StudentController extends Controller
 {
     public function index(FilterStudentRequest $request, ListStudentsAction $fetchAction)
     {
-       
+
         try {
-                // dd('here');
+            // dd('here');
             $students = $fetchAction->handle($request->validated());
-         
+
             return $this->paginatedResponse(
                 StudentResource::collection($students),
                 'Students fetched successfully'
@@ -48,27 +48,27 @@ class StudentController extends Controller
         }
     }
 
-public function update(UpdateStudentRequest $request, $id, UpdateStudentAction $updateAction)
-{
-    try {
-        $student = Student::findOrFail($id); // ✅ fetch student instance
+    public function update(UpdateStudentRequest $request, $id, UpdateStudentAction $updateAction)
+    {
+        try {
+            $student = Student::findOrFail($id); // ✅ fetch student instance
 
-        $updated = $updateAction->handle($request->validated(), $student); // ✅ correct order
+            $updated = $updateAction->handle($request->validated(), $student); // ✅ correct order
 
-        return $this->successResponse(
-            new StudentResource($updated),
-            'Student updated successfully'
-        );
-    } catch (Throwable $e) {
-        return $this->exceptionResponse($e);
+            return $this->successResponse(
+                new StudentResource($updated),
+                'Student updated successfully'
+            );
+        } catch (Throwable $e) {
+            return $this->exceptionResponse($e);
+        }
     }
-}
 
-public function destroy($id, DeleteStudentAction $deleteAction)
-{
-    try {
-        $student = Student::findOrFail($id);
-        $deleteAction->handle($student);
+    public function destroy($id, DeleteStudentAction $deleteAction)
+    {
+        try {
+            $student = Student::findOrFail($id);
+            $deleteAction->handle($student);
 
             return $this->successResponse(null, 'Student deleted successfully');
         } catch (Throwable $e) {

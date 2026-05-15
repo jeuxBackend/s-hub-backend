@@ -18,12 +18,16 @@ class UserResource extends JsonResource
             'phone_number' => $this->phone_number,
             'role' => $role->value,
             'role_label' => $role->name,
+            'address' => $this->address,
+            'longitude' => $this->longitude,
+            'latitude' => $this->latitude,
+            'country' => $this->country,
 
             'first_name' => $this->first_name,
             'sur_name' => $this->sur_name,
             'full_name' => trim("{$this->first_name} {$this->sur_name}"),
 
-            'profile_picture_url' => $this->profile_picture_url,
+            'profile_picture' => $this->profile_picture,
             'created_by' => $this->creator?->full_name,
             'notifications_enabled' => (bool) $this->notifications_enabled,
             'status' => $this->status,
@@ -36,6 +40,7 @@ class UserResource extends JsonResource
                 'title' => $this->title,
                 'position' => $this->position,
                 'staff_number' => $this->staff_number,
+                'address' => $this->address,
                 'institution' => $this->whenLoaded('institution', function () {
                         return new InstitutionResource($this->institution);
                     }),

@@ -14,11 +14,12 @@ class AllocateTeacherRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'teacher_id'   => 'required|exists:users,id',
+            'teacher_id'   => 'required_without:teacher_ids|exists:users,id',
+            'teacher_ids'  => 'required_without:teacher_id|array',
+            'teacher_ids.*'=> 'exists:users,id',
             'classroom_id' => 'required|exists:classrooms,id',
-            // 'assigned_by'  => 'required|exists:users,id',
-            'term'         => 'required|string|max:50',
-            'year'         => 'required|integer|min:2000|max:2100',
+            'term'         => 'nullable|string|max:50',
+            'year'         => 'nullable|integer|min:2000|max:2100',
             'section'      => 'nullable|string|max:50',
         ];
     }

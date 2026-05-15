@@ -6,7 +6,20 @@ use Illuminate\Database\Eloquent\Model;
 
 class Subject extends Model
 {
-    protected $fillable = ['name', 'code', 'classroom_id','institution_id'];
+    protected $fillable = [
+        'name', 
+        'code', 
+        'classroom_id',
+        'institution_id',
+        'teacher_id',
+        'start_time',
+        'end_time'
+    ];
+
+    public function teacher()
+    {
+        return $this->belongsTo(User::class, 'teacher_id');
+    }
 
     public function classroom()
     {

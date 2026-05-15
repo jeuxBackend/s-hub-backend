@@ -34,14 +34,20 @@ class Student extends Model
         'term' => \App\Enums\TermType::class,
     ];
 
-    protected $appends = ['profile_picture_url'];
-
     // ✅ Accessor
-    public function getProfilePictureUrlAttribute(): string
+    public function getProfilePictureAttribute($value): string
     {
-        return $this->profile_picture
-            ? Storage::url($this->profile_picture)
-            : asset('defaults/user.png');
+        if (!$value) {
+            return asset('defaults/user.png');
+        }
+
+        // If already contains folder path
+        if (str_contains($value, '/')) {
+            return asset('storage/' . $value);
+        }
+
+        // Default folder
+        return asset('candidatefiles/' . $value);
     }
 
     // 👥 Relationships

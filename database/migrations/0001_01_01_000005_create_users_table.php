@@ -32,8 +32,12 @@ return new class extends Migration {
             $table->string('title')->nullable();
             $table->string('position')->nullable();
             $table->string('country')->nullable();
+            $table->text('address')->nullable();
             $table->string('profile_picture')->nullable();
-            $table->string('staff_number')->nullable()->index(); // safer than unique
+            $table->string('staff_number')->nullable()->index();
+
+            $table->decimal('latitude', 10, 8)->nullable();
+            $table->decimal('longitude', 11, 8)->nullable();
 
             // Security
             $table->text('security_question')->nullable();

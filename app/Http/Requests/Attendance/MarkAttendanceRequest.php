@@ -22,12 +22,11 @@ class MarkAttendanceRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //
             'classroom_id' => ['required', 'exists:classrooms,id'],
-            'student_id'  => ['required', 'exists:students,id'],
-            'date'        => ['required', 'date'],
-            'status'      => ['required', 'in:present,absent,leave'],
-            'remarks'     => ['nullable', 'string'],
+            'student_id' => ['required', 'exists:students,id'],
+            'date' => ['required', 'date'],
+            'status' => ['required', 'in:present,absent,leave'],
+            'remarks' => ['nullable', 'string'],
         ];
     }
 }

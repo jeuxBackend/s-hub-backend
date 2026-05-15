@@ -10,7 +10,13 @@ class Classroom extends Model
         'name',
         'code',
         'institution_id',
+        'in_charge_id',
     ];
+
+    public function inCharge()
+    {
+        return $this->belongsTo(User::class, 'in_charge_id');
+    }
 
     public function institution()
     {

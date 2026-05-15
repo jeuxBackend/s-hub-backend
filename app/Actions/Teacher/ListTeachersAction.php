@@ -18,14 +18,17 @@ class ListTeachersAction
 
         $query = User::query()
             ->where('role', 'teacher')
-            ->where('created_by', $requester->id);
+            ->where('institution_id', $requester->institution_id);
 
         return $query
-            ->when($request->filled('name'), fn ($q) =>
-                $q->where('name', 'like', '%' . $request->name . '%')
-            )
+            ->when($request->filled('name'), function ($q) use ($request) {
+                $q->where(function ($sub) use ($request) {
+                    $sub->where('first_name', 'like', '%' . $request->name . '%')
+                        ->orWhere('sur_name', 'like', '%' . $request->name . '%');
+                });
+            })
             ->when($request->filled('phone'), fn ($q) =>
-                $q->where('phone', 'like', '%' . $request->phone . '%')
+                $q->where('phone_number', 'like', '%' . $request->phone . '%')
             )
             ->when($request->filled('email'), fn ($q) =>
                 $q->where('email', 'like', '%' . $request->email . '%')
