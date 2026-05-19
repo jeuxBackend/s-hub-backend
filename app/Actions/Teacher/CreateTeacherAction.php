@@ -5,6 +5,7 @@ namespace App\Actions\Teacher;
 use App\Models\User;
 use App\Enums\UserRole;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 
 class CreateTeacherAction
 {
@@ -20,8 +21,11 @@ class CreateTeacherAction
         $data['address'] = $data['address'] ?? null;
         $data['country'] = $data['country'] ?? null;
         $data['title'] = $data['title'] ?? null;
-        $data['position'] = $data['position'] ?? null;
-        $data['staff_number'] = $data['staff_number'] ?? null;
+
+
+        Log::info('data: ', [$data]);
+        // $data['position'] = $data['position'] ;
+        // $data['staff_number'] = $data['staff_number'];
 
         if (isset($data['profile_picture']) && $data['profile_picture'] instanceof \Illuminate\Http\UploadedFile) {
             $data['profile_picture'] = $data['profile_picture']->store('profile_pictures', 'public');

@@ -11,52 +11,59 @@ class StudentFee extends Model
 
     protected $fillable = [
         'student_id',
-        'term',
+        'class_id',
         'tuition_fee',
         'uniform_fee',
         'meals_fee',
         'books_fee',
         'other_fee',
         'paid_amount',
+        'total_amount',
         'due_date',
         'paid_date',
+        'payment_month',
         'status',
     ];
-protected static function booted()
-{
-    static::saving(function ($fee) {
-        $total = (
-            ($fee->tuition_fee ?? 0) +
-            ($fee->uniform_fee ?? 0) +
-            ($fee->meals_fee ?? 0) +
-            ($fee->books_fee ?? 0) +
-            ($fee->other_fee ?? 0));
+    protected static function booted()
+    {
+        static::saving(function ($fee) {
+            $total = (
+                ($fee->tuition_fee ?? 0) +
+                ($fee->uniform_fee ?? 0) +
+                ($fee->meals_fee ?? 0) +
+                ($fee->books_fee ?? 0) +
+                ($fee->other_fee ?? 0));
 
-        if ($fee->paid_amount >= $total) {
-            $fee->status = 'paid';
-        } elseif ($fee->paid_amount > 0) {
-            $fee->status = 'partial';
-        } else {
-            $fee->status = 'unpaid';
-        }
-    });
-}
+            if ($fee->paid_amount >= $total) {
+                $fee->status = 'paid';
+            } elseif ($fee->paid_amount > 0) {
+                $fee->status = 'partial';
+            } else {
+                $fee->status = 'unpaid';
+            }
+        });
+    }
 
     protected $casts = [
         'tuition_fee' => 'float',
         'uniform_fee' => 'float',
-        'meals_fee'   => 'float',
-        'books_fee'   => 'float',
-        'other_fee'   => 'float',
+        'meals_fee' => 'float',
+        'books_fee' => 'float',
+        'other_fee' => 'float',
         'paid_amount' => 'float',
-        'due_date'    => 'date',
-        'paid_date'   => 'date',
+        'due_date' => 'date',
+        'paid_date' => 'date',
     ];
 
     // 🔁 Relationships
     public function student()
     {
         return $this->belongsTo(Student::class);
+    }
+
+    public function classroom()
+    {
+        return $this->belongsTo(Classroom::class, 'class_id');
     }
 
     // 🧮 Accessors

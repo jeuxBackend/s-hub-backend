@@ -37,15 +37,15 @@ trait ResponsesTrait
         return $this->errorResponse($message, 422, $errors);
     }
 
-    protected function paginatedResponse(ResourceCollection $resource, string $message = 'Success', int $code = 200): JsonResponse
+    protected function paginatedResponse(ResourceCollection $resource, string $message = 'Success', int $code = 200, array $extraMeta = []): JsonResponse
     {
         return response()->json([
             'success' => true,
             'message' => $message,
             'data' => $resource,
-            'meta' => [
+            'meta' => array_merge([
                 'pagination' => $this->getPaginationMeta($resource->resource)
-            ],
+            ], $extraMeta),
         ], $code);
     }
 

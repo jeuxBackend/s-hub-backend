@@ -13,6 +13,8 @@ return new class extends Migration {
 
             $table->string('name');
             $table->string('code')->nullable();
+            
+            $table->foreignId('in_charge_id')->nullable()->constrained('users')->onDelete('set null');
 
             $table->timestamps();
 

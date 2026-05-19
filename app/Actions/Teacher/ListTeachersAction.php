@@ -17,7 +17,7 @@ class ListTeachersAction
         // }
 
         $query = User::query()
-            ->where('role', 'teacher')
+            ->whereIn('role', ['teacher', 'school-admin'])
             ->where('institution_id', $requester->institution_id);
 
         return $query
@@ -27,10 +27,14 @@ class ListTeachersAction
                         ->orWhere('sur_name', 'like', '%' . $request->name . '%');
                 });
             })
-            ->when($request->filled('phone'), fn ($q) =>
+            ->when(
+                $request->filled('phone'),
+                fn($q) =>
                 $q->where('phone_number', 'like', '%' . $request->phone . '%')
             )
-            ->when($request->filled('email'), fn ($q) =>
+            ->when(
+                $request->filled('email'),
+                fn($q) =>
                 $q->where('email', 'like', '%' . $request->email . '%')
             )
             ->latest()

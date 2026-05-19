@@ -32,7 +32,6 @@ class UserResource extends JsonResource
             'notifications_enabled' => (bool) $this->notifications_enabled,
             'status' => $this->status,
             'fcm_token' => $this->fcm_token,
-            'permissions' => $this->permissions ?? [],
         ];
 
         $roleFields = match ($role) {
@@ -41,6 +40,7 @@ class UserResource extends JsonResource
                 'position' => $this->position,
                 'staff_number' => $this->staff_number,
                 'address' => $this->address,
+                'permissions' => $this->permissions ?? [],
                 'institution' => $this->whenLoaded('institution', function () {
                         return new InstitutionResource($this->institution);
                     }),
@@ -49,6 +49,7 @@ class UserResource extends JsonResource
             UserRole::SchoolAdmin => [
                 'staff_number' => $this->staff_number,
                 'position' => $this->position,
+                'permissions' => $this->permissions ?? [],
 
                 'institution' => $this->when(
                     $this->relationLoaded('creator') && $this->creator?->relationLoaded('institution'),
@@ -59,6 +60,7 @@ class UserResource extends JsonResource
             UserRole::Teacher => [
                 'staff_number' => $this->staff_number,
                 'position' => $this->position,
+                'permissions' => $this->permissions ?? [],
             ],
 
             UserRole::Parent => [

@@ -22,6 +22,9 @@ class SubjectResource extends JsonResource
             'classroom'    => $this->whenLoaded('classroom', function () {
                 return new ClassroomResource($this->classroom);
             }),
+            'teacher'      => new UserResource($this->whenLoaded('teacher')),
+            'start_time'   => $this->start_time ? date('h:i a', strtotime($this->start_time)) : null,
+            'end_time'     => $this->end_time ? date('h:i a', strtotime($this->end_time)) : null,
             'created_at'   => $this->created_at?->toDateTimeString(),
         ];
     }

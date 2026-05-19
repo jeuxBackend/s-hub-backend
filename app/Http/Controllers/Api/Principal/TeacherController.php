@@ -71,7 +71,8 @@ class TeacherController extends Controller
             'phone_number' => 'sometimes|string|unique:users,phone_number,' . $id,
             'password' => 'sometimes|string|min:8',
             'profile_picture' => 'nullable|image|max:2048',
-            'staff_number' => 'nullable'
+            'position' => 'nullable|string|max:255',
+            'staff_number' => 'nullable',
         ]);
 
         try {

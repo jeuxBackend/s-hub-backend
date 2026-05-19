@@ -13,20 +13,20 @@ class CreateClassroomAction
     {
         return DB::transaction(function () use ($data, $creator) {
             $classroom = Classroom::create([
-                'name'           => $data['name'],
-                'code'           => $data['code'] ?? null,
-                'in_charge_id'   => $data['in_charge_id'] ?? null,
+                'name' => $data['name'],
+                'code' => $data['code'] ?? null,
+                'in_charge_id' => $data['in_charge_id'] ?? null,
                 'institution_id' => $creator->institution->id,
             ]);
 
             if (!empty($data['subjects'])) {
                 foreach ($data['subjects'] as $subjectData) {
                     $classroom->subjects()->create([
-                        'name'           => $subjectData['name'],
+                        'name' => $subjectData['name'],
                         'institution_id' => $creator->institution->id,
-                        'teacher_id'     => $subjectData['teacher_id'] ?? null,
-                        'start_time'     => $subjectData['start_time'] ?? null,
-                        'end_time'       => $subjectData['end_time'] ?? null,
+                        'teacher_id' => $subjectData['teacher_id'] ?? null,
+                        'start_time' => $subjectData['start_time'] ?? null,
+                        'end_time' => $subjectData['end_time'] ?? null,
                     ]);
                 }
             }

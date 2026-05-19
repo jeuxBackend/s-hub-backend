@@ -81,7 +81,7 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'otp_code' => 'hashed',
             'password' => 'hashed',
-            'permissions' => 'array',
+            'permissions' => 'json',
             'role' => UserRole::class,
             'guardian_type' => GuardianType::class,
         ];

@@ -34,6 +34,13 @@ class GuardianController extends Controller
             'phone_number' => 'required|string|unique:users,phone_number',
             'password' => 'nullable|string|min:8',
             'profile_picture' => 'nullable|image|max:2048',
+            'guardian_type' => 'required|string|in:mother,father,guardian',
+            'guardian_name' => 'nullable|string|max:255',
+            'guardian_relation' => 'nullable|string|max:255',
+            'guardian_phone_number' => 'nullable|string|unique:users,phone_number',
+            'alternative_guardian_phone_number' => 'nullable',
+            'alternative_email' => 'nullable|email|unique:users,email',
+            'address' => 'nullable|string|max:255',
         ]);
 
         try {
@@ -70,6 +77,12 @@ class GuardianController extends Controller
             'phone_number' => 'sometimes|string|unique:users,phone_number,' . $id,
             'password' => 'sometimes|string|min:8',
             'profile_picture' => 'nullable|image|max:2048',
+            'guardian_name' => 'sometimes|string|max:255',
+            'guardian_relation' => 'sometimes|string|max:255',
+            'guardian_phone_number' => 'sometimes|string|unique:users,phone_number,' . $id,
+            'alternative_guardian_phone_number' => 'sometimes',
+            'alternative_email' => 'sometimes|email|unique:users,email,' . $id,
+            'address' => 'sometimes|string|max:255',
         ]);
 
         try {

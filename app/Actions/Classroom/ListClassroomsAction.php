@@ -2,24 +2,25 @@
 
 namespace App\Actions\Classroom;
 
+use App\Enums\AdminRole;
 use App\Models\Classroom;
 use App\Models\User;
 use App\Models\StudentAttendance;
 use Illuminate\Support\Carbon;
-use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Database\Eloquent\Collection;
 use App\Enums\UserRole;
 
 class ListClassroomsAction
 {
-    public function handle(User $requester): LengthAwarePaginator
+    public function handle(User $requester): Collection
     {
-        $withRelations = ['subjects', 'teachers', 'students.todayAttendance'];
+        $withRelations = ['inCharge', 'subjects.teacher', 'teachers', 'students.todayAttendance'];
 
-        if ($requester->isRole(UserRole::Admin)) {
+        if ($requester->role == AdminRole::Admin->value) {
             return Classroom::query()
                 ->with($withRelations)
                 ->latest()
-                ->paginate(10);
+                ->get();
         }
 
         if ($requester->isRole(UserRole::Principal)) {
@@ -27,22 +28,22 @@ class ListClassroomsAction
                 ->where('institution_id', $requester->institution->id)
                 ->with($withRelations)
                 ->latest()
-                ->paginate(10);
+                ->get();
         }
 
         if ($requester->isRole(UserRole::Teacher)) {
             $classrooms = Classroom::query()
-                ->whereHas('teachers', fn ($q) => $q->where('users.id', $requester->id))
+                ->whereHas('teachers', fn($q) => $q->where('users.id', $requester->id))
                 ->with($withRelations)
                 ->latest()
-                ->paginate(10);
+                ->get();
 
             $this->createMissingAttendanceForToday($requester, $classrooms);
             $classrooms = Classroom::query()
-                ->whereHas('teachers', fn ($q) => $q->where('users.id', $requester->id))
+                ->whereHas('teachers', fn($q) => $q->where('users.id', $requester->id))
                 ->with($withRelations)
                 ->latest()
-                ->paginate(10);
+                ->get();
             return $classrooms;
         }
 
@@ -54,19 +55,19 @@ class ListClassroomsAction
                     ->where('institution_id', $institutionId)
                     ->with($withRelations)
                     ->latest()
-                    ->paginate(10)
-                : Classroom::query()->whereRaw('0=1')->paginate(10);
+                    ->get()
+                : Classroom::query()->whereRaw('0=1')->get();
         }
 
         if ($requester->isRole(UserRole::Parent)) {
             return Classroom::query()
-                ->whereHas('students', fn ($q) => $q->where('guardian_id', $requester->id))
+                ->whereHas('students', fn($q) => $q->where('guardian_id', $requester->id))
                 ->with($withRelations)
                 ->latest()
-                ->paginate(10);
+                ->get();
         }
 
-        return Classroom::query()->whereRaw('0=1')->paginate(10);
+        return Classroom::query()->whereRaw('0=1')->get();
     }
 
     protected function createMissingAttendanceForToday(User $teacher, $classrooms): void
@@ -90,14 +91,14 @@ class ListClassroomsAction
             $missing = $studentIds->diff($alreadyMarked);
 
             if ($missing->isNotEmpty()) {
-                $records = $missing->map(fn ($studentId) => [
-                    'student_id'   => $studentId,
+                $records = $missing->map(fn($studentId) => [
+                    'student_id' => $studentId,
                     'classroom_id' => $classroom->id,
-                    'date'         => $today,
-                    'status'       => null,
-                    'recorded_by'  => $teacher->id,
-                    'created_at'   => now(),
-                    'updated_at'   => now(),
+                    'date' => $today,
+                    'status' => null,
+                    'recorded_by' => $teacher->id,
+                    'created_at' => now(),
+                    'updated_at' => now(),
                 ]);
 
                 StudentAttendance::insert($records->toArray());

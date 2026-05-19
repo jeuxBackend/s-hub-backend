@@ -14,16 +14,17 @@ class AssignFeeRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'student_id'   => ['required', 'exists:students,id'],
-            'term'         => ['required', 'string'],
-            'tuition_fee'  => ['nullable', 'numeric'],
-            'uniform_fee'  => ['nullable', 'numeric'],
-            'meals_fee'    => ['nullable', 'numeric'],
-            'books_fee'    => ['nullable', 'numeric'],
-            'other_fee'    => ['nullable', 'numeric'],
-            'paid_amount'  => ['nullable', 'numeric'],
-            'due_date'     => ['nullable', 'date'],
-            'status'       => ['nullable', 'in:paid,unpaid,partial'],
+            'student_id' => ['required', 'exists:students,id'],
+            'term' => ['required', 'exists:classrooms,id'],
+            'tuition_fee' => ['nullable', 'numeric'],
+            'uniform_fee' => ['nullable', 'numeric'],
+            'meals_fee' => ['nullable', 'numeric'],
+            'books_fee' => ['nullable', 'numeric'],
+            'other_fee' => ['nullable', 'numeric'],
+            'paid_amount' => ['nullable', 'numeric'],
+            'due_date' => ['nullable', 'date'],
+            'paid_date' => ['nullable'],
+            'status' => ['nullable', 'in:paid,unpaid,partial'],
         ];
     }
 }

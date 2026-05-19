@@ -18,16 +18,31 @@ class StudentFeeResource extends JsonResource
          return [
             'id'           => $this->id,
             'student_id'   => $this->student_id,
-            // 'term'         => $this->term->value,
+            'student'      => $this->whenLoaded('student', function () {
+                return [
+                    'id' => $this->student->id,
+                    'name' => trim($this->student->first_name . ' ' . $this->student->sur_name),
+                    'profile_picture' => $this->student->profile_picture,
+                    'registration_number' => $this->student->registration_number,
+                ];
+            }),
+            'classroom'    => $this->whenLoaded('classroom', function () {
+                return [
+                    'id' => $this->classroom->id,
+                    'name' => $this->classroom->name,
+                ];
+            }),
+            // Map DB columns to old API keys
             'tuition_fee'  => $this->tuition_fee,
             'uniform_fee'  => $this->uniform_fee,
-            'meals'        => $this->meals,
-            'books'        => $this->books,
-            'others'       => $this->others,
-            'paid'         => $this->paid,
+            'meals'        => $this->meals_fee,
+            'books'        => $this->books_fee,
+            'others'       => $this->other_fee,
+            'paid'         => $this->paid_amount,
+            'total_amount' => $this->total_amount,
             'due_date'     => $this->due_date?->toDateString(),
-          'term' => $this->term instanceof \App\Enums\TermType ? $this->term->value : $this->term,
-    'status' => $this->status instanceof \App\Enums\PaymentStatusType ? $this->status->value : $this->status,
+            'term'         => $this->class_id, // Mapping the new 'class_id' back to 'term' for the API
+            'status'       => $this->status instanceof \App\Enums\PaymentStatusType ? $this->status->value : $this->status,
         ];
     }
 }

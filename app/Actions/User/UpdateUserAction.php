@@ -5,10 +5,11 @@ namespace App\Actions\User;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Log;
 
 class UpdateUserAction
 {
-    public function handle(int $id, array $data, User $requester): User
+    public function handle(int $id, $data, User $requester): User
     {
         $user = User::findOrFail($id);
 
@@ -21,11 +22,14 @@ class UpdateUserAction
         } else {
             unset($data['password']);
         }
-        // $data['address'] = $data['address'] ?? $user->address;
+
+
+        Log::info($data);
+
+        $data['guardian_name'] = $data['first_name'] ?? $user->guardian_name;
 
         $user->fill($data);
 
-        // dd($data);
         $user->save();
 
         return $user->refresh();

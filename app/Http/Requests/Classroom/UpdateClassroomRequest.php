@@ -16,6 +16,13 @@ class UpdateClassroomRequest extends FormRequest
         return [
             'name' => ['sometimes', 'string', 'max:100'],
             'code' => ['nullable', 'string', 'max:50', 'unique:classrooms,code,' . $this->classroom->id],
+            'in_charge_id' => ['nullable', 'exists:users,id'],
+            'subjects' => ['nullable', 'array'],
+            'subjects.*.id' => ['nullable', 'exists:subjects,id'],
+            'subjects.*.name' => ['required_with:subjects', 'string', 'max:100'],
+            'subjects.*.teacher_id' => ['nullable', 'exists:users,id'],
+            'subjects.*.start_time' => ['nullable', 'string'],
+            'subjects.*.end_time' => ['nullable', 'string'],
         ];
     }
 }

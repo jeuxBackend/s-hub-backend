@@ -10,7 +10,7 @@ class GetClassroomAction
     {
         return Classroom::query()
             ->where('institution_id', $requester->institution->id)
-            ->with(['subjects']) // eager load relationships, e.g. subjects
+            ->with(['inCharge', 'subjects.teacher', 'teachers', 'students'])
             ->findOrFail($id);
     }
 }

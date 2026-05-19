@@ -18,9 +18,13 @@ return new class extends Migration {
             $table->enum('type', ['theory', 'practical'])->default('theory');
             $table->boolean('status')->default(true);
 
+            $table->foreignId('teacher_id')->nullable()->constrained('users')->onDelete('set null');
+            $table->time('start_time')->nullable();
+            $table->time('end_time')->nullable();
+
             $table->timestamps();
 
-            $table->unique(['classroom_id', 'name']); // Optional composite uniqueness
+            $table->unique(['classroom_id', 'name']); 
         });
     }
 
