@@ -8,19 +8,18 @@ class MarkAttendanceAction
 {
     public function execute(array $data): ?StudentAttendance
     {
-        $attendance = StudentAttendance::where('student_id', $data['student_id'])
-            ->whereDate('date', $data['date'])
-            ->first();
-
-        if (! $attendance) {
-            // Optional: throw exception or return null
-            return null;
-        }
+        // Find or create the attendance record for the student on the specified date
+        $attendance = StudentAttendance::firstOrCreate([
+            'student_id'   => $data['student_id'],
+            'date'         => $data['date'],
+        ], [
+            'classroom_id' => $data['classroom_id'],
+        ]);
 
         $attendance->update([
-            'status'     => $data['status'],
-            'recorded_by'  => auth()->id(),
-            'remarks'    => $data['remarks'] ?? null,
+            'status'      => $data['status'],
+            'recorded_by' => auth()->id(),
+            'remarks'     => $data['remarks'] ?? null,
         ]);
 
         return $attendance;

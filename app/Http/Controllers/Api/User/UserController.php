@@ -70,6 +70,23 @@ class UserController extends Controller
         }
     }
 
+    public function updateProfile(UpdateUserRequest $request, UpdateUserAction $updateUser)
+    {
+        try {
+
+            $data = $request->validated();
+            $updated = $updateUser->handle(auth()->user()->id, $data, auth()->user());
+            return $this->successResponse(
+                [
+                    'user' => new UserResource($updated),
+                ],
+                'Profile updated successfully'
+            );
+        } catch (Throwable $e) {
+            return $this->exceptionResponse($e);
+        }
+    }
+
     public function destroy(User $user, DeleteAccountAction $deleteAccount)
     {
         try {

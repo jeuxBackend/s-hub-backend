@@ -1,0 +1,207 @@
+{
+  "info": {
+    "name": "S-Hub Chat API",
+    "_postman_id": "shub-chat-collection",
+    "description": "Real-time chat API for S-Hub. All requests require Bearer token from login.\n\nBase URL: http://192.168.101.117:8000/api/v1",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url",  "value": "http://192.168.101.117:8000/api/v1" },
+    { "key": "token",     "value": "PASTE_YOUR_BEARER_TOKEN_HERE" },
+    { "key": "conv_id",   "value": "1" }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }]
+  },
+  "item": [
+    {
+      "name": "1. Get Chat Contacts",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Accept",        "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{token}}" }
+        ],
+        "url": {
+          "raw": "{{base_url}}/chat/users",
+          "host":  ["{{base_url}}"],
+          "path":  ["chat", "users"]
+        },
+        "description": "Returns the list of users the authenticated user is allowed to chat with.\n\n- Parent → child's teachers + principal\n- Teacher → all teachers + principal + parents of their students\n- Principal / School Admin → all teachers + all parents"
+      },
+      "response": [
+        {
+          "name": "200 OK — Teacher contacts",
+          "status": "OK",
+          "code": 200,
+          "body": "{\n  \"success\": true,\n  \"message\": \"Chat contacts retrieved successfully\",\n  \"data\": [\n    {\n      \"id\": 5,\n      \"full_name\": \"Sara Ahmed\",\n      \"role\": \"principal\",\n      \"position\": \"Head of School\",\n      \"profile_picture\": \"http://192.168.101.117:8000/candidatefiles/pic.jpg\"\n    },\n    {\n      \"id\": 8,\n      \"full_name\": \"Ali Hassan\",\n      \"role\": \"teacher\",\n      \"position\": \"Maths Teacher\",\n      \"profile_picture\": \"http://192.168.101.117:8000/defaults/user.png\"\n    }\n  ]\n}"
+        }
+      ]
+    },
+    {
+      "name": "2. Start / Find Conversation",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Accept",        "value": "application/json" },
+          { "key": "Content-Type",  "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{token}}" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"recipient_id\": 8\n}",
+          "options": { "raw": { "language": "json" } }
+        },
+        "url": {
+          "raw": "{{base_url}}/chat/conversations",
+          "host":  ["{{base_url}}"],
+          "path":  ["chat", "conversations"]
+        },
+        "description": "Creates a new conversation with the given user, or returns the existing one if it already exists. Safe to call multiple times — idempotent."
+      },
+      "response": [
+        {
+          "name": "200 OK — Conversation found or created",
+          "status": "OK",
+          "code": 200,
+          "body": "{\n  \"success\": true,\n  \"message\": \"Conversation ready\",\n  \"data\": {\n    \"id\": 3,\n    \"participant\": {\n      \"id\": 8,\n      \"full_name\": \"Ali Hassan\",\n      \"role\": \"teacher\",\n      \"position\": \"Maths Teacher\",\n      \"profile_picture\": \"http://192.168.101.117:8000/defaults/user.png\"\n    },\n    \"last_message\": null,\n    \"unread_count\": 0,\n    \"last_message_at\": null\n  }\n}"
+        }
+      ]
+    },
+    {
+      "name": "3. Get Inbox (All Conversations)",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Accept",        "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{token}}" }
+        ],
+        "url": {
+          "raw": "{{base_url}}/chat/conversations",
+          "host":  ["{{base_url}}"],
+          "path":  ["chat", "conversations"]
+        },
+        "description": "Returns all conversations for the authenticated user, sorted by most recent message. Includes last message preview and unread count per conversation."
+      },
+      "response": [
+        {
+          "name": "200 OK — Inbox",
+          "status": "OK",
+          "code": 200,
+          "body": "{\n  \"success\": true,\n  \"message\": \"Conversations retrieved successfully\",\n  \"data\": [\n    {\n      \"id\": 3,\n      \"participant\": {\n        \"id\": 8,\n        \"full_name\": \"Ali Hassan\",\n        \"role\": \"teacher\",\n        \"position\": \"Maths Teacher\",\n        \"profile_picture\": \"http://192.168.101.117:8000/defaults/user.png\"\n      },\n      \"last_message\": {\n        \"body\": \"See you in the meeting!\",\n        \"attachment_type\": null,\n        \"is_mine\": false,\n        \"created_at\": \"2026-05-19T10:00:00.000000Z\"\n      },\n      \"unread_count\": 2,\n      \"last_message_at\": \"2026-05-19T10:00:00.000000Z\"\n    }\n  ]\n}"
+        }
+      ]
+    },
+    {
+      "name": "4. Open Conversation (Get Messages)",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Accept",        "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{token}}" }
+        ],
+        "url": {
+          "raw": "{{base_url}}/chat/conversations/{{conv_id}}?page=1",
+          "host":  ["{{base_url}}"],
+          "path":  ["chat", "conversations", "{{conv_id}}"],
+          "query": [{ "key": "page", "value": "1" }]
+        },
+        "description": "Opens a conversation and returns paginated messages (20 per page, newest first). Also automatically marks all unread messages from the other person as read."
+      },
+      "response": [
+        {
+          "name": "200 OK — Messages",
+          "status": "OK",
+          "code": 200,
+          "body": "{\n  \"success\": true,\n  \"message\": \"Messages retrieved successfully\",\n  \"data\": {\n    \"conversation\": {\n      \"id\": 3,\n      \"participant\": { \"id\": 8, \"full_name\": \"Ali Hassan\", \"role\": \"teacher\", \"position\": \"Maths Teacher\", \"profile_picture\": \"...\" },\n      \"last_message\": { \"body\": \"See you!\", \"is_mine\": false, \"created_at\": \"...\" },\n      \"unread_count\": 0,\n      \"last_message_at\": \"2026-05-19T10:00:00.000000Z\"\n    },\n    \"messages\": [\n      {\n        \"id\": 12,\n        \"conversation_id\": 3,\n        \"body\": \"See you in the meeting!\",\n        \"attachment\": null,\n        \"attachment_type\": null,\n        \"is_mine\": false,\n        \"read_at\": \"2026-05-19T10:05:00.000000Z\",\n        \"sender\": { \"id\": 8, \"full_name\": \"Ali Hassan\", \"profile_picture\": \"...\" },\n        \"created_at\": \"2026-05-19T10:00:00.000000Z\"\n      },\n      {\n        \"id\": 11,\n        \"conversation_id\": 3,\n        \"body\": \"Hello!\",\n        \"attachment\": null,\n        \"attachment_type\": null,\n        \"is_mine\": true,\n        \"read_at\": \"2026-05-19T09:55:00.000000Z\",\n        \"sender\": { \"id\": 3, \"full_name\": \"Ahmed Ali\", \"profile_picture\": \"...\" },\n        \"created_at\": \"2026-05-19T09:50:00.000000Z\"\n      }\n    ],\n    \"pagination\": {\n      \"total\": 2,\n      \"per_page\": 20,\n      \"current_page\": 1,\n      \"last_page\": 1\n    }\n  }\n}"
+        }
+      ]
+    },
+    {
+      "name": "5. Send Text Message",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Accept",        "value": "application/json" },
+          { "key": "Content-Type",  "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{token}}" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"body\": \"Hello! When is the next parent-teacher meeting?\"\n}",
+          "options": { "raw": { "language": "json" } }
+        },
+        "url": {
+          "raw": "{{base_url}}/chat/conversations/{{conv_id}}/messages",
+          "host":  ["{{base_url}}"],
+          "path":  ["chat", "conversations", "{{conv_id}}", "messages"]
+        },
+        "description": "Sends a text message. After saving to DB, fires a Reverb broadcast event to the private channel `chat.{conv_id}` so the recipient receives it in real-time."
+      },
+      "response": [
+        {
+          "name": "201 Created — Message sent",
+          "status": "Created",
+          "code": 201,
+          "body": "{\n  \"success\": true,\n  \"message\": \"Message sent successfully\",\n  \"data\": {\n    \"id\": 13,\n    \"conversation_id\": 3,\n    \"body\": \"Hello! When is the next parent-teacher meeting?\",\n    \"attachment\": null,\n    \"attachment_type\": null,\n    \"is_mine\": true,\n    \"read_at\": null,\n    \"sender\": { \"id\": 3, \"full_name\": \"Ahmed Ali\", \"profile_picture\": \"...\" },\n    \"created_at\": \"2026-05-19T10:47:00.000000Z\"\n  }\n}"
+        }
+      ]
+    },
+    {
+      "name": "6. Send Message With Attachment",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Accept",        "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{token}}" }
+        ],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            { "key": "body",       "value": "Please check this file",       "type": "text" },
+            { "key": "attachment", "src":   "/path/to/your/file.pdf",        "type": "file" }
+          ]
+        },
+        "url": {
+          "raw": "{{base_url}}/chat/conversations/{{conv_id}}/messages",
+          "host":  ["{{base_url}}"],
+          "path":  ["chat", "conversations", "{{conv_id}}", "messages"]
+        },
+        "description": "Send a message with a file or image attachment (up to 20MB). Use multipart/form-data. Supported: jpg, png, gif, webp, pdf, doc, docx, xls, xlsx. The `body` field is optional — you can send a file without any text."
+      },
+      "response": [
+        {
+          "name": "201 Created — Message with attachment",
+          "status": "Created",
+          "code": 201,
+          "body": "{\n  \"success\": true,\n  \"message\": \"Message sent successfully\",\n  \"data\": {\n    \"id\": 14,\n    \"conversation_id\": 3,\n    \"body\": \"Please check this file\",\n    \"attachment\": \"http://192.168.101.117:8000/storage/chat/attachments/file.pdf\",\n    \"attachment_type\": \"file\",\n    \"is_mine\": true,\n    \"read_at\": null,\n    \"sender\": { \"id\": 3, \"full_name\": \"Ahmed Ali\", \"profile_picture\": \"...\" },\n    \"created_at\": \"2026-05-19T10:48:00.000000Z\"\n  }\n}"
+        }
+      ]
+    },
+    {
+      "name": "7. Mark Conversation as Read",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          { "key": "Accept",        "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{token}}" }
+        ],
+        "url": {
+          "raw": "{{base_url}}/chat/conversations/{{conv_id}}/read",
+          "host":  ["{{base_url}}"],
+          "path":  ["chat", "conversations", "{{conv_id}}", "read"]
+        },
+        "description": "Marks all unread messages from the OTHER participant in this conversation as read (sets read_at = now). Call this when the user opens a conversation."
+      },
+      "response": [
+        {
+          "name": "200 OK — Marked read",
+          "status": "OK",
+          "code": 200,
+          "body": "{\n  \"success\": true,\n  \"message\": \"Messages marked as read\",\n  \"data\": {\n    \"marked_read\": 2\n  }\n}"
+        }
+      ]
+    }
+  ]
+}

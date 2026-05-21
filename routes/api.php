@@ -15,6 +15,7 @@ use App\Http\Controllers\Api\Manager\StudentController as ManagerStudentControll
 use App\Http\Controllers\Api\Manager\ManagerDashboardController;
 use App\Http\Controllers\Api\Notifications\NotificationsController;
 use App\Http\Controllers\Auth\AdminLoginController;
+use Illuminate\Support\Facades\Broadcast;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Cache\RateLimiting\Limit;
@@ -43,6 +44,9 @@ use App\Http\Controllers\Api\{
     User\UserController
 };
 use App\Http\Controllers\Api\Teacher\TeacherClassroomController;
+use App\Http\Controllers\Api\Chat\ChatUserController;
+use App\Http\Controllers\Api\Chat\ConversationController as ChatConversationController;
+use App\Http\Controllers\Api\Chat\MessageController as ChatMessageController;
 
 
 // Rate Limiting
@@ -59,9 +63,11 @@ Route::post('/otp/verify', VerifyOtpController::class);
 Route::post('/otp/resend', ResendOtpController::class)->middleware('throttle:otp-resend');
 // });
 Route::post('/logout', LogoutController::class)->middleware('auth:sanctum');
-
 // ==================== AUTHENTICATED ROUTES ====================
 Route::prefix('v1')->middleware(['auth:sanctum', 'active.user'])->group(function () {
+    // WebSocket Broadcasting Authentication (Sanctum protected)
+    Broadcast::routes();
+
     // ===================== OPERATIONAL ROUTES (TEACHER, PRINCIPAL, SCHOOL ADMIN) =====================
     Route::apiResource('student-reports', \App\Http\Controllers\Api\StudentReportController::class)->only(['index', 'store', 'destroy']);
 
@@ -89,6 +95,7 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'active.user'])->group(function
         Route::get('teacher/classrooms/{classroom}', [TeacherClassroomController::class, 'show']);
     });
 
+    Route::put('update-profile', [UserController::class, 'updateProfile']);
 
     // ===================== MANAGEMENT ROUTES (PRINCIPAL + SCHOOL ADMIN ONLY) =====================
     Route::middleware(['otp.verified', 'role:principal,school-admin'])->group(function () {
@@ -177,6 +184,29 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'active.user'])->group(function
 
         Route::get('dashboard-stats', [ManagerDashboardController::class, 'stats']);
         Route::get('my-invoices', [ActivitiesController::class, 'getInvoices']);
+    });
+
+    // ===================== PARENT ENDPOINTS =====================
+    Route::middleware(['otp.verified', 'role:parent'])->prefix('parent')->group(function () {
+        Route::get('students', [\App\Http\Controllers\Api\Parent\ParentController::class, 'getChildrenClassrooms']);
+        Route::get('attendances/by-month', [\App\Http\Controllers\Api\Parent\ParentController::class, 'getAttendanceByMonth']);
+        Route::get('attendances/by-date', [\App\Http\Controllers\Api\Parent\ParentController::class, 'getAttendanceByDate']);
+    });
+
+    // ===================== CHAT ROUTES (ALL AUTHENTICATED USERS) =====================
+    Route::middleware(['otp.verified'])->prefix('chat')->group(function () {
+        Route::get('users', [ChatUserController::class, 'index']);                                        // Who can I chat with?
+        Route::get('conversations', [ChatConversationController::class, 'index']);                        // My inbox
+        Route::post('conversations', [ChatConversationController::class, 'store']);                       // Start / find conversation
+        Route::get('conversations/{conversation}', [ChatConversationController::class, 'show']);          // Open chat (paginated messages)
+        Route::post('conversations/{conversation}/messages', [ChatMessageController::class, 'store']);    // Send message
+        Route::patch('conversations/{conversation}/read', [ChatMessageController::class, 'markRead']);    // Mark as read
+    });
+
+    // ===================== GENERAL REPORTS =====================
+    Route::middleware(['otp.verified'])->group(function () {
+        Route::patch('general-reports/{id}/status', [\App\Http\Controllers\Api\GeneralReportController::class, 'updateStatus']);
+        Route::apiResource('general-reports', \App\Http\Controllers\Api\GeneralReportController::class)->only(['index', 'store', 'show', 'update', 'destroy']);
     });
 });
 

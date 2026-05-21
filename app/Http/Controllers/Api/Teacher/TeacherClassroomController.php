@@ -31,7 +31,7 @@ class TeacherClassroomController extends Controller
                             $q->where('teacher_id', $teacherId);
                         });
                 })
-                ->with(['inCharge', 'subjects.teacher', 'teachers'])
+                ->with(['inCharge', 'subjects.teacher', 'teachers', 'students'])
                 ->get();
 
             $classrooms->transform(function ($classroom) {

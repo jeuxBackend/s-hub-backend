@@ -1,0 +1,203 @@
+<?php
+
+namespace App\Http\Controllers\Api\Parent;
+
+use App\Http\Controllers\Controller;
+use App\Models\Student;
+use App\Models\StudentAttendance;
+use App\Enums\AttendanceStatus;
+use Carbon\Carbon;
+use Illuminate\Http\Request;
+use Throwable;
+
+class ParentController extends Controller
+{
+    /**
+     * GET /v1/parent/attendances/by-month
+     * Fetch monthly attendance and stats for a child.
+     */
+    public function getAttendanceByMonth(Request $request, \App\Actions\Attendance\GetAttendanceByMonthAction $action)
+    {
+        $filters = $request->validate([
+            'student_id' => ['required', 'exists:students,id'],
+            'month' => ['nullable', 'integer', 'between:1,12'],
+            'year' => ['nullable', 'integer', 'min:2000'],
+        ]);
+
+        $authId = auth()->id();
+        $studentId = $filters['student_id'];
+
+        $student = Student::where('id', $studentId)
+            ->where('guardian_id', $authId)
+            ->first();
+
+        if (!$student) {
+            return $this->errorResponse('Unauthorized access. This student is not registered under your profile.', 403);
+        }
+
+        // Determine the target month and year
+        $now = Carbon::now();
+        $targetMonth = $filters['month'] ?? $now->month;
+        $targetYear = $filters['year'] ?? $now->year;
+
+        $targetDate = Carbon::createFromDate($targetYear, $targetMonth, 1)->startOfMonth();
+
+        // Fetch current month's full records using the Action to keep eager loading identical
+        $currentAttendances = $action->handle([
+            'student_id' => $studentId,
+            'month' => $targetMonth,
+            'year' => $targetYear,
+        ], false);
+
+        // Calculate current month's counters
+        $totalDays = $currentAttendances->count();
+        $presentCount = $currentAttendances->where('status', AttendanceStatus::Present)->count();
+        $absentCount = $currentAttendances->where('status', AttendanceStatus::Absent)->count();
+        $lateCount = $currentAttendances->where('status', AttendanceStatus::Late)->count();
+        $excusedCount = $currentAttendances->where('status', AttendanceStatus::Excused)->count();
+
+        // Percentage calculation (Present + Late count as attended)
+        $currentPercentage = $totalDays > 0
+            ? round((($presentCount + $lateCount) / $totalDays) * 100, 1)
+            : 0.0;
+
+        // Fetch last month's stats to calculate difference
+        $lastMonthDate = $targetDate->copy()->subMonth();
+
+        $lastAttendances = StudentAttendance::where('student_id', $studentId)
+            ->whereBetween('date', [$lastMonthDate->copy()->startOfMonth(), $lastMonthDate->copy()->endOfMonth()])
+            ->get();
+
+        $lastTotalDays = $lastAttendances->count();
+        $lastPresentCount = $lastAttendances->where('status', AttendanceStatus::Present)->count();
+        $lastLateCount = $lastAttendances->where('status', AttendanceStatus::Late)->count();
+
+        $lastPercentage = $lastTotalDays > 0
+            ? round((($lastPresentCount + $lastLateCount) / $lastTotalDays) * 100, 1)
+            : 0.0;
+
+        $difference = $lastTotalDays > 0
+            ? round($currentPercentage - $lastPercentage, 1)
+            : 0.0;
+
+        return $this->successResponse([
+            'student_id' => $student->id,
+            'student_name' => trim($student->first_name . ' ' . $student->sur_name),
+            'target_month' => $targetDate->format('F Y'),
+            'current_month_percentage' => $currentPercentage,
+            'last_month_percentage' => $lastPercentage,
+            'difference' => $difference,
+            'total_days' => $totalDays,
+            'present_days' => $presentCount,
+            'absent_days' => $absentCount,
+            'late_days' => $lateCount,
+            'excused_days' => $excusedCount,
+            'attendance_log' => $currentAttendances, // the full models, matching ParentAttendanceResponse
+        ], 'Monthly attendance fetched successfully.');
+    }
+
+    /**
+     * GET /v1/parent/attendances/by-date
+     * Fetch attendance for a child by a specific date.
+     */
+    public function getAttendanceByDate(Request $request, \App\Actions\Attendance\GetAttendanceByDateAction $action)
+    {
+        $filters = $request->validate([
+            'date' => ['nullable', 'date'],
+            'student_id' => ['required', 'exists:students,id'],
+            'paginate' => ['nullable', 'boolean'],
+            'per_page' => ['nullable', 'integer', 'min:1', 'max:100'],
+        ]);
+
+        $authId = auth()->id();
+        $student = Student::where('id', $filters['student_id'])
+            ->where('guardian_id', $authId)
+            ->first();
+
+        if (!$student) {
+            return $this->errorResponse('Unauthorized access. This student is not registered under your profile.', 403);
+        }
+
+        $isPaginated = $filters['paginate'] ?? false;
+        $result = $action->handle($filters);
+
+        if (!$isPaginated) {
+            $attendance = $result->first();
+            return $attendance
+                ? $this->successResponse(new \App\Http\Resources\StudentAttendanceResource($attendance))
+                : $this->errorResponse('Attendance record not found.', 404);
+        }
+
+        if ($isPaginated && $result instanceof \Illuminate\Contracts\Pagination\LengthAwarePaginator) {
+            return $this->paginatedResponse(
+                \App\Http\Resources\StudentAttendanceResource::collection($result),
+                'Attendance records retrieved successfully.'
+            );
+        }
+
+        return $this->successResponse(
+            \App\Http\Resources\StudentAttendanceResource::collection($result),
+            'Attendance records retrieved successfully.'
+        );
+    }
+
+    /**
+     * GET /v1/parent/classrooms
+     * Fetch children with their classrooms and individual stats
+     */
+    public function getChildrenClassrooms()
+    {
+        try {
+            $parentId = auth()->id();
+
+            $children = Student::where('guardian_id', $parentId)
+                ->with(['classroom.inCharge'])
+                ->get()
+                ->map(function ($student) {
+                    // Child's Average Performance (Percentage)
+                    $student->average_performance = \App\Models\StudentPerformance::where('student_id', $student->id)
+                        ->selectRaw('COALESCE(AVG(CASE WHEN total_mark > 0 THEN (obtained_mark / total_mark * 100) ELSE 0 END), 0) as avg_perf')
+                        ->value('avg_perf');
+
+                    // Child's Average Attendance (Percentage)
+                    $attendance = StudentAttendance::where('student_id', $student->id)
+                        ->selectRaw('count(*) as total, count(CASE WHEN status = ? THEN 1 END) as present', [AttendanceStatus::Present->value])
+                        ->first();
+                    $student->average_attendance = ($attendance->total > 0) ? round(($attendance->present / $attendance->total * 100), 2) : 0;
+
+                    // Tuition Counts for this child
+                    $student->paid_tuition = \App\Models\StudentInvoice::where('student_id', $student->id)
+                        ->where('status', 'paid')
+                        ->count();
+
+                    $student->owing_tuition = \App\Models\StudentInvoice::where('student_id', $student->id)
+                        ->where('due_amount', '>', 0)
+                        ->count();
+
+                    return [
+                        'student_id' => $student->id,
+                        'student_name' => trim($student->first_name . ' ' . $student->sur_name),
+                        'profile_picture' => $student->profile_picture,
+                        'registration_number' => $student->registration_number,
+                        'classroom' => $student->classroom ? [
+                            'id' => $student->classroom->id,
+                            'name' => $student->classroom->name,
+                            'code' => $student->classroom->code,
+                            'in_charge' => $student->classroom->inCharge ? [
+                                'id' => $student->classroom->inCharge->id,
+                                'name' => $student->classroom->inCharge->full_name,
+                            ] : null,
+                        ] : null,
+                        'average_performance' => round($student->average_performance, 2),
+                        'average_attendance' => $student->average_attendance,
+                        'paid_tuition' => $student->paid_tuition,
+                        'owing_tuition' => $student->owing_tuition,
+                    ];
+                });
+
+            return $this->successResponse($children, 'Children classrooms and stats retrieved successfully');
+        } catch (\Throwable $e) {
+            return $this->exceptionResponse($e);
+        }
+    }
+}

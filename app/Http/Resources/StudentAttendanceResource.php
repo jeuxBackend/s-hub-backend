@@ -15,13 +15,16 @@ class StudentAttendanceResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-            'id'         => $this->id,
-            'student'    => StudentResource::make($this->whenLoaded('student'))->additional(['without' => ['teachers']]),
-            'subject'    => SubjectResource::make($this->whenLoaded('subject')),
-            'status'     => $this->status,
-            'remarks'    => $this->remarks,
-            'marked_by'  => UserResource::make($this->whenLoaded('marked_by')),
-            'date'       => $this->date?->toDateString(),
+            'id' => $this->id,
+            'student' => StudentResource::make($this->whenLoaded('student')),
+            'status' => $this->status?->value ?? null,
+            'remarks' => $this->remarks,
+            'date' => $this->date?->toDateString() ?? "",
+            'subject' => SubjectResource::make($this->whenLoaded('subject')),
+            'term' => $this->term ?? null,
+            'score' => $this->score ?? null,
+            'type' => $this->type ?? null,
+            'recorded_by' => UserResource::make($this->whenLoaded('recordedBy')),
         ];
     }
 }
