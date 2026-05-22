@@ -85,7 +85,7 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'active.user'])->group(function
         Route::prefix('classrooms/{classroom}/grades')->group(function () {
             Route::get('/', [GradeController::class, 'index']);
             Route::post('/', [GradeController::class, 'store']);
-            Route::patch('{grade}', [GradeController::class, 'update']);
+            Route::patch('/{grade}', [GradeController::class, 'update']);
         });
     });
 
@@ -191,6 +191,7 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'active.user'])->group(function
         Route::get('students', [\App\Http\Controllers\Api\Parent\ParentController::class, 'getChildrenClassrooms']);
         Route::get('attendances/by-month', [\App\Http\Controllers\Api\Parent\ParentController::class, 'getAttendanceByMonth']);
         Route::get('attendances/by-date', [\App\Http\Controllers\Api\Parent\ParentController::class, 'getAttendanceByDate']);
+        Route::get('grades', [\App\Http\Controllers\Api\Parent\ParentController::class, 'getGrades']);
     });
 
     // ===================== CHAT ROUTES (ALL AUTHENTICATED USERS) =====================

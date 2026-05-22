@@ -50,10 +50,10 @@ class ParentController extends Controller
         ], false);
 
         // Calculate current month's counters safely grouping by date
-        $daysGrouped = $currentAttendances->groupBy(function($item) {
+        $daysGrouped = $currentAttendances->groupBy(function ($item) {
             return \Carbon\Carbon::parse($item->date)->format('Y-m-d');
         });
-        
+
         $totalDays = $daysGrouped->count();
         $presentCount = 0;
         $absentCount = 0;
@@ -65,7 +65,7 @@ class ParentController extends Controller
             $late = $records->where('status', AttendanceStatus::Late)->count();
             $absent = $records->where('status', AttendanceStatus::Absent)->count();
             $excused = $records->where('status', AttendanceStatus::Excused)->count();
-            
+
             if ($present > 0) {
                 $presentCount++;
             } elseif ($late > 0) {
@@ -78,8 +78,8 @@ class ParentController extends Controller
         }
 
         // Percentage calculation (Present + Late count as attended)
-        $currentPercentage = $totalDays > 0 
-            ? round((($presentCount + $lateCount) / $totalDays) * 100, 1) 
+        $currentPercentage = $totalDays > 0
+            ? round((($presentCount + $lateCount) / $totalDays) * 100, 1)
             : 0.0;
 
         // Fetch last month's stats to calculate difference
@@ -89,7 +89,7 @@ class ParentController extends Controller
             ->whereBetween('date', [$lastMonthDate->copy()->startOfMonth(), $lastMonthDate->copy()->endOfMonth()])
             ->get();
 
-        $lastDaysGrouped = $lastAttendances->groupBy(function($item) {
+        $lastDaysGrouped = $lastAttendances->groupBy(function ($item) {
             return \Carbon\Carbon::parse($item->date)->format('Y-m-d');
         });
 
@@ -157,10 +157,10 @@ class ParentController extends Controller
         if (!$isPaginated) {
             $isClass11Or12 = false;
             if ($student->classroom) {
-                $isClass11Or12 = str_contains($student->classroom->name, '11') || 
-                                 str_contains($student->classroom->name, '12') ||
-                                 str_contains($student->classroom->code, '11') ||
-                                 str_contains($student->classroom->code, '12');
+                $isClass11Or12 = str_contains($student->classroom->name, '11') ||
+                    str_contains($student->classroom->name, '12') ||
+                    str_contains($student->classroom->code, '11') ||
+                    str_contains($student->classroom->code, '12');
             }
 
             if ($isClass11Or12) {
@@ -247,5 +247,50 @@ class ParentController extends Controller
         } catch (\Throwable $e) {
             return $this->exceptionResponse($e);
         }
+    }
+
+    public function getGrades(Request $request)
+    {
+        $filters = $request->validate([
+            'student_id' => ['required', 'exists:students,id'],
+            'subject_id' => ['required', 'exists:subjects,id'],
+            'term' => ['required'],
+        ]);
+
+        $authId = auth()->id();
+        $student = Student::where('id', $filters['student_id'])
+            ->where('guardian_id', $authId)
+            ->first();
+
+        if (!$student) {
+            return $this->errorResponse('Unauthorized access. This student is not registered under your profile.', 403);
+        }
+
+        $grades = \App\Models\StudentGrade::where('student_id', $student->id)
+            ->where('subject_id', $filters['subject_id'])
+            ->where('term', $filters['term'])
+            ->get();
+
+        $result = [
+            'student_id' => $student->id,
+            'student_name' => trim($student->first_name . ' ' . $student->sur_name),
+            'subject_id' => $filters['subject_id'],
+            'term' => $filters['term'],
+            'grades' => [
+                'test_1' => $grades->where('type', 'test_1')->first(),
+                'test_2' => $grades->where('type', 'test_2')->first(),
+                'test_3' => $grades->where('type', 'test_3')->first(),
+                'test_4' => $grades->where('type', 'test_4')->first(),
+                'final_marks' => $grades->where('type', 'final_marks')->first(),
+                'exam_marks' => $grades->where('type', 'exam_marks')->first(),
+                'years_marks' => $grades->where('type', 'years_marks')->first(),
+                // Keep these just in case old data exists
+                'exam' => $grades->where('type', 'exam')->first(),
+                'assignment' => $grades->where('type', 'assignment')->first(),
+                'quiz' => $grades->where('type', 'quiz')->first(),
+            ]
+        ];
+
+        return $this->successResponse($result, 'Grades retrieved successfully.');
     }
 }

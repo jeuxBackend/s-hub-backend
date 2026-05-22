@@ -23,11 +23,11 @@ class UpdateGradeRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'score'        => 'required|numeric|min:0|max:100',
-            'remarks'      => 'nullable|string|max:255',
-            'total'        => 'nullable|numeric|min:0|max:100',
-            'type'         => 'nullable|string|max:100',
-            'date'         => 'nullable|date',
+            'score' => 'nullable',
+            'remarks' => 'nullable|string|max:255',
+            'total' => 'nullable|numeric|min:0|max:100',
+            'type' => 'nullable|string|max:100',
+            'date' => 'nullable|date',
         ];
     }
 }

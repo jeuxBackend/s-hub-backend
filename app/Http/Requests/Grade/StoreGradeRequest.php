@@ -22,15 +22,15 @@ class StoreGradeRequest extends FormRequest
     public function rules(): array
     {
         return [
-        // 'student_id'   => 'required|exists:students,id',
-        'classroom_id' => 'required|exists:classrooms,id',
-        'subject_id'   => 'required|exists:subjects,id',
-        'term'         => ['nullable', 'in:first,second,third,final'],// or use Rule::enum()
-        // 'score'        => 'required|numeric|min:0|max:100',
-        'remarks'      => 'nullable|string|max:255',
-        'date'         => 'nullable|date',
-        'type'        => ['nullable', 'in:exam,assignment,quiz'], 
-        'total'        => 'nullable|numeric|min:0|max:100',
-    ];
+            'student_id'   => 'required|exists:students,id',
+            'classroom_id' => 'required|exists:classrooms,id',
+            'subject_id' => 'required|exists:subjects,id',
+            'term' => ['nullable', 'in:first,second,third,final'],
+            'score' => 'nullable',
+            'remarks' => 'nullable|string|max:255',
+            'date' => 'nullable|date',
+            'type' => ['nullable'],
+            'total' => 'nullable|numeric|min:0|max:100',
+        ];
     }
 }

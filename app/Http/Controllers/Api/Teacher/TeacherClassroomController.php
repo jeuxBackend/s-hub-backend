@@ -29,6 +29,9 @@ class TeacherClassroomController extends Controller
                     $query->where('in_charge_id', $teacherId)
                         ->orWhereHas('subjects', function ($q) use ($teacherId) {
                             $q->where('teacher_id', $teacherId);
+                        })
+                        ->orWhereHas('teachers', function ($q) use ($teacherId) {
+                            $q->where('teacher_id', $teacherId);
                         });
                 })
                 ->with(['inCharge', 'subjects.teacher', 'teachers', 'students'])
@@ -87,6 +90,9 @@ class TeacherClassroomController extends Controller
                 ->where(function ($query) use ($teacherId) {
                     $query->where('in_charge_id', $teacherId)
                         ->orWhereHas('subjects', function ($q) use ($teacherId) {
+                            $q->where('teacher_id', $teacherId);
+                        })
+                        ->orWhereHas('teachers', function ($q) use ($teacherId) {
                             $q->where('teacher_id', $teacherId);
                         });
                 })
