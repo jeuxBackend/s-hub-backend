@@ -49,16 +49,37 @@ class ParentController extends Controller
             'year' => $targetYear,
         ], false);
 
-        // Calculate current month's counters
-        $totalDays = $currentAttendances->count();
-        $presentCount = $currentAttendances->where('status', AttendanceStatus::Present)->count();
-        $absentCount = $currentAttendances->where('status', AttendanceStatus::Absent)->count();
-        $lateCount = $currentAttendances->where('status', AttendanceStatus::Late)->count();
-        $excusedCount = $currentAttendances->where('status', AttendanceStatus::Excused)->count();
+        // Calculate current month's counters safely grouping by date
+        $daysGrouped = $currentAttendances->groupBy(function($item) {
+            return \Carbon\Carbon::parse($item->date)->format('Y-m-d');
+        });
+        
+        $totalDays = $daysGrouped->count();
+        $presentCount = 0;
+        $absentCount = 0;
+        $lateCount = 0;
+        $excusedCount = 0;
+
+        foreach ($daysGrouped as $date => $records) {
+            $present = $records->where('status', AttendanceStatus::Present)->count();
+            $late = $records->where('status', AttendanceStatus::Late)->count();
+            $absent = $records->where('status', AttendanceStatus::Absent)->count();
+            $excused = $records->where('status', AttendanceStatus::Excused)->count();
+            
+            if ($present > 0) {
+                $presentCount++;
+            } elseif ($late > 0) {
+                $lateCount++;
+            } elseif ($excused > 0 && $absent == 0) {
+                $excusedCount++;
+            } else {
+                $absentCount++;
+            }
+        }
 
         // Percentage calculation (Present + Late count as attended)
-        $currentPercentage = $totalDays > 0
-            ? round((($presentCount + $lateCount) / $totalDays) * 100, 1)
+        $currentPercentage = $totalDays > 0 
+            ? round((($presentCount + $lateCount) / $totalDays) * 100, 1) 
             : 0.0;
 
         // Fetch last month's stats to calculate difference
@@ -68,9 +89,21 @@ class ParentController extends Controller
             ->whereBetween('date', [$lastMonthDate->copy()->startOfMonth(), $lastMonthDate->copy()->endOfMonth()])
             ->get();
 
-        $lastTotalDays = $lastAttendances->count();
-        $lastPresentCount = $lastAttendances->where('status', AttendanceStatus::Present)->count();
-        $lastLateCount = $lastAttendances->where('status', AttendanceStatus::Late)->count();
+        $lastDaysGrouped = $lastAttendances->groupBy(function($item) {
+            return \Carbon\Carbon::parse($item->date)->format('Y-m-d');
+        });
+
+        $lastTotalDays = $lastDaysGrouped->count();
+        $lastPresentCount = 0;
+        $lastLateCount = 0;
+
+        foreach ($lastDaysGrouped as $date => $records) {
+            if ($records->where('status', AttendanceStatus::Present)->count() > 0) {
+                $lastPresentCount++;
+            } elseif ($records->where('status', AttendanceStatus::Late)->count() > 0) {
+                $lastLateCount++;
+            }
+        }
 
         $lastPercentage = $lastTotalDays > 0
             ? round((($lastPresentCount + $lastLateCount) / $lastTotalDays) * 100, 1)

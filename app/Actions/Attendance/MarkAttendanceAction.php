@@ -12,6 +12,7 @@ class MarkAttendanceAction
         $attendance = StudentAttendance::firstOrCreate([
             'student_id'   => $data['student_id'],
             'date'         => $data['date'],
+            'subject_id'   => $data['subject_id'] ?? null,
         ], [
             'classroom_id' => $data['classroom_id'],
         ]);

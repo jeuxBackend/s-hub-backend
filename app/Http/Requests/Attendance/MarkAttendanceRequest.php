@@ -24,6 +24,7 @@ class MarkAttendanceRequest extends FormRequest
         return [
             'classroom_id' => ['required', 'exists:classrooms,id'],
             'student_id' => ['required', 'exists:students,id'],
+            'subject_id' => ['nullable', 'exists:subjects,id'],
             'date' => ['required', 'date'],
             'status' => ['required', 'in:present,absent,leave'],
             'remarks' => ['nullable', 'string'],

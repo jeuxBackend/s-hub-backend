@@ -90,7 +90,7 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'active.user'])->group(function
     });
 
     // ===================== TEACHER ONLY ROUTES =====================
-    Route::middleware(['otp.verified', 'role:teacher'])->group(function () {
+    Route::middleware(['otp.verified', 'role:teacher,school-admin'])->group(function () {
         Route::get('teacher/classrooms', [TeacherClassroomController::class, 'index']);
         Route::get('teacher/classrooms/{classroom}', [TeacherClassroomController::class, 'show']);
     });
