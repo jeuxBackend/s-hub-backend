@@ -24,6 +24,7 @@ class GetAttendanceByMonthRequest extends FormRequest
         return [
            'student_id'    => ['nullable', 'exists:students,id'],
         'classroom_id'  => ['nullable', 'exists:classrooms,id'],
+        'subject_id'    => ['nullable', 'exists:subjects,id'],
         'term'         => ['nullable', 'in:first,second,third,final'],
         'date'          => ['nullable', 'date'],         // for exact day
         'month'         => ['nullable', 'integer', 'between:1,12'], // optional

@@ -12,9 +12,10 @@ class GetAttendanceByMonthAction
     public function handle(array $filters, bool $paginate = false): LengthAwarePaginator|Collection
     {
         $query = StudentAttendance::query()
-            ->with(['student.classroom'])
+            ->with(['student.classroom', 'subject'])
             ->when(isset($filters['student_id']), fn($q) => $q->where('student_id', $filters['student_id']))
             ->when(isset($filters['classroom_id']), fn($q) => $q->where('classroom_id', $filters['classroom_id']))
+            ->when(isset($filters['subject_id']), fn($q) => $q->where('subject_id', $filters['subject_id']))
             ->when(isset($filters['term']), fn($q) => $q->where('term', $filters['term']))
             
             // 🔍 Exact date filter

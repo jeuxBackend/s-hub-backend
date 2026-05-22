@@ -125,7 +125,7 @@ class ParentController extends Controller
             'absent_days' => $absentCount,
             'late_days' => $lateCount,
             'excused_days' => $excusedCount,
-            'attendance_log' => $currentAttendances, // the full models, matching ParentAttendanceResponse
+            'attendance_log' => \App\Http\Resources\StudentAttendanceResource::collection($currentAttendances),
         ], 'Monthly attendance fetched successfully.');
     }
 
@@ -143,7 +143,7 @@ class ParentController extends Controller
         ]);
 
         $authId = auth()->id();
-        $student = Student::where('id', $filters['student_id'])
+        $student = Student::with('classroom')->where('id', $filters['student_id'])
             ->where('guardian_id', $authId)
             ->first();
 
@@ -155,6 +155,21 @@ class ParentController extends Controller
         $result = $action->handle($filters);
 
         if (!$isPaginated) {
+            $isClass11Or12 = false;
+            if ($student->classroom) {
+                $isClass11Or12 = str_contains($student->classroom->name, '11') || 
+                                 str_contains($student->classroom->name, '12') ||
+                                 str_contains($student->classroom->code, '11') ||
+                                 str_contains($student->classroom->code, '12');
+            }
+
+            if ($isClass11Or12) {
+                return $this->successResponse(
+                    \App\Http\Resources\StudentAttendanceResource::collection($result),
+                    'Attendance records retrieved successfully.'
+                );
+            }
+
             $attendance = $result->first();
             return $attendance
                 ? $this->successResponse(new \App\Http\Resources\StudentAttendanceResource($attendance))

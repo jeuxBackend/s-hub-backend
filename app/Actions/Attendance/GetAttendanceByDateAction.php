@@ -33,14 +33,20 @@ class GetAttendanceByDateAction
             }
 
             // Fetch marked attendance for these students on this date
-            $attendances = StudentAttendance::with(['student.guardian', 'subject', 'recordedBy'])
+            $attendancesQuery = StudentAttendance::with(['student.guardian', 'subject', 'recordedBy'])
                 ->whereIn('student_id', $students->pluck('id'))
-                ->whereDate('date', $date)
-                ->get()
-                ->keyBy('student_id');
+                ->whereDate('date', $date);
+
+            if (!empty($filters['subject_id'])) {
+                $attendancesQuery->where('subject_id', $filters['subject_id']);
+            } else {
+                $attendancesQuery->whereNull('subject_id');
+            }
+
+            $attendances = $attendancesQuery->get()->keyBy('student_id');
 
             // Map students to attendance objects (real or transient)
-            $items = $students->map(function ($student) use ($attendances, $date) {
+            $items = $students->map(function ($student) use ($attendances, $date, $filters) {
                 if ($attendances->has($student->id)) {
                     $attendance = $attendances->get($student->id);
                     // Set attendance_status directly on the student model
@@ -57,6 +63,7 @@ class GetAttendanceByDateAction
                     'date'         => Carbon::parse($date),
                     'status'       => null,
                     'remarks'      => null,
+                    'subject_id'   => $filters['subject_id'] ?? null,
                 ]);
                 $transient->setRelation('student', $student);
                 return $transient;
@@ -72,6 +79,15 @@ class GetAttendanceByDateAction
         // Default query logic when classroom_id is not specified
         $query = StudentAttendance::with(['student.guardian', 'subject', 'recordedBy'])
             ->whereDate('date', $date);
+
+        if (!empty($filters['subject_id'])) {
+            $query->where('subject_id', $filters['subject_id']);
+        } else if (!empty($filters['student_id'])) {
+            // Optional: don't restrict subject_id if fetching generally for a student, unless specified.
+            // But if we want only daily attendance, we should restrict to null.
+        } else {
+            $query->whereNull('subject_id');
+        }
 
         if (!empty($filters['student_id'])) {
             $query->where('student_id', $filters['student_id']);

@@ -26,6 +26,7 @@ class GetAttendanceByDateRequest extends FormRequest
              'date'         => ['nullable', 'date'],
             'classroom_id' => ['nullable', 'exists:classrooms,id'],
             'student_id'   => ['nullable', 'exists:students,id'],
+            'subject_id'   => ['nullable', 'exists:subjects,id'],
             'paginate'     => ['nullable', 'boolean'],
             'per_page'     => ['nullable', 'integer', 'min:1', 'max:100'],
         ];
