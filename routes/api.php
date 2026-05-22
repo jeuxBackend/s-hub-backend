@@ -61,6 +61,7 @@ Route::get('/ping', fn() => 'pong');
 Route::post('/web/login', AdminLoginController::class);
 Route::post('/otp/verify', VerifyOtpController::class);
 Route::post('/otp/resend', ResendOtpController::class)->middleware('throttle:otp-resend');
+Route::post('/stripe/webhook', [\App\Http\Controllers\Api\StripeWebhookController::class, 'handleWebhook']);
 // });
 Route::post('/logout', LogoutController::class)->middleware('auth:sanctum');
 // ==================== AUTHENTICATED ROUTES ====================
@@ -184,6 +185,10 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'active.user'])->group(function
 
         Route::get('dashboard-stats', [ManagerDashboardController::class, 'stats']);
         Route::get('my-invoices', [ActivitiesController::class, 'getInvoices']);
+
+        // Stripe Connect for Managers
+        Route::post('stripe/connect', [\App\Http\Controllers\Api\Manager\StripeConnectController::class, 'connect']);
+        Route::get('stripe/status', [\App\Http\Controllers\Api\Manager\StripeConnectController::class, 'status']);
     });
 
     // ===================== PARENT ENDPOINTS =====================
@@ -191,6 +196,12 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'active.user'])->group(function
         Route::get('students', [\App\Http\Controllers\Api\Parent\ParentController::class, 'getChildrenClassrooms']);
         Route::get('attendances/by-month', [\App\Http\Controllers\Api\Parent\ParentController::class, 'getAttendanceByMonth']);
         Route::get('attendances/by-date', [\App\Http\Controllers\Api\Parent\ParentController::class, 'getAttendanceByDate']);
+
+        // Invoices & Payments
+        Route::get('invoices', [\App\Http\Controllers\Api\Parent\ParentInvoiceController::class, 'index']);
+        Route::get('invoices/{id}', [\App\Http\Controllers\Api\Parent\ParentInvoiceController::class, 'show']);
+        Route::post('invoices/{id}/pay', [\App\Http\Controllers\Api\Parent\ParentInvoiceController::class, 'pay']);
+        Route::post('invoices/{id}/confirm', [\App\Http\Controllers\Api\Parent\ParentInvoiceController::class, 'confirm']);
     });
 
     // ===================== CHAT ROUTES (ALL AUTHENTICATED USERS) =====================

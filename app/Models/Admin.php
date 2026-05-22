@@ -26,6 +26,8 @@ class Admin extends Authenticatable
         'permissions',
         'fcm_token',
         'profile_image',
+        'stripe_connect_account_id',
+        'stripe_onboarding_completed',
     ];
 
     protected $hidden = [
@@ -36,6 +38,7 @@ class Admin extends Authenticatable
         'permissions' => 'array',
         'region' => 'array',
         'role' => \App\Enums\AdminRole::class,
+        'stripe_onboarding_completed' => 'boolean',
     ];
 
     public function getNameAttribute()
