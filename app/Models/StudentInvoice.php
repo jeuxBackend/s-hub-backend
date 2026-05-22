@@ -21,6 +21,7 @@ class StudentInvoice extends Model
         'payment_method',
         'reference_no',
         'stripe_payment_intent_id',
+        'stripe_charge_id',
     ];
 
     public function student()

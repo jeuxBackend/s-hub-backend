@@ -100,6 +100,7 @@ class StripeWebhookController extends Controller
                 'payment_method' => 'stripe',
                 'reference_no' => $paymentIntent->id,
                 'stripe_payment_intent_id' => $paymentIntent->id,
+                'stripe_charge_id' => $paymentIntent->latest_charge ?? null,
             ]);
 
             Log::info("Student Invoice ID {$invoiceId} marked as PAID via Stripe Webhook. PaymentIntent: {$paymentIntent->id}");

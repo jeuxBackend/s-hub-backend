@@ -21,7 +21,7 @@ class ParentInvoiceController extends Controller
             $parentId = auth()->id();
             $invoices = $action->handle($parentId, $request);
 
-            return $this->paginatedResponse($invoices, 'Invoices retrieved successfully.');
+            return $this->successResponse($invoices, 'Invoices retrieved successfully.');
         } catch (Throwable $e) {
             return $this->exceptionResponse($e);
         }

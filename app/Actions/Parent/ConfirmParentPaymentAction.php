@@ -29,6 +29,7 @@ class ConfirmParentPaymentAction
                     'payment_method' => 'stripe',
                     'reference_no' => $paymentIntent->id,
                     'stripe_payment_intent_id' => $paymentIntent->id,
+                    'stripe_charge_id' => $paymentIntent->latest_charge ?? null,
                 ]);
             }
             return $invoice;

@@ -26,6 +26,6 @@ class ListParentInvoicesAction
             $query->where('student_id', $studentId);
         }
 
-        return $query->latest()->paginate($request->get('per_page', 10));
+        return $query->latest()->get();
     }
 }
