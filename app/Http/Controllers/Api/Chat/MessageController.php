@@ -32,9 +32,9 @@ class MessageController extends Controller
             $auth = auth()->user();
             $authId = $auth->id;
 
-            // Authorization: Principals and School Admins cannot send messages
-            if ($auth->role === \App\Enums\UserRole::Principal || $auth->role === \App\Enums\UserRole::SchoolAdmin) {
-                return $this->errorResponse('Principals and School Admins cannot send messages.', 403);
+            // Authorization: Principals cannot send messages
+            if ($auth->role === \App\Enums\UserRole::Principal) {
+                return $this->errorResponse('Principals cannot send messages.', 403);
             }
 
             // Authorization: only participants can send messages
@@ -68,6 +68,57 @@ class MessageController extends Controller
             // Fire broadcast event — delivers to other participant via Reverb in real-time
             broadcast(new MessageSent($message))->toOthers();
 
+            // Dispatch FCM notification to the receiver
+            \App\Jobs\SendChatNotificationJob::dispatch($message);
+
+            // Trigger global Inbox Update for the receiver
+            $receiverId = $conversation->user_one_id === $authId ? $conversation->user_two_id : $conversation->user_one_id;
+            $receiver = \App\Models\User::find($receiverId);
+            
+            if ($receiver) {
+                $isPrincipal = $receiver->role === \App\Enums\UserRole::Principal;
+                
+                $inboxPayload = [
+                    'id' => $conversation->id,
+                    'last_message' => [
+                        'body' => $message->body,
+                        'attachment_type' => $message->attachment_type,
+                        'is_mine' => false,
+                        'created_at' => $message->created_at?->toISOString(),
+                    ],
+                    'unread_count' => $conversation->unreadCountFor($receiverId),
+                    'last_message_at' => $conversation->last_message_at?->toISOString(),
+                ];
+
+                if ($isPrincipal) {
+                    $conversation->load(['userOne', 'userTwo']);
+                    $inboxPayload['user_one'] = [
+                        'id' => $conversation->userOne->id,
+                        'full_name' => $conversation->userOne->full_name,
+                        'role' => $conversation->userOne->role?->value,
+                        'position' => $conversation->userOne->position,
+                        'profile_picture' => $conversation->userOne->profile_picture,
+                    ];
+                    $inboxPayload['user_two'] = [
+                        'id' => $conversation->userTwo->id,
+                        'full_name' => $conversation->userTwo->full_name,
+                        'role' => $conversation->userTwo->role?->value,
+                        'position' => $conversation->userTwo->position,
+                        'profile_picture' => $conversation->userTwo->profile_picture,
+                    ];
+                } else {
+                    $inboxPayload['participant'] = [
+                        'id' => $auth->id,
+                        'full_name' => $auth->full_name,
+                        'role' => $auth->role?->value,
+                        'position' => $auth->position,
+                        'profile_picture' => $auth->profile_picture,
+                    ];
+                }
+
+                broadcast(new \App\Events\InboxUpdatedEvent($inboxPayload, $receiverId))->toOthers();
+            }
+
             return $this->successResponse(
                 new MessageResource($message->load('sender')),
                 'Message sent successfully',
@@ -88,9 +139,9 @@ class MessageController extends Controller
             $auth = auth()->user();
             $authId = $auth->id;
 
-            // Authorization: Principals and School Admins cannot mark messages as read
-            if ($auth->role === \App\Enums\UserRole::Principal || $auth->role === \App\Enums\UserRole::SchoolAdmin) {
-                return $this->errorResponse('Principals and School Admins cannot modify messages.', 403);
+            // Authorization: Principals cannot mark messages as read
+            if ($auth->role === \App\Enums\UserRole::Principal) {
+                return $this->errorResponse('Principals cannot modify messages.', 403);
             }
 
             // Authorization: only participants can mark messages as read

@@ -34,7 +34,7 @@ Broadcast::channel('chat.{conversationId}', function (User $user, int $conversat
         return true;
     }
 
-    if ($user->role === \App\Enums\UserRole::Principal || $user->role === \App\Enums\UserRole::SchoolAdmin) {
+    if ($user->role === \App\Enums\UserRole::Principal) {
         $conversation->load(['userOne', 'userTwo']);
         if ($conversation->userOne->institution_id === $user->institution_id || $conversation->userTwo->institution_id === $user->institution_id) {
             return true;
@@ -42,4 +42,11 @@ Broadcast::channel('chat.{conversationId}', function (User $user, int $conversat
     }
 
     return false;
+});
+
+/**
+ * Private notifications channel.
+ */
+Broadcast::channel('notifications.{userId}', function (User $user, int $userId) {
+    return (int) $user->id === (int) $userId;
 });

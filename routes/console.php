@@ -10,3 +10,4 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 Schedule::command('tuition:process-scheduled')->daily();
+Schedule::command('attendance:notify-teachers')->everyMinute();

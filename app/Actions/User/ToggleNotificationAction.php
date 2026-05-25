@@ -9,9 +9,9 @@ class ToggleNotificationAction
 {
     public function handle(User $user): User
     {
-         Gate::authorize('update', $user);
+        Gate::authorize('update', $user);
         $user->update([
-            'notifications_enabled' => ! $user->notifications_enabled,
+            'notifications_enabled' => !$user->notifications_enabled,
         ]);
 
         return $user->refresh();

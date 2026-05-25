@@ -92,10 +92,15 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'active.user'])->group(function
     // ===================== TEACHER ONLY ROUTES =====================
     Route::middleware(['otp.verified', 'role:teacher,school-admin'])->group(function () {
         Route::get('teacher/classrooms', [TeacherClassroomController::class, 'index']);
+        Route::get('teacher/timetable', [TeacherClassroomController::class, 'timetable']);
         Route::get('teacher/classrooms/{classroom}', [TeacherClassroomController::class, 'show']);
+        Route::post('teacher/attendance/mark', [\App\Http\Controllers\Api\Teacher\TeacherAttendanceController::class, 'markAttendance']);
     });
 
     Route::put('update-profile', [UserController::class, 'updateProfile']);
+    Route::patch('users/{user}/notifications/toggle', [UserController::class, 'toggleNotification']);
+    Route::patch('users/remote/toggle', [UserController::class, 'toggleRemote']);
+
 
     // ===================== MANAGEMENT ROUTES (PRINCIPAL + SCHOOL ADMIN ONLY) =====================
     Route::middleware(['otp.verified', 'role:principal,school-admin'])->group(function () {
@@ -107,9 +112,10 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'active.user'])->group(function
             Route::post('update-permissions', [SchoolAdminController::class, 'updatePermissions']);
             Route::get('remove-admin/{id}', [SchoolAdminController::class, 'removeSchoolAdmin']);
             Route::patch('student-reports/{id}/status', [\App\Http\Controllers\Api\StudentReportController::class, 'updateStatus']);
+
+            Route::get('teachers/{id}/timetable', [\App\Http\Controllers\Api\Principal\PrincipalTimetableController::class, 'getTeacherTimetable']);
+            Route::get('classrooms/{id}/timetable', [\App\Http\Controllers\Api\Principal\PrincipalTimetableController::class, 'getClassroomTimetable']);
         });
-
-
 
         Route::prefix('principal')->middleware('role:principal,school-admin')->group(function () {
             // Managed by Principal or School Admin with permissions
@@ -129,7 +135,6 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'active.user'])->group(function
 
         Route::put('update-contact', [UserController::class, 'updateContact']);
         Route::put('change-password', [UserController::class, 'changePassword']);
-        Route::patch('users/{user}/notifications/toggle', [UserController::class, 'toggleNotification']);
 
 
         // Finance
@@ -141,8 +146,8 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'active.user'])->group(function
         });
 
         Route::get('dashboard-stats', [PrincipalDashboardController::class, 'stats']);
-        Route::get('settings', [SettingController::class, 'show']);
     });
+    Route::get('settings', [SettingController::class, 'show']);
     Route::post('get-noticeboard', [NotificationsController::class, 'getUserNotifications']);
     Route::post('read-noticeboard/{id}', [NotificationsController::class, 'readNotification']);
 

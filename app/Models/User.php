@@ -59,6 +59,7 @@ class User extends Authenticatable
         'status',
         'notifications_enabled',
         'email_verified_at',
+        'remote_teaching',
     ];
 
     // Hidden attributes
@@ -76,6 +77,7 @@ class User extends Authenticatable
     {
         return [
             'status' => 'boolean',
+            'remote_teaching' => 'boolean',
             'otp_verified' => 'boolean',
             'notifications_enabled' => 'boolean',
             'email_verified_at' => 'datetime',

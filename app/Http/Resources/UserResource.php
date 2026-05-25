@@ -50,6 +50,7 @@ class UserResource extends JsonResource
                 'staff_number' => $this->staff_number,
                 'position' => $this->position,
                 'permissions' => $this->permissions ?? [],
+                'remote' => $this->remote_teaching,
 
                 'institution' => $this->when(
                     $this->relationLoaded('creator') && $this->creator?->relationLoaded('institution'),
@@ -61,6 +62,7 @@ class UserResource extends JsonResource
                 'staff_number' => $this->staff_number,
                 'position' => $this->position,
                 'permissions' => $this->permissions ?? [],
+                'remote' => $this->remote_teaching,
             ],
 
             UserRole::Parent => [

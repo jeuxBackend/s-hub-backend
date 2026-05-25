@@ -135,4 +135,33 @@ class TeacherClassroomController extends Controller
             return $this->exceptionResponse($e);
         }
     }
+
+    /**
+     * Get timetable for the teacher.
+     */
+    public function timetable()
+    {
+        try {
+            $teacherId = auth()->id();
+
+            $subjects = \App\Models\Subject::where('teacher_id', $teacherId)
+                ->with(['classroom' => function ($q) {
+                    $q->select('id', 'name', 'code')->withCount('students');
+                }])
+                ->whereNotNull('start_time')
+                ->whereNotNull('end_time')
+                ->get()
+                ->sortBy(function ($subject) {
+                    return strtotime($subject->start_time);
+                })
+                ->values();
+
+            return $this->successResponse(
+                \App\Http\Resources\SubjectResource::collection($subjects),
+                'Teacher timetable retrieved successfully.'
+            );
+        } catch (Throwable $e) {
+            return $this->exceptionResponse($e);
+        }
+    }
 }

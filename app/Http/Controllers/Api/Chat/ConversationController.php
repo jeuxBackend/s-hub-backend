@@ -24,7 +24,7 @@ class ConversationController extends Controller
 
             $query = Conversation::query();
 
-            if ($auth->role === \App\Enums\UserRole::Principal || $auth->role === \App\Enums\UserRole::SchoolAdmin) {
+            if ($auth->role === \App\Enums\UserRole::Principal) {
                 $institutionId = $auth->institution_id;
                 $query->where(function ($q) use ($institutionId) {
                     $q->whereHas('userOne', function ($q2) use ($institutionId) {
@@ -36,7 +36,7 @@ class ConversationController extends Controller
             } else {
                 $query->where(function ($q) use ($authId) {
                     $q->where('user_one_id', $authId)
-                      ->orWhere('user_two_id', $authId);
+                        ->orWhere('user_two_id', $authId);
                 });
             }
 
@@ -67,9 +67,9 @@ class ConversationController extends Controller
         try {
             $auth = auth()->user();
             $authId = $auth->id;
-            
-            if ($auth->role === \App\Enums\UserRole::Principal || $auth->role === \App\Enums\UserRole::SchoolAdmin) {
-                return $this->errorResponse('Principals and School Admins cannot start conversations.', 403);
+
+            if ($auth->role === \App\Enums\UserRole::Principal) {
+                return $this->errorResponse('Principals cannot start conversations.', 403);
             }
 
             $recipientId = (int) $request->recipient_id;
@@ -100,13 +100,13 @@ class ConversationController extends Controller
         try {
             $auth = auth()->user();
             $authId = $auth->id;
-            $isPrincipalOrAdmin = $auth->role === \App\Enums\UserRole::Principal || $auth->role === \App\Enums\UserRole::SchoolAdmin;
+            $isPrincipalOrAdmin = $auth->role === \App\Enums\UserRole::Principal;
 
             // Authorization: only participants or institution admin can open the chat
             if (!$isPrincipalOrAdmin && $conversation->user_one_id !== $authId && $conversation->user_two_id !== $authId) {
                 abort(403, 'Unauthorized access to this conversation.');
             }
-            
+
             if ($isPrincipalOrAdmin) {
                 $institutionId = $auth->institution_id;
                 // Principal can only view conversations if one of the users belongs to their institution
@@ -135,10 +135,10 @@ class ConversationController extends Controller
                 ),
                 'messages' => MessageResource::collection($messages),
                 'pagination' => [
-                    'total'        => $messages->total(),
-                    'per_page'     => $messages->perPage(),
+                    'total' => $messages->total(),
+                    'per_page' => $messages->perPage(),
                     'current_page' => $messages->currentPage(),
-                    'last_page'    => $messages->lastPage(),
+                    'last_page' => $messages->lastPage(),
                 ],
             ], 'Messages retrieved successfully');
         } catch (Throwable $e) {

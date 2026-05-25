@@ -26,7 +26,7 @@ class ChatUserController extends Controller
 
             $contacts = match ($auth->role) {
                 UserRole::Parent    => $this->contactsForParent($auth, $institutionId),
-                UserRole::Teacher   => $this->contactsForTeacher($auth, $institutionId),
+                UserRole::Teacher, UserRole::SchoolAdmin => $this->contactsForTeacher($auth, $institutionId),
                 default             => collect(),
             };
 
@@ -72,9 +72,9 @@ class ChatUserController extends Controller
 
     private function contactsForTeacher(User $teacher, int $institutionId): \Illuminate\Support\Collection
     {
-        // All other teachers in the same institution
+        // All other teachers & school admins in the same institution
         $teacherIds = User::where('institution_id', $institutionId)
-            ->where('role', UserRole::Teacher->value)
+            ->whereIn('role', [UserRole::Teacher->value, UserRole::SchoolAdmin->value])
             ->where('id', '!=', $teacher->id)
             ->pluck('id');
 

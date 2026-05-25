@@ -11,7 +11,7 @@ class ConversationResource extends JsonResource
     {
         $auth = auth()->user();
         $authId = $auth->id;
-        $isPrincipalOrAdmin = $auth->role === \App\Enums\UserRole::Principal || $auth->role === \App\Enums\UserRole::SchoolAdmin;
+        $isPrincipalOrAdmin = $auth->role === \App\Enums\UserRole::Principal;
         
         $response = [
             'id'              => $this->id,

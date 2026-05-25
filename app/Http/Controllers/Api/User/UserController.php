@@ -113,6 +113,23 @@ class UserController extends Controller
             return $this->exceptionResponse($e);
         }
     }
+
+    public function toggleRemote()
+    {
+        try {
+            $user = auth()->user();
+            $user->update([
+                'remote_teaching' => !$user->remote_teaching,
+            ]);
+            return $this->successResponse(
+                ['user' => new UserResource($user)],
+                'Remote teaching status updated'
+            );
+        } catch (Throwable $e) {
+            return $this->exceptionResponse($e);
+        }
+    }
+
     public function updateContact(UpdateContactRequest $request, UpdateContactAction $action)
     {
         try {

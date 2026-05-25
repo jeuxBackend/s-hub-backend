@@ -30,6 +30,8 @@ class Institution extends Model
         'email_verified',
         'phone_verified',
         'subjects',
+        'latitude',
+        'longitude',
     ];
 
     protected $casts = [
