@@ -61,6 +61,7 @@ Route::get('/ping', fn() => 'pong');
 Route::post('/web/login', AdminLoginController::class);
 Route::post('/otp/verify', VerifyOtpController::class);
 Route::post('/otp/resend', ResendOtpController::class)->middleware('throttle:otp-resend');
+Route::post('/stripe/webhook', [\App\Http\Controllers\Api\StripeWebhookController::class, 'handleWebhook']);
 // });
 Route::post('/logout', LogoutController::class)->middleware('auth:sanctum');
 // ==================== AUTHENTICATED ROUTES ====================
@@ -85,22 +86,17 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'active.user'])->group(function
         Route::prefix('classrooms/{classroom}/grades')->group(function () {
             Route::get('/', [GradeController::class, 'index']);
             Route::post('/', [GradeController::class, 'store']);
-            Route::patch('/{grade}', [GradeController::class, 'update']);
+            Route::patch('{grade}', [GradeController::class, 'update']);
         });
     });
 
     // ===================== TEACHER ONLY ROUTES =====================
     Route::middleware(['otp.verified', 'role:teacher,school-admin'])->group(function () {
         Route::get('teacher/classrooms', [TeacherClassroomController::class, 'index']);
-        Route::get('teacher/timetable', [TeacherClassroomController::class, 'timetable']);
         Route::get('teacher/classrooms/{classroom}', [TeacherClassroomController::class, 'show']);
-        Route::post('teacher/attendance/mark', [\App\Http\Controllers\Api\Teacher\TeacherAttendanceController::class, 'markAttendance']);
     });
 
     Route::put('update-profile', [UserController::class, 'updateProfile']);
-    Route::patch('users/{user}/notifications/toggle', [UserController::class, 'toggleNotification']);
-    Route::patch('users/remote/toggle', [UserController::class, 'toggleRemote']);
-
 
     // ===================== MANAGEMENT ROUTES (PRINCIPAL + SCHOOL ADMIN ONLY) =====================
     Route::middleware(['otp.verified', 'role:principal,school-admin'])->group(function () {
@@ -112,10 +108,9 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'active.user'])->group(function
             Route::post('update-permissions', [SchoolAdminController::class, 'updatePermissions']);
             Route::get('remove-admin/{id}', [SchoolAdminController::class, 'removeSchoolAdmin']);
             Route::patch('student-reports/{id}/status', [\App\Http\Controllers\Api\StudentReportController::class, 'updateStatus']);
-
-            Route::get('teachers/{id}/timetable', [\App\Http\Controllers\Api\Principal\PrincipalTimetableController::class, 'getTeacherTimetable']);
-            Route::get('classrooms/{id}/timetable', [\App\Http\Controllers\Api\Principal\PrincipalTimetableController::class, 'getClassroomTimetable']);
         });
+
+
 
         Route::prefix('principal')->middleware('role:principal,school-admin')->group(function () {
             // Managed by Principal or School Admin with permissions
@@ -135,6 +130,7 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'active.user'])->group(function
 
         Route::put('update-contact', [UserController::class, 'updateContact']);
         Route::put('change-password', [UserController::class, 'changePassword']);
+        Route::patch('users/{user}/notifications/toggle', [UserController::class, 'toggleNotification']);
 
 
         // Finance
@@ -146,8 +142,8 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'active.user'])->group(function
         });
 
         Route::get('dashboard-stats', [PrincipalDashboardController::class, 'stats']);
+        Route::get('settings', [SettingController::class, 'show']);
     });
-    Route::get('settings', [SettingController::class, 'show']);
     Route::post('get-noticeboard', [NotificationsController::class, 'getUserNotifications']);
     Route::post('read-noticeboard/{id}', [NotificationsController::class, 'readNotification']);
 
@@ -189,6 +185,10 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'active.user'])->group(function
 
         Route::get('dashboard-stats', [ManagerDashboardController::class, 'stats']);
         Route::get('my-invoices', [ActivitiesController::class, 'getInvoices']);
+
+        // Stripe Connect for Managers
+        Route::post('stripe/connect', [\App\Http\Controllers\Api\Manager\StripeConnectController::class, 'connect']);
+        Route::get('stripe/status', [\App\Http\Controllers\Api\Manager\StripeConnectController::class, 'status']);
     });
 
     // ===================== PARENT ENDPOINTS =====================
@@ -196,7 +196,12 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'active.user'])->group(function
         Route::get('students', [\App\Http\Controllers\Api\Parent\ParentController::class, 'getChildrenClassrooms']);
         Route::get('attendances/by-month', [\App\Http\Controllers\Api\Parent\ParentController::class, 'getAttendanceByMonth']);
         Route::get('attendances/by-date', [\App\Http\Controllers\Api\Parent\ParentController::class, 'getAttendanceByDate']);
-        Route::get('grades', [\App\Http\Controllers\Api\Parent\ParentController::class, 'getGrades']);
+
+        // Invoices & Payments
+        Route::get('invoices', [\App\Http\Controllers\Api\Parent\ParentInvoiceController::class, 'index']);
+        Route::get('invoices/{id}', [\App\Http\Controllers\Api\Parent\ParentInvoiceController::class, 'show']);
+        Route::post('invoices/{id}/pay', [\App\Http\Controllers\Api\Parent\ParentInvoiceController::class, 'pay']);
+        Route::post('invoices/{id}/confirm', [\App\Http\Controllers\Api\Parent\ParentInvoiceController::class, 'confirm']);
     });
 
     // ===================== CHAT ROUTES (ALL AUTHENTICATED USERS) =====================

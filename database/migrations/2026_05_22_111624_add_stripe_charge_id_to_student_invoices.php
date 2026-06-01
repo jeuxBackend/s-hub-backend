@@ -11,8 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('classrooms', function (Blueprint $table) {
-            $table->foreignId('in_charge_id')->nullable()->constrained('users')->onDelete('set null');
+        Schema::table('student_invoices', function (Blueprint $table) {
+            $table->string('stripe_charge_id')->nullable()->after('stripe_payment_intent_id');
         });
     }
 
@@ -21,9 +21,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('classrooms', function (Blueprint $table) {
-            $table->dropForeign(['in_charge_id']);
-            $table->dropColumn('in_charge_id');
+        Schema::table('student_invoices', function (Blueprint $table) {
+            $table->dropColumn('stripe_charge_id');
         });
     }
 };
