@@ -15,6 +15,7 @@ class TeacherAttendance extends Model
         'institution_id',
         'date',
         'status',
+        'type',
         'is_remote',
     ];
 

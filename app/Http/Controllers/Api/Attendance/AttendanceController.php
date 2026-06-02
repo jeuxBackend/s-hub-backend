@@ -43,7 +43,6 @@ class AttendanceController extends Controller
                 ? $this->successResponse(new StudentAttendanceResource($attendance))
                 : $this->errorResponse('Attendance record not found.', 404);
         }
-
         // Case: paginated result
         if ($isPaginated && $result instanceof \Illuminate\Contracts\Pagination\LengthAwarePaginator) {
             return $this->paginatedResponse(

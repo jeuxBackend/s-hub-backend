@@ -37,6 +37,7 @@ use App\Http\Controllers\Api\{
     Principal\SchoolAdminController,
     Principal\TeacherController,
     Principal\GuardianController,
+    Principal\FreePeriodTeacherController,
     Setting\SettingController,
     Student\StudentController,
     StudentFee\AssignFeeController,
@@ -128,6 +129,10 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'active.user'])->group(function
 
             Route::post('classroom-teachers/allocate', [ClassroomTeacherController::class, 'allocate']);
             Route::post('classroom-teachers/unallocate', [ClassroomTeacherController::class, 'unallocate']);
+
+            // Free Period Teacher - Notify and Mark Extra Attendance
+            Route::post('free-period-teachers/notify', [FreePeriodTeacherController::class, 'notifyFreeTeachers']);
+            Route::post('free-period-teachers/notify-teacher', [FreePeriodTeacherController::class, 'notifyTeacher']);
         });
 
         Route::put('update-contact', [UserController::class, 'updateContact']);
