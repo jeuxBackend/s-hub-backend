@@ -26,6 +26,8 @@ class ListParentInvoicesAction
             $query->where('student_id', $studentId);
         }
 
-        return $query->latest()->get();
+        return $query->orderByRaw("CASE WHEN status = 'unpaid' THEN 0 WHEN status = 'partial' THEN 1 ELSE 2 END")
+            ->latest()
+            ->get();
     }
 }
