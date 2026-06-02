@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use App\Models\StudentInvoice;
 use App\Actions\StudentInvoice\CreateStudentInvoiceAction;
 use App\Actions\StudentInvoice\UpdateStudentInvoiceAction;
@@ -59,6 +60,69 @@ class StudentInvoiceController extends Controller
         try {
             $action->handle($studentInvoice);
             return $this->successResponse(null, 'Deleted successfully');
+        } catch (Throwable $e) {
+            return $this->exceptionResponse($e);
+        }
+    }
+
+    public function pay(Request $request, StudentInvoice $studentInvoice)
+    {
+        $request->validate([
+            'paid_amount' => ['required', 'numeric', 'min:0.01'],
+            'paid_date' => ['required', 'date'],
+            'payment_method' => ['required', 'in:cash,card,check'],
+        ]);
+
+        try {
+            if ($studentInvoice->status === 'paid') {
+                return $this->errorResponse('Invoice is already paid.', 400);
+            }
+
+            $paidAmount = (float) $request->input('paid_amount');
+            $invoiceTotal = (float) $studentInvoice->total_amount;
+
+            if ($paidAmount > $invoiceTotal) {
+                return $this->errorResponse('Paid amount cannot exceed invoice total.', 422);
+            }
+
+            return DB::transaction(function () use ($request, $studentInvoice, $paidAmount) {
+                $paymentDate = $request->input('paid_date');
+                $paymentMethod = $request->input('payment_method');
+                $invoiceUuid = $studentInvoice->invoice_uuid ?: \Illuminate\Support\Str::uuid()->toString();
+
+                $studentInvoice->update([
+                    'invoice_uuid' => $invoiceUuid,
+                    'paid_amount' => $paidAmount,
+                    'due_amount' => $studentInvoice->total_amount - $paidAmount,
+                    'status' => $paidAmount === (float) $studentInvoice->total_amount ? 'paid' : 'partial',
+                    'payment_date' => $paymentDate,
+                    'payment_method' => $paymentMethod,
+                ]);
+
+                if ($paidAmount < (float) $studentInvoice->total_amount) {
+                    $remainingAmount = $studentInvoice->total_amount - $paidAmount;
+                    $paidBy = $studentInvoice->paid_by ?: $studentInvoice->student->guardian_id ?? auth()->id();
+
+                    StudentInvoice::create([
+                        'student_id' => $studentInvoice->student_id,
+                        'paid_by' => $paidBy,
+                        'for_month' => $studentInvoice->for_month,
+                        'for_year' => $studentInvoice->for_year,
+                        'amount' => $remainingAmount,
+                        'discount' => 0,
+                        'total_amount' => $remainingAmount,
+                        'paid_amount' => 0,
+                        'due_amount' => $remainingAmount,
+                        'status' => 'unpaid',
+                        'payment_date' => null,
+                        'payment_method' => null,
+                        'reference_no' => null,
+                        'invoice_uuid' => $invoiceUuid,
+                    ]);
+                }
+
+                return $this->successResponse($studentInvoice->fresh(), 'Invoice payment recorded successfully.');
+            });
         } catch (Throwable $e) {
             return $this->exceptionResponse($e);
         }

@@ -20,6 +20,7 @@ class StudentInvoice extends Model
         'payment_date',
         'payment_method',
         'reference_no',
+        'invoice_uuid',
         'stripe_payment_intent_id',
         'stripe_charge_id',
     ];

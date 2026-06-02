@@ -8,11 +8,13 @@ use App\Http\Requests\Student\StoreStudentRequest;
 use App\Http\Requests\Student\UpdateStudentRequest;
 use App\Http\Requests\Student\FilterStudentRequest;
 use App\Http\Resources\StudentResource;
+use App\Http\Resources\StudentWithInvoicesResource;
 use App\Actions\Student\CreateStudentAction;
 use App\Actions\Student\UpdateStudentAction;
 use App\Actions\Student\DeleteStudentAction;
 use App\Actions\Student\ListStudentsAction;
 use App\Actions\Student\GetStudentAction;
+use App\Actions\Admin\GetStudentWithInvoicesAction;
 use App\Models\Student;
 use Throwable;
 
@@ -84,6 +86,20 @@ class StudentController extends Controller
             return $this->successResponse(
                 new StudentResource($student),
                 'Student fetched successfully'
+            );
+        } catch (Throwable $e) {
+            return $this->exceptionResponse($e);
+        }
+    }
+
+    public function showWithInvoices($id, GetStudentWithInvoicesAction $getStudentAction)
+    {
+        try {
+            $student = $getStudentAction->handle($id);
+
+            return $this->successResponse(
+                new StudentWithInvoicesResource($student),
+                'Student with invoices retrieved successfully'
             );
         } catch (Throwable $e) {
             return $this->exceptionResponse($e);

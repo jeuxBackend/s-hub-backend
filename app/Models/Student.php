@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Support\Facades\Storage;
+use App\Models\studentInvoices;
 
 class Student extends Model
 {
@@ -86,6 +87,11 @@ class Student extends Model
     public function attendanceRecords()
     {
         return $this->hasMany(StudentAttendance::class);
+    }
+
+    public function studentInvoices()
+    {
+        return $this->hasMany(StudentInvoice::class);
     }
 
     // ✅ Today's attendance relation

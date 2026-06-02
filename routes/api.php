@@ -115,8 +115,10 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'active.user'])->group(function
         Route::prefix('principal')->middleware('role:principal,school-admin')->group(function () {
             // Managed by Principal or School Admin with permissions
             Route::apiResource('students', StudentController::class)->middleware('schooladmin.permission:Students');
+            Route::get('students/{id}/with-invoices', [StudentController::class, 'showWithInvoices'])->middleware('schooladmin.permission:Students');
             Route::apiResource('teachers', TeacherController::class)->middleware('schooladmin.permission:Teachers');
             Route::apiResource('parents', GuardianController::class)->middleware('schooladmin.permission:Parents');
+            Route::get('classrooms/no-fee-students', [ClassroomController::class, 'indexWithoutFeeStudents']);
             Route::apiResource('classrooms', ClassroomController::class);
             Route::apiResource('subjects', SubjectController::class);
 
@@ -136,8 +138,10 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'active.user'])->group(function
         // Finance
         Route::middleware('schooladmin.permission:Finance')->group(function () {
             Route::apiResource('student-invoices', \App\Http\Controllers\Api\StudentInvoiceController::class);
+            Route::post('student-invoices/{student_invoice}/pay', [\App\Http\Controllers\Api\StudentInvoiceController::class, 'pay']);
             Route::post('student-fees', [\App\Http\Controllers\Api\StudentFee\StudentFeeController::class, 'index']);
             Route::post('student-fees/assign', AssignFeeController::class);
+            Route::patch('student-fees/{student_fee}', [\App\Http\Controllers\Api\StudentFee\StudentFeeController::class, 'update']);
             Route::post('tuition-updates/schedule', [\App\Http\Controllers\Api\TuitionUpdateController::class, 'schedule']);
         });
 

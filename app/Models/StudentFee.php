@@ -27,6 +27,11 @@ class StudentFee extends Model
     protected static function booted()
     {
         static::saving(function ($fee) {
+            if ($fee->paid_amount === null) {
+                $fee->status = null;
+                return;
+            }
+
             $total = (
                 ($fee->tuition_fee ?? 0) +
                 ($fee->uniform_fee ?? 0) +

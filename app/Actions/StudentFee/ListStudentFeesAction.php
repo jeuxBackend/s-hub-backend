@@ -9,7 +9,7 @@ class ListStudentFeesAction
 {
     public function handle(array $filters = []): LengthAwarePaginator
     {
-        $query = StudentFee::with(['student', 'classroom']);
+        $query = StudentFee::with(['student.studentInvoices', 'classroom']);
 
         // Ensure users only see records for their own institution
         if (auth()->check() && auth()->user()->institution_id) {
