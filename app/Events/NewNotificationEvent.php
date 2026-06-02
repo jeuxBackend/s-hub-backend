@@ -22,6 +22,7 @@ class NewNotificationEvent implements ShouldBroadcastNow
     public function __construct(NotificationLog $notification)
     {
         $this->notification = $notification;
+        \Illuminate\Support\Facades\Log::info('NewNotificationEvent triggered', ['user_id' => $notification->user_id, 'title' => $notification->title]);
     }
 
     /**
