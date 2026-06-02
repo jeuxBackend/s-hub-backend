@@ -29,6 +29,15 @@ class StoreGradeAction
                 ]
             );
 
+            if (!in_array($grade->type, ['final_marks', 'years_marks'])) {
+                app(\App\Actions\Grade\CalculateStudentGradesAction::class)->handle(
+                    $grade->student_id,
+                    $grade->classroom_id,
+                    $grade->subject_id,
+                    $grade->term
+                );
+            }
+
             return [$grade];
         });
     }

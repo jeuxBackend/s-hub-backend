@@ -269,7 +269,10 @@ class ParentController extends Controller
 
         $grades = \App\Models\StudentGrade::where('student_id', $student->id)
             ->where('subject_id', $filters['subject_id'])
-            ->where('term', $filters['term'])
+            ->where(function($q) use ($filters) {
+                $q->where('term', $filters['term'])
+                  ->orWhere('type', 'years_marks');
+            })
             ->get();
 
         $result = [

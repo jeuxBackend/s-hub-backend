@@ -37,7 +37,10 @@ class GradeController extends Controller
             $gradesQuery->where('subject_id', $filters['subject_id']);
         }
         if (!empty($filters['term'])) {
-            $gradesQuery->where('term', $filters['term']);
+            $gradesQuery->where(function($q) use ($filters) {
+                $q->where('term', $filters['term'])
+                  ->orWhere('type', 'years_marks');
+            });
         }
         if (!empty($filters['date'])) {
             $gradesQuery->whereDate('date', $filters['date']);
