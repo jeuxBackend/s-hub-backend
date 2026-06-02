@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Actions\Parent\ListParentInvoicesAction;
 use App\Actions\Parent\CreateParentPaymentIntentAction;
 use App\Actions\Parent\ConfirmParentPaymentAction;
+use App\Actions\StudentInvoice\GenerateInvoiceReceiptPdfAction;
 use App\Models\Student;
 use App\Models\StudentFee;
 use App\Models\StudentInvoice;
@@ -118,6 +119,25 @@ class ParentInvoiceController extends Controller
             );
 
             return $this->successResponse($invoice, 'Payment confirmed and invoice marked as paid.');
+        } catch (Throwable $e) {
+            return $this->exceptionResponse($e);
+        }
+    }
+
+    /**
+     * Download invoice receipt as PDF
+     */
+    public function downloadReceipt($id, GenerateInvoiceReceiptPdfAction $action)
+    {
+        try {
+            $parentId = auth()->id();
+            
+            // Verify parent owns this invoice (through student relationship)
+            $invoice = StudentInvoice::whereHas('student', function ($q) use ($parentId) {
+                $q->where('guardian_id', $parentId);
+            })->findOrFail($id);
+
+            return $action->handle($invoice);
         } catch (Throwable $e) {
             return $this->exceptionResponse($e);
         }
