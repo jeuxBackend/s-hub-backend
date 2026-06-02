@@ -139,6 +139,7 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'active.user'])->group(function
         Route::middleware('schooladmin.permission:Finance')->group(function () {
             Route::apiResource('student-invoices', \App\Http\Controllers\Api\StudentInvoiceController::class);
             Route::post('student-invoices/{student_invoice}/pay', [\App\Http\Controllers\Api\StudentInvoiceController::class, 'pay']);
+            Route::get('student-invoices/{student_invoice}/receipt/download', [\App\Http\Controllers\Api\StudentInvoiceController::class, 'downloadReceipt']);
             Route::post('student-fees', [\App\Http\Controllers\Api\StudentFee\StudentFeeController::class, 'index']);
             Route::post('student-fees/assign', AssignFeeController::class);
             Route::patch('student-fees/{student_fee}', [\App\Http\Controllers\Api\StudentFee\StudentFeeController::class, 'update']);
@@ -204,6 +205,7 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'active.user'])->group(function
         // Invoices & Payments
         Route::get('invoices', [\App\Http\Controllers\Api\Parent\ParentInvoiceController::class, 'index']);
         Route::get('invoices/{id}', [\App\Http\Controllers\Api\Parent\ParentInvoiceController::class, 'show']);
+        Route::get('invoices/{id}/receipt/download', [\App\Http\Controllers\Api\Parent\ParentInvoiceController::class, 'downloadReceipt']);
         Route::post('invoices/{id}/pay', [\App\Http\Controllers\Api\Parent\ParentInvoiceController::class, 'pay']);
         Route::post('invoices/{id}/confirm', [\App\Http\Controllers\Api\Parent\ParentInvoiceController::class, 'confirm']);
     });

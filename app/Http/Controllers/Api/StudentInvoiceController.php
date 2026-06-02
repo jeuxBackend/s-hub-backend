@@ -11,6 +11,7 @@ use App\Actions\StudentInvoice\UpdateStudentInvoiceAction;
 use App\Actions\StudentInvoice\DeleteStudentInvoiceAction;
 use App\Actions\StudentInvoice\ListStudentInvoicesAction;
 use App\Actions\StudentInvoice\GetStudentInvoiceAction;
+use App\Actions\StudentInvoice\GenerateInvoiceReceiptPdfAction;
 use Throwable;
 
 class StudentInvoiceController extends Controller
@@ -123,6 +124,15 @@ class StudentInvoiceController extends Controller
 
                 return $this->successResponse($studentInvoice->fresh(), 'Invoice payment recorded successfully.');
             });
+        } catch (Throwable $e) {
+            return $this->exceptionResponse($e);
+        }
+    }
+
+    public function downloadReceipt(StudentInvoice $studentInvoice, GenerateInvoiceReceiptPdfAction $action)
+    {
+        try {
+            return $action->handle($studentInvoice);
         } catch (Throwable $e) {
             return $this->exceptionResponse($e);
         }
