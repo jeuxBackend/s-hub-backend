@@ -158,7 +158,8 @@ class Configuration
     private ?array $autoloadWarmers = null;
     private $implicitUse = false;
     private ?ShellLogger $logger = null;
-    private ?\Closure $exceptionDetails = null;
+    /** @var callable|null */
+    private $exceptionDetails = null;
     private int $errorLoggingLevel = \E_ALL;
     private bool $warnOnMultipleConfigs = false;
     private string $colorMode = self::COLOR_MODE_AUTO;
@@ -175,6 +176,7 @@ class Configuration
     private bool $yolo = false;
     private ?Theme $theme = null;
     private bool $localConfigLoaded = false;
+    private bool $forceWarmAutoload = false;
 
     // services
     private ?Readline\Readline $readline = null;
@@ -326,6 +328,7 @@ class Configuration
         // Handle --warm-autoload
         if (self::getOptionFromInput($input, ['warm-autoload'])) {
             $config->setWarmAutoload(true);
+            $config->setForceWarmAutoload(true);
         }
 
         // Handle --yolo
@@ -699,10 +702,11 @@ class Configuration
     }
 
     /**
-     * @deprecated explicit autoload warming always respects project trust restrictions
+     * Force autoload warming for this run, regardless of project trust status.
      */
     public function setForceWarmAutoload(bool $force = true): void
     {
+        $this->forceWarmAutoload = $force;
     }
 
     /**
@@ -852,6 +856,10 @@ class Configuration
 
     private function shouldReportAutoloadWarming(string $projectRoot): bool
     {
+        if ($this->forceWarmAutoload) {
+            return false;
+        }
+
         if (!$this->hasComposerAutoloadWarmerConfigured()) {
             return false;
         }
@@ -2060,7 +2068,7 @@ class Configuration
             $this->autoloadWarmers = $this->parseWarmAutoloadConfig(false);
         }
 
-        if ($this->projectTrust->getForceTrust() || $this->projectTrust->getMode() === self::PROJECT_TRUST_ALWAYS) {
+        if ($this->forceWarmAutoload || $this->projectTrust->getForceTrust() || $this->projectTrust->getMode() === self::PROJECT_TRUST_ALWAYS) {
             return $this->autoloadWarmers;
         }
 
@@ -2255,16 +2263,24 @@ class Configuration
      *
      * The callback receives the thrown exception and may return any dumpable
      * value; returning null suppresses additional output.
+     *
+     * @param callable $exceptionDetails
      */
-    public function setExceptionDetails(callable $exceptionDetails): void
+    public function setExceptionDetails($exceptionDetails): void
     {
-        $this->exceptionDetails = \Closure::fromCallable($exceptionDetails);
+        if (!\is_callable($exceptionDetails)) {
+            throw new \InvalidArgumentException('Exception details callback must be callable');
+        }
+
+        $this->exceptionDetails = $exceptionDetails;
     }
 
     /**
      * Get the configured exception details callback, if any.
+     *
+     * @return callable|null
      */
-    public function getExceptionDetails(): ?\Closure
+    public function getExceptionDetails()
     {
         return $this->exceptionDetails;
     }

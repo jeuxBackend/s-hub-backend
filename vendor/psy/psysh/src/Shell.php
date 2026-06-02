@@ -70,7 +70,7 @@ use Symfony\Component\Console\Output\StreamOutput;
  */
 class Shell extends Application
 {
-    const VERSION = 'v0.12.23';
+    const VERSION = 'v0.12.22';
 
     private Configuration $config;
     private ?CodeCleaner $cleaner = null;
@@ -622,6 +622,17 @@ class Shell extends Application
     {
         $this->output = $output;
         $this->originalVerbosity = $output->getVerbosity();
+
+        if ($output instanceof ShellOutput) {
+            $output->setWriteListener(function (): void {
+                if ($this->writingLegacySpacer) {
+                    return;
+                }
+
+                $this->outputWritten = true;
+                $this->markLegacyOutputWritten();
+            });
+        }
     }
 
     /**
@@ -839,7 +850,6 @@ class Shell extends Application
             // reset output verbosity (in case it was altered by a subcommand)
             $this->output->setVerbosity($this->originalVerbosity);
             $this->outputWritten = false;
-            $this->resetShellOutputWritten();
 
             $input = $this->readline();
 
@@ -919,7 +929,6 @@ class Shell extends Application
     public function beforeLoop()
     {
         $this->outputWritten = false;
-        $this->resetShellOutputWritten();
 
         foreach ($this->loopListeners as $listener) {
             $listener->beforeLoop($this);
@@ -987,28 +996,13 @@ class Shell extends Application
      */
     private function notifyOutputWritten(): void
     {
-        if ($this->output instanceof ShellOutput && $this->output->consumeVisibleOutputWritten()) {
-            $this->outputWritten = true;
-            $this->markLegacyOutputWritten();
-        }
-
         if ($this->readline instanceof InteractiveReadlineInterface) {
             $this->readline->setOutputWritten($this->outputWritten);
         }
     }
 
     /**
-     * Reset ShellOutput's visible-output tracker.
-     */
-    private function resetShellOutputWritten(): void
-    {
-        if ($this->output instanceof ShellOutput) {
-            $this->output->consumeVisibleOutputWritten();
-        }
-    }
-
-    /**
-     * Capture write positions for output streams not covered by ShellOutput tracking.
+     * Capture write positions for output streams not covered by explicit write listeners.
      *
      * @return array<int, int>|null
      */
@@ -2037,7 +2031,6 @@ class Shell extends Application
         try {
             $this->output->writeln('');
         } finally {
-            $this->resetShellOutputWritten();
             $this->writingLegacySpacer = false;
         }
     }

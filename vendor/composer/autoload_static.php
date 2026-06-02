@@ -4,7 +4,7 @@
 
 namespace Composer\Autoload;
 
-class ComposerStaticInit7537bafe985ddcd2776dd5bc4602b906
+class ComposerStaticInit5f72f01aa25d20204efb5885dd073a52
 {
     public static $files = array (
         '6e3fae29631ef280660b3cdad06f25a8' => __DIR__ . '/..' . '/symfony/deprecation-contracts/function.php',
@@ -968,6 +968,7 @@ class ComposerStaticInit7537bafe985ddcd2776dd5bc4602b906
         'App\\Actions\\StudentFee\\UpdateFeeAction' => __DIR__ . '/../..' . '/app/Actions/StudentFee/UpdateFeeAction.php',
         'App\\Actions\\StudentInvoice\\CreateStudentInvoiceAction' => __DIR__ . '/../..' . '/app/Actions/StudentInvoice/CreateStudentInvoiceAction.php',
         'App\\Actions\\StudentInvoice\\DeleteStudentInvoiceAction' => __DIR__ . '/../..' . '/app/Actions/StudentInvoice/DeleteStudentInvoiceAction.php',
+        'App\\Actions\\StudentInvoice\\GenerateInvoiceReceiptPdfAction' => __DIR__ . '/../..' . '/app/Actions/StudentInvoice/GenerateInvoiceReceiptPdfAction.php',
         'App\\Actions\\StudentInvoice\\GetStudentInvoiceAction' => __DIR__ . '/../..' . '/app/Actions/StudentInvoice/GetStudentInvoiceAction.php',
         'App\\Actions\\StudentInvoice\\ListStudentInvoicesAction' => __DIR__ . '/../..' . '/app/Actions/StudentInvoice/ListStudentInvoicesAction.php',
         'App\\Actions\\StudentInvoice\\UpdateStudentInvoiceAction' => __DIR__ . '/../..' . '/app/Actions/StudentInvoice/UpdateStudentInvoiceAction.php',
@@ -988,7 +989,9 @@ class ComposerStaticInit7537bafe985ddcd2776dd5bc4602b906
         'App\\Actions\\Subject\\StoreSubjectAction' => __DIR__ . '/../..' . '/app/Actions/Subject/StoreSubjectAction.php',
         'App\\Actions\\Subject\\UpdateSubjectAction' => __DIR__ . '/../..' . '/app/Actions/Subject/UpdateSubjectAction.php',
         'App\\Actions\\Teacher\\CreateTeacherAction' => __DIR__ . '/../..' . '/app/Actions/Teacher/CreateTeacherAction.php',
+        'App\\Actions\\Teacher\\FindFreeTeachersAction' => __DIR__ . '/../..' . '/app/Actions/Teacher/FindFreeTeachersAction.php',
         'App\\Actions\\Teacher\\ListTeachersAction' => __DIR__ . '/../..' . '/app/Actions/Teacher/ListTeachersAction.php',
+        'App\\Actions\\Teacher\\NotifyFreeTeachersAction' => __DIR__ . '/../..' . '/app/Actions/Teacher/NotifyFreeTeachersAction.php',
         'App\\Actions\\TuitionUpdate\\ScheduleUpdateAction' => __DIR__ . '/../..' . '/app/Actions/TuitionUpdate/ScheduleUpdateAction.php',
         'App\\Actions\\User\\ChangePasswordAction' => __DIR__ . '/../..' . '/app/Actions/User/ChangePasswordAction.php',
         'App\\Actions\\User\\ChangeUserRoleAction' => __DIR__ . '/../..' . '/app/Actions/User/ChangeUserRoleAction.php',
@@ -1049,6 +1052,7 @@ class ComposerStaticInit7537bafe985ddcd2776dd5bc4602b906
         'App\\Http\\Controllers\\Api\\Notifications\\NotificationsController' => __DIR__ . '/../..' . '/app/Http/Controllers/Api/Notifications/NotificationsController.php',
         'App\\Http\\Controllers\\Api\\Parent\\ParentController' => __DIR__ . '/../..' . '/app/Http/Controllers/Api/Parent/ParentController.php',
         'App\\Http\\Controllers\\Api\\Parent\\ParentInvoiceController' => __DIR__ . '/../..' . '/app/Http/Controllers/Api/Parent/ParentInvoiceController.php',
+        'App\\Http\\Controllers\\Api\\Principal\\FreePeriodTeacherController' => __DIR__ . '/../..' . '/app/Http/Controllers/Api/Principal/FreePeriodTeacherController.php',
         'App\\Http\\Controllers\\Api\\Principal\\GuardianController' => __DIR__ . '/../..' . '/app/Http/Controllers/Api/Principal/GuardianController.php',
         'App\\Http\\Controllers\\Api\\Principal\\PrincipalDashboardController' => __DIR__ . '/../..' . '/app/Http/Controllers/Api/Principal/PrincipalDashboardController.php',
         'App\\Http\\Controllers\\Api\\Principal\\PrincipalTimetableController' => __DIR__ . '/../..' . '/app/Http/Controllers/Api/Principal/PrincipalTimetableController.php',
@@ -10161,9 +10165,9 @@ class ComposerStaticInit7537bafe985ddcd2776dd5bc4602b906
     public static function getInitializer(ClassLoader $loader)
     {
         return \Closure::bind(function () use ($loader) {
-            $loader->prefixLengthsPsr4 = ComposerStaticInit7537bafe985ddcd2776dd5bc4602b906::$prefixLengthsPsr4;
-            $loader->prefixDirsPsr4 = ComposerStaticInit7537bafe985ddcd2776dd5bc4602b906::$prefixDirsPsr4;
-            $loader->classMap = ComposerStaticInit7537bafe985ddcd2776dd5bc4602b906::$classMap;
+            $loader->prefixLengthsPsr4 = ComposerStaticInit5f72f01aa25d20204efb5885dd073a52::$prefixLengthsPsr4;
+            $loader->prefixDirsPsr4 = ComposerStaticInit5f72f01aa25d20204efb5885dd073a52::$prefixDirsPsr4;
+            $loader->classMap = ComposerStaticInit5f72f01aa25d20204efb5885dd073a52::$classMap;
 
         }, null, ClassLoader::class);
     }

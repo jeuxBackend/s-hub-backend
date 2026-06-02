@@ -226,7 +226,8 @@ EOT
             throw new InvalidArgumentException('Empty host provided');
         }
 
-        $host = self::normalizeNoProxyHost($host, true);
+        // Strip port if present.
+        [$host] = \explode(':', $host, 2);
 
         foreach ($noProxyArray as $area) {
             // Always match on wildcards.
@@ -239,8 +240,6 @@ EOT
                 continue;
             }
 
-            $area = self::normalizeNoProxyHost($area, false);
-
             if ($area === $host) {
                 // Exact matches.
                 return true;
@@ -248,45 +247,12 @@ EOT
             // Special match if the area when prefixed with ".". Remove any
             // existing leading "." and add a new leading ".".
             $area = '.'.\ltrim($area, '.');
-            if (
-                \strpos($host, ':') === false
-                && \strpos($area, ':') === false
-                && \substr($host, -\strlen($area)) === $area
-            ) {
+            if (\substr($host, -\strlen($area)) === $area) {
                 return true;
             }
         }
 
         return false;
-    }
-
-    private static function normalizeNoProxyHost(string $host, bool $stripPort): string
-    {
-        if ($host !== '' && $host[0] === '[') {
-            $closingBracket = \strpos($host, ']');
-
-            if ($closingBracket !== false) {
-                $address = \substr($host, 1, $closingBracket - 1);
-                $tail = \substr($host, $closingBracket + 1);
-
-                if (
-                    ($tail === '' || ($stripPort && \preg_match('/^:\d+$/', $tail)))
-                    && \filter_var($address, \FILTER_VALIDATE_IP, \FILTER_FLAG_IPV6)
-                ) {
-                    return \strtolower($address);
-                }
-            }
-        }
-
-        if (\filter_var($host, \FILTER_VALIDATE_IP, \FILTER_FLAG_IPV6)) {
-            return \strtolower($host);
-        }
-
-        if ($stripPort) {
-            [$host] = \explode(':', $host, 2);
-        }
-
-        return $host;
     }
 
     /**

@@ -38,6 +38,19 @@ class Uri implements UriInterface, \JsonSerializable
         'ldap' => 389,
     ];
 
+    /**
+     * Unreserved characters for use in a regex.
+     *
+     * @see https://datatracker.ietf.org/doc/html/rfc3986#section-2.3
+     */
+    private const CHAR_UNRESERVED = 'a-zA-Z0-9_\-\.~';
+
+    /**
+     * Sub-delims for use in a regex.
+     *
+     * @see https://datatracker.ietf.org/doc/html/rfc3986#section-2.2
+     */
+    private const CHAR_SUB_DELIMS = '!\$&\'\(\)\*\+,;=';
     private const QUERY_SEPARATORS_REPLACEMENT = ['=' => '%3D', '&' => '%26', '+' => '%2B'];
 
     /** @var string Uri scheme. */
@@ -68,13 +81,7 @@ class Uri implements UriInterface, \JsonSerializable
             if ($parts === false) {
                 throw new MalformedUriException("Unable to parse URI: $uri");
             }
-            try {
-                $this->applyParts($parts);
-            } catch (MalformedUriException $e) {
-                throw $e;
-            } catch (\InvalidArgumentException $e) {
-                throw new MalformedUriException($e->getMessage(), 0, $e);
-            }
+            $this->applyParts($parts);
         }
     }
 
@@ -99,15 +106,15 @@ class Uri implements UriInterface, \JsonSerializable
             return self::parsePathNoSchemeReference($url);
         }
 
-        // Preserve bracketed IPv6 literals before encoding, including dotted IPv4 tails.
+        // If IPv6
         $prefix = '';
-        if (preg_match('%^([0-9A-Za-z+.-]+://\[[0-9:.a-fA-F]+\])(.*?)$%', $url, $matches)) {
+        if (preg_match('%^(.*://\[[0-9:a-fA-F]+\])(.*?)$%', $url, $matches)) {
             /** @var array{0:string, 1:string, 2:string} $matches */
             $prefix = $matches[1];
             $url = $matches[2];
         }
 
-        /** @var string|null */
+        /** @var string */
         $encodedUrl = preg_replace_callback(
             '%[^:/@?&=#]+%usD',
             static function ($matches) {
@@ -115,10 +122,6 @@ class Uri implements UriInterface, \JsonSerializable
             },
             $url
         );
-
-        if ($encodedUrl === null) {
-            return false;
-        }
 
         $result = parse_url($prefix.$encodedUrl);
 
@@ -387,32 +390,10 @@ class Uri implements UriInterface, \JsonSerializable
     public static function fromParts(array $parts): UriInterface
     {
         $uri = new self();
-        try {
-            $uri->applyParts($parts);
-            $uri->validateState();
-        } catch (MalformedUriException $e) {
-            throw $e;
-        } catch (\InvalidArgumentException $e) {
-            throw new MalformedUriException($e->getMessage(), 0, $e);
-        }
+        $uri->applyParts($parts);
+        $uri->validateState();
 
         return $uri;
-    }
-
-    /**
-     * @throws \InvalidArgumentException If the host is invalid.
-     *
-     * @internal
-     */
-    public static function assertValidHost(string $host): void
-    {
-        if ($host === '') {
-            return;
-        }
-
-        if (preg_match('/[\x00-\x20\x7F]/', $host)) {
-            throw new \InvalidArgumentException(sprintf('Invalid host: "%s"', $host));
-        }
     }
 
     public function getScheme(): string
@@ -638,7 +619,7 @@ class Uri implements UriInterface, \JsonSerializable
         }
 
         return preg_replace_callback(
-            '/(?:[^%'.Rfc3986::CHAR_UNRESERVED.Rfc3986::CHAR_SUB_DELIMS.']+|%(?![A-Fa-f0-9]{2}))/',
+            '/(?:[^%'.self::CHAR_UNRESERVED.self::CHAR_SUB_DELIMS.']+|%(?![A-Fa-f0-9]{2}))/',
             [$this, 'rawurlencodeMatchZero'],
             $component
         );
@@ -655,10 +636,7 @@ class Uri implements UriInterface, \JsonSerializable
             throw new \InvalidArgumentException('Host must be a string');
         }
 
-        $host = \strtr($host, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz');
-        self::assertValidHost($host);
-
-        return $host;
+        return \strtr($host, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz');
     }
 
     /**
@@ -740,7 +718,7 @@ class Uri implements UriInterface, \JsonSerializable
         }
 
         return preg_replace_callback(
-            '/(?:[^'.Rfc3986::CHAR_UNRESERVED.Rfc3986::CHAR_SUB_DELIMS.'%:@\/]++|%(?![A-Fa-f0-9]{2}))/',
+            '/(?:[^'.self::CHAR_UNRESERVED.self::CHAR_SUB_DELIMS.'%:@\/]++|%(?![A-Fa-f0-9]{2}))/',
             [$this, 'rawurlencodeMatchZero'],
             $path
         );
@@ -760,7 +738,7 @@ class Uri implements UriInterface, \JsonSerializable
         }
 
         return preg_replace_callback(
-            '/(?:[^'.Rfc3986::CHAR_UNRESERVED.Rfc3986::CHAR_SUB_DELIMS.'%:@\/\?]++|%(?![A-Fa-f0-9]{2}))/',
+            '/(?:[^'.self::CHAR_UNRESERVED.self::CHAR_SUB_DELIMS.'%:@\/\?]++|%(?![A-Fa-f0-9]{2}))/',
             [$this, 'rawurlencodeMatchZero'],
             $str
         );

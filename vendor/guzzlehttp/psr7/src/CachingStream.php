@@ -84,16 +84,8 @@ final class CachingStream implements StreamInterface
             // Read the remoteStream until we have read in at least the amount
             // of bytes requested, or we reach the end of the file.
             while ($diff > 0 && !$this->remoteStream->eof()) {
-                $previousSize = $this->stream->getSize();
-                $previousSkipReadBytes = $this->skipReadBytes;
-                $data = $this->read($diff);
-                $currentSize = $this->stream->getSize();
-
-                if ($data === '' && $currentSize === $previousSize && $this->skipReadBytes === $previousSkipReadBytes) {
-                    break;
-                }
-
-                $diff = $byte - $currentSize;
+                $this->read($diff);
+                $diff = $byte - $this->stream->getSize();
             }
         } else {
             // We can just do a normal seek since we've already seen this byte.
@@ -124,11 +116,7 @@ final class CachingStream implements StreamInterface
             }
 
             $data .= $remoteData;
-
-            // A short cache write would silently corrupt later replays, so fail loudly.
-            if ($this->stream->write($remoteData) !== strlen($remoteData)) {
-                throw new \RuntimeException('Unable to cache the entire read from the remote stream');
-            }
+            $this->stream->write($remoteData);
         }
 
         return $data;
