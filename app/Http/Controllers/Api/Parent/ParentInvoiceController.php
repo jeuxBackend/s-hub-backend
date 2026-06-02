@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Actions\Parent\ListParentInvoicesAction;
 use App\Actions\Parent\CreateParentPaymentIntentAction;
 use App\Actions\Parent\ConfirmParentPaymentAction;
+use App\Models\Student;
+use App\Models\StudentFee;
 use App\Models\StudentInvoice;
 use Illuminate\Http\Request;
 use Throwable;
@@ -17,11 +19,48 @@ class ParentInvoiceController extends Controller
      */
     public function index(Request $request, ListParentInvoicesAction $action)
     {
+        $request->validate([
+            'student_id' => ['nullable', 'integer', 'exists:students,id'],
+        ]);
+
         try {
             $parentId = auth()->id();
-            $invoices = $action->handle($parentId, $request);
+            $studentId = $request->query('student_id');
 
-            return $this->successResponse($invoices, 'Invoices retrieved successfully.');
+            if ($studentId) {
+                Student::where('id', $studentId)
+                    ->where('guardian_id', $parentId)
+                    ->firstOrFail();
+            }
+
+            $invoices = $action->handle($parentId, $request);
+            $response = ['invoices' => $invoices];
+
+            if ($studentId) {
+                $grouped = $invoices->groupBy(fn($invoice) => $invoice->invoice_uuid ?: 'inv_'.$invoice->id);
+                $totalPaid = 0.0;
+                $totalOwing = 0.0;
+
+                foreach ($grouped as $group) {
+                    $groupTotal = (float) $group->max('total_amount');
+                    $groupPaid = (float) $group->sum('paid_amount');
+                    $groupOwing = max(0.0, $groupTotal - $groupPaid);
+
+                    $totalPaid += $groupPaid;
+                    $totalOwing += $groupOwing;
+                }
+
+                $studentFee = StudentFee::where('student_id', $studentId)->latest()->first();
+
+                $response['summary'] = [
+                    'student_id' => $studentId,
+                    'total_paid' => $totalPaid,
+                    'total_owing' => $totalOwing,
+                    'student_fee' => $studentFee,
+                ];
+            }
+
+            return $this->successResponse($response, 'Invoices retrieved successfully.');
         } catch (Throwable $e) {
             return $this->exceptionResponse($e);
         }
