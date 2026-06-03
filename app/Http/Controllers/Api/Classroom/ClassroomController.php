@@ -12,8 +12,9 @@ use App\Actions\Classroom\DeleteClassroomAction;
 use App\Actions\Classroom\ListClassroomsAction;
 use App\Actions\Classroom\ListClassroomsWithoutFeeStudentsAction;
 use App\Actions\Classroom\GetClassroomAction;
+use App\Actions\Classroom\GetClassroomPerformanceStatsAction;
 use App\Models\Classroom;
-use App\Models\StudentPerformance;
+use App\Actions\Classroom\GetClassroomSubjectPerformanceAction;
 use App\Models\StudentAttendance;
 use App\Models\StudentInvoice;
 use App\Enums\AttendanceStatus;
@@ -121,6 +122,42 @@ class ClassroomController extends Controller
                 new ClassroomResource($classroom),
                 'Classroom fetched successfully'
             );
+        } catch (Throwable $e) {
+            return $this->exceptionResponse($e);
+        }
+    }
+
+    public function subjectPerformance($id, GetClassroomSubjectPerformanceAction $action)
+    {
+        try {
+            $classroom = Classroom::findOrFail($id);
+
+            // Ensure the requester belongs to the same institution
+            if ($classroom->institution_id !== auth()->user()->institution_id) {
+                abort(403, 'Unauthorized access to this classroom.');
+            }
+
+            $data = $action->handle($id);
+
+            return $this->successResponse($data, 'Classroom subject performance retrieved successfully');
+        } catch (Throwable $e) {
+            return $this->exceptionResponse($e);
+        }
+    }
+
+    public function performanceStats($id, GetClassroomPerformanceStatsAction $action)
+    {
+        try {
+            $classroom = Classroom::findOrFail($id);
+            
+            // Check school admin/principal scope
+            if ($classroom->institution_id !== auth()->user()->institution_id) {
+                abort(403, 'Unauthorized access to this classroom.');
+            }
+
+            $data = $action->handle($id);
+
+            return $this->successResponse($data, 'Classroom performance stats retrieved successfully');
         } catch (Throwable $e) {
             return $this->exceptionResponse($e);
         }

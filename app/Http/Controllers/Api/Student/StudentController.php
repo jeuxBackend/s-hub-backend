@@ -15,16 +15,18 @@ use App\Actions\Student\DeleteStudentAction;
 use App\Actions\Student\ListStudentsAction;
 use App\Actions\Student\GetStudentAction;
 use App\Actions\Admin\GetStudentWithInvoicesAction;
+use App\Actions\Student\GetStudentYearMarksAction;
+use App\Actions\Student\GetAllStudentsYearMarksAction;
 use App\Models\Student;
+use App\Models\Subject;
+use Illuminate\Http\Request;
 use Throwable;
 
 class StudentController extends Controller
 {
     public function index(FilterStudentRequest $request, ListStudentsAction $fetchAction)
     {
-
         try {
-            // dd('here');
             $students = $fetchAction->handle($request->validated());
 
             return $this->paginatedResponse(
@@ -53,9 +55,8 @@ class StudentController extends Controller
     public function update(UpdateStudentRequest $request, $id, UpdateStudentAction $updateAction)
     {
         try {
-            $student = Student::findOrFail($id); // ✅ fetch student instance
-
-            $updated = $updateAction->handle($request->validated(), $student); // ✅ correct order
+            $student = Student::findOrFail($id);
+            $updated = $updateAction->handle($request->validated(), $student);
 
             return $this->successResponse(
                 new StudentResource($updated),
@@ -101,6 +102,51 @@ class StudentController extends Controller
                 new StudentWithInvoicesResource($student),
                 'Student with invoices retrieved successfully'
             );
+        } catch (Throwable $e) {
+            return $this->exceptionResponse($e);
+        }
+    }
+
+    public function yearMarks($id, GetStudentYearMarksAction $action)
+    {
+        try {
+            $student = Student::findOrFail($id);
+            $data = $action->handle($student);
+
+            return $this->successResponse($data, 'Student year marks retrieved successfully');
+        } catch (Throwable $e) {
+            return $this->exceptionResponse($e);
+        }
+    }
+
+    public function allYearMarks(Request $request, GetAllStudentsYearMarksAction $action)
+    {
+        try {
+            $filters = $request->all();
+            $paginator = $action->handle($filters);
+
+            // All unique subject names in the DB for table headings
+            $subjectHeadings = Subject::orderBy('name')
+                ->pluck('name')
+                ->unique()
+                ->values();
+
+            return response()->json([
+                'success'          => true,
+                'message'          => 'All students year marks retrieved successfully',
+                'data'             => $paginator->items(),
+                'meta'             => [
+                    'subject_headings' => $subjectHeadings,
+                    'pagination'       => [
+                        'total'        => $paginator->total(),
+                        'per_page'     => $paginator->perPage(),
+                        'current_page' => $paginator->currentPage(),
+                        'last_page'    => $paginator->lastPage(),
+                        'from'         => $paginator->firstItem(),
+                        'to'           => $paginator->lastItem(),
+                    ],
+                ],
+            ]);
         } catch (Throwable $e) {
             return $this->exceptionResponse($e);
         }

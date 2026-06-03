@@ -8,13 +8,16 @@ use App\Models\Admin;
 
 class ListStudentsAction
 {
-    private const DEFAULT_PER_PAGE = 10;
+    private const DEFAULT_PER_PAGE = 20;
     private const MAX_PER_PAGE = 100;
 
     // Only load relations actually needed — callers can extend if required
     private array $baseRelations = [
         'classroom',
         'guardian',
+        'studentInvoices',
+        'studentGrades',
+        'attendanceRecords',
     ];
 
     public function handle(array $filters = [], array $relations = [])
@@ -118,6 +121,23 @@ class ListStudentsAction
 
         if (!empty($filters['term'])) {
             $query->where('term', $filters['term']);
+        }
+
+        if (!empty($filters['class_name'])) {
+            $query->whereHas('classroom', function ($q) use ($filters) {
+                $q->where('name', 'like', '%' . $filters['class_name'] . '%');
+            });
+        }
+
+        if (!empty($filters['tuition_status'])) {
+            $status = $filters['tuition_status'];
+            $query->whereHas('studentInvoices', function ($q) use ($status) {
+                $q->whereIn('id', function ($sub) {
+                    $sub->selectRaw('MAX(id)')
+                        ->from('student_invoices')
+                        ->groupBy('student_id');
+                })->where('status', $status);
+            });
         }
     }
 

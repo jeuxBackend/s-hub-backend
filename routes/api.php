@@ -114,12 +114,16 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'active.user'])->group(function
 
 
         Route::prefix('principal')->middleware('role:principal,school-admin')->group(function () {
-            // Managed by Principal or School Admin with permissions
-            Route::apiResource('students', StudentController::class)->middleware('schooladmin.permission:Students');
+            // Specific student routes MUST come before apiResource to avoid {id} conflicts
+            Route::get('students/year-marks', [StudentController::class, 'allYearMarks'])->middleware('schooladmin.permission:Students');
             Route::get('students/{id}/with-invoices', [StudentController::class, 'showWithInvoices'])->middleware('schooladmin.permission:Students');
+            Route::get('students/{id}/year-marks', [StudentController::class, 'yearMarks'])->middleware('schooladmin.permission:Students');
+            Route::apiResource('students', StudentController::class)->middleware('schooladmin.permission:Students');
             Route::apiResource('teachers', TeacherController::class)->middleware('schooladmin.permission:Teachers');
             Route::apiResource('parents', GuardianController::class)->middleware('schooladmin.permission:Parents');
             Route::get('classrooms/no-fee-students', [ClassroomController::class, 'indexWithoutFeeStudents']);
+            Route::get('classrooms/{id}/subject-performance', [ClassroomController::class, 'subjectPerformance']);
+            Route::get('classrooms/{id}/performance-stats', [ClassroomController::class, 'performanceStats']);
             Route::apiResource('classrooms', ClassroomController::class);
             Route::apiResource('subjects', SubjectController::class);
 

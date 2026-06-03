@@ -94,6 +94,11 @@ class Student extends Model
         return $this->hasMany(StudentInvoice::class);
     }
 
+    public function studentGrades()
+    {
+        return $this->hasMany(StudentGrade::class);
+    }
+
     // ✅ Today's attendance relation
     public function todayAttendance()
     {

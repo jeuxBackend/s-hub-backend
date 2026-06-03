@@ -21,19 +21,45 @@ class CalculateStudentGradesAction
         // Extract string value if it's an Enum
         $termValue = $term instanceof \UnitEnum ? $term->value : $term;
 
-        $components = ['test_1', 'test_2', 'test_3', 'test_4', 'exam_marks'];
+        $tests = ['test_1', 'test_2', 'test_3', 'test_4'];
 
-        $grades = StudentGrade::where('student_id', $studentId)
+        $testGrades = StudentGrade::where('student_id', $studentId)
             ->where('classroom_id', $classroomId)
             ->where('subject_id', $subjectId)
             ->where('term', $termValue)
-            ->whereIn('type', $components)
+            ->whereIn('type', $tests)
             ->get();
+            
+        $examGrade = StudentGrade::where('student_id', $studentId)
+            ->where('classroom_id', $classroomId)
+            ->where('subject_id', $subjectId)
+            ->where('term', $termValue)
+            ->where('type', 'exam_marks')
+            ->first();
 
-        $totalScore = $grades->sum('score');
-        $totalMax = $grades->sum('total');
+        // 40% Weight for Tests (Percentage based)
+        $testScoreSum = $testGrades->sum('score');
+        $testTotalSum = $testGrades->sum('total');
 
-        if ($totalMax > 0 || $totalScore > 0) {
+        $testPercentage = 0;
+        if ($testTotalSum > 0) {
+            $testPercentage = ($testScoreSum / $testTotalSum) * 40;
+        }
+
+        // 60% Weight for Exam (Percentage based)
+        $examScore = $examGrade ? $examGrade->score : 0;
+        $examTotal = $examGrade ? $examGrade->total : 0;
+
+        $examPercentage = 0;
+        if ($examTotal > 0) {
+            $examPercentage = ($examScore / $examTotal) * 60;
+        }
+
+        // Combine to get a score out of 100
+        $finalScore = $testPercentage + $examPercentage;
+        $finalTotal = 100;
+
+        if ($testTotalSum > 0 || $examTotal > 0) {
             StudentGrade::updateOrCreate(
                 [
                     'student_id'   => $studentId,
@@ -43,8 +69,8 @@ class CalculateStudentGradesAction
                     'type'         => 'final_marks',
                 ],
                 [
-                    'score'       => $totalScore,
-                    'total'       => $totalMax,
+                    'score'       => round($finalScore, 2),
+                    'total'       => $finalTotal,
                     'date'        => now()->toDateString(),
                     'recorded_by' => auth()->id(),
                 ]
