@@ -31,9 +31,11 @@ class PrincipalTimetableController extends Controller
             }
 
             $subjects = Subject::where('teacher_id', $teacher->id)
-                ->with(['classroom' => function ($q) {
-                    $q->select('id', 'name', 'code')->withCount('students');
-                }])
+                ->with([
+                    'classroom' => function ($q) {
+                        $q->select('id', 'name', 'code')->withCount('students');
+                    }
+                ])
                 ->whereNotNull('start_time')
                 ->whereNotNull('end_time')
                 ->get()
