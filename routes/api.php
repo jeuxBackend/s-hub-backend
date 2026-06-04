@@ -48,6 +48,7 @@ use App\Http\Controllers\Api\Teacher\TeacherClassroomController;
 use App\Http\Controllers\Api\Chat\ChatUserController;
 use App\Http\Controllers\Api\Chat\ConversationController as ChatConversationController;
 use App\Http\Controllers\Api\Chat\MessageController as ChatMessageController;
+use App\Http\Controllers\Api\Teacher\TeacherAttendanceController;
 
 
 // Rate Limiting
@@ -95,9 +96,16 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'active.user'])->group(function
     Route::middleware(['otp.verified', 'role:teacher,school-admin'])->group(function () {
         Route::get('teacher/classrooms', [TeacherClassroomController::class, 'index']);
         Route::get('teacher/classrooms/{classroom}', [TeacherClassroomController::class, 'show']);
+        Route::get('teacher/timetable', [TeacherClassroomController::class, 'timetable']);
+        Route::post('teacher/attendance/mark', [TeacherAttendanceController::class, 'markAttendance']);
     });
 
+
+
     Route::put('update-profile', [UserController::class, 'updateProfile']);
+    // Route::patch('users/{user}/notifications/toggle', [UserController::class, 'toggleNotification']);
+    Route::patch('users/remote/toggle', [UserController::class, 'toggleRemote']);
+
 
     // ===================== MANAGEMENT ROUTES (PRINCIPAL + SCHOOL ADMIN ONLY) =====================
     Route::middleware(['otp.verified', 'role:principal,school-admin'])->group(function () {
@@ -109,6 +117,9 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'active.user'])->group(function
             Route::post('update-permissions', [SchoolAdminController::class, 'updatePermissions']);
             Route::get('remove-admin/{id}', [SchoolAdminController::class, 'removeSchoolAdmin']);
             Route::patch('student-reports/{id}/status', [\App\Http\Controllers\Api\StudentReportController::class, 'updateStatus']);
+            Route::get('teachers/{id}/timetable', [\App\Http\Controllers\Api\Principal\PrincipalTimetableController::class, 'getTeacherTimetable']);
+            Route::get('classrooms/{id}/timetable', [\App\Http\Controllers\Api\Principal\PrincipalTimetableController::class, 'getClassroomTimetable']);
+
         });
 
 
@@ -210,6 +221,7 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'active.user'])->group(function
         Route::get('students', [\App\Http\Controllers\Api\Parent\ParentController::class, 'getChildrenClassrooms']);
         Route::get('attendances/by-month', [\App\Http\Controllers\Api\Parent\ParentController::class, 'getAttendanceByMonth']);
         Route::get('attendances/by-date', [\App\Http\Controllers\Api\Parent\ParentController::class, 'getAttendanceByDate']);
+        Route::get('grades', [\App\Http\Controllers\Api\Parent\ParentController::class, 'getGrades']);
 
         // Invoices & Payments
         Route::get('invoices', [\App\Http\Controllers\Api\Parent\ParentInvoiceController::class, 'index']);
