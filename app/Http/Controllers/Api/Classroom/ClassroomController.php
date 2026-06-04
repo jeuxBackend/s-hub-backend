@@ -17,6 +17,7 @@ use App\Models\Classroom;
 use App\Actions\Classroom\GetClassroomSubjectPerformanceAction;
 use App\Models\StudentAttendance;
 use App\Models\StudentInvoice;
+use App\Models\StudentPerformance;
 use App\Enums\AttendanceStatus;
 use Illuminate\Http\Resources\Json\ResourceCollection;
 use Throwable;
