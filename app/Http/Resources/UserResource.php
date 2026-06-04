@@ -71,6 +71,35 @@ class UserResource extends JsonResource
                 'guardian_relation' => $this->guardian_relation,
                 'guardian_phone_number' => $this->guardian_phone_number,
                 'alternative_guardian_phone_number' => $this->alternative_guardian_phone_number,
+                'children' => $this->whenLoaded('guardianStudents', function () {
+                    return $this->guardianStudents->map(function ($student) {
+                        $latestInvoice = $student->relationLoaded('studentInvoices')
+                            ? $student->studentInvoices->sortByDesc('id')->first()
+                            : null;
+
+                        return [
+                            'id' => $student->id,
+                            'first_name' => $student->first_name,
+                            'sur_name' => $student->sur_name,
+                            'full_name' => trim($student->first_name . ' ' . $student->sur_name),
+                            'profile_picture' => $student->profile_picture,
+                            'student_phone_number' => $student->student_phone_number,
+                            'gender' => $student->gender->value ?? null,
+                            'age' => $student->age,
+                            'term' => $student->term->value ?? null,
+                            'registration_number' => $student->registration_number,
+                            'status' => $student->status,
+                            'classroom' => $student->classroom ? [
+                                'id' => $student->classroom->id,
+                                'name' => $student->classroom->name,
+                                'code' => $student->classroom->code,
+                            ] : null,
+                            'tuition_status' => $latestInvoice?->status,
+                            'total_paid' => $student->relationLoaded('studentInvoices') ? $student->studentInvoices->sum('paid_amount') : 0,
+                            'total_due' => $latestInvoice?->due_amount ?? 0,
+                        ];
+                    });
+                }),
             ],
 
             default => [],

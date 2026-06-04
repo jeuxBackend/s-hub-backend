@@ -14,6 +14,10 @@ class ListGuardiansAction
         return User::query()
             ->where('role', 'parent')
             ->where('institution_id', $requester->institution_id)
+            ->with([
+                'guardianStudents.classroom',
+                'guardianStudents.studentInvoices',
+            ])
             ->when($request->filled('name'), function ($q) use ($request) {
                 $q->where(function ($sub) use ($request) {
                     $sub->where('first_name', 'like', '%' . $request->name . '%')

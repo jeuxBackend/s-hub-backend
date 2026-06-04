@@ -77,6 +77,7 @@ class GuardianController extends Controller
             'phone_number' => 'sometimes|string|unique:users,phone_number,' . $id,
             'password' => 'sometimes|string|min:8',
             'profile_picture' => 'nullable|image|max:2048',
+            'guardian_type' => 'sometimes|string|in:mother,father,guardian',
             'guardian_name' => 'sometimes|string|max:255',
             'guardian_relation' => 'sometimes|string|max:255',
             'guardian_phone_number' => 'sometimes|string|unique:users,phone_number,' . $id,
@@ -111,5 +112,4 @@ class GuardianController extends Controller
         }
     }
 }
-
 

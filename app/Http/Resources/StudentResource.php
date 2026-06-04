@@ -76,6 +76,7 @@ class StudentResource extends JsonResource
             'today_attendance' => new StudentAttendanceResource($this->whenLoaded('todayAttendance')),
             'total_paid' => $this->relationLoaded('studentInvoices') ? $this->studentInvoices->sum('paid_amount') : 0,
             'total_due' => $latestInvoice ? $latestInvoice->due_amount : 0,
+            'tuition_status' => $latestInvoice?->status,
             'performance_percentage' => $performancePercentage,
             'performance_indicator' => $performanceIndicator,
             'attendance_percentage' => $attendancePercentage,

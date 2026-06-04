@@ -18,7 +18,8 @@ class GetAllStudentsYearMarksAction
      *
      * Filters:
      *  - student_name : partial match on first_name or sur_name (case-insensitive)
-     *  - class_name   : partial match on the linked classroom name (case-insensitive)
+     *  - class_id     : exact match on the linked classroom id
+     *  - class_name   : partial match on the linked classroom name (legacy fallback)
      *  - per_page     : records per page (default 20, max 100)
      */
     public function handle(array $filters = []): LengthAwarePaginator
@@ -34,8 +35,13 @@ class GetAllStudentsYearMarksAction
             });
         }
 
-        // Class name filter
-        if (!empty($filters['class_name'])) {
+        // Class filter
+        if (!empty($filters['class_id'])) {
+            $query->where('classroom_id', (int) $filters['class_id']);
+        } elseif (!empty($filters['classroom_id'])) {
+            // Backwards-compatible alias if the caller still uses classroom_id
+            $query->where('classroom_id', (int) $filters['classroom_id']);
+        } elseif (!empty($filters['class_name'])) {
             $className = $filters['class_name'];
             $query->whereHas('classroom', function ($q) use ($className) {
                 $q->where('name', 'like', "%{$className}%");
@@ -91,6 +97,7 @@ class GetAllStudentsYearMarksAction
                 'student_id'     => $student->id,
                 'full_name'      => trim($student->first_name . ' ' . $student->sur_name),
                 'reg_number'     => $student->registration_number,
+                'profile_picture' => $student->profile_picture,
                 'classroom_id'   => $student->classroom->id ?? null,
                 'classroom_name' => $student->classroom->name ?? null,
                 'subjects'       => $subjectsData,

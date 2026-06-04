@@ -11,7 +11,11 @@ class GetUserAction
          $user = User::findOrFail($id);
 
         // Gate::authorize('view', $user);
-       $user->load('institution');
+       $user->load([
+           'institution',
+           'guardianStudents.classroom',
+           'guardianStudents.studentInvoices',
+       ]);
         return $user;
     }
 }

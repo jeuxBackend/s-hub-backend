@@ -95,50 +95,30 @@ class ListStudentsAction
             }
         }
 
-        // Shared filters — safe for all roles
-        if (!empty($filters['classroom_id'])) {
-            $query->where('classroom_id', $filters['classroom_id']);
-        }
+        // Shared filters — safe for all roles and combined with AND logic
+        $query
+            ->when(!empty($filters['class_id']), function ($q) use ($filters) {
+                $q->where('classroom_id', $filters['class_id']);
+            })
+            ->when(isset($filters['student_name']) && $filters['student_name'] !== '', function ($q) use ($filters) {
+                $search = mb_strtolower(trim($filters['student_name']));
 
-        if (isset($filters['name']) && $filters['name'] !== '') {
-            $query->where(function ($q) use ($filters) {
-                $q->where('first_name', 'like', '%' . $filters['name'] . '%')
-                    ->orWhere('sur_name', 'like', '%' . $filters['name'] . '%');
+                $q->where(function ($nameQuery) use ($search) {
+                    $nameQuery->whereRaw('LOWER(first_name) LIKE ?', ['%' . $search . '%'])
+                        ->orWhereRaw('LOWER(sur_name) LIKE ?', ['%' . $search . '%']);
+                });
+            })
+            ->when(!empty($filters['tuition_status']), function ($q) use ($filters) {
+                $status = $filters['tuition_status'];
+
+                $q->whereHas('studentInvoices', function ($invoiceQuery) use ($status) {
+                    $invoiceQuery->whereIn('id', function ($sub) {
+                        $sub->selectRaw('MAX(id)')
+                            ->from('student_invoices')
+                            ->groupBy('student_id');
+                    })->where('status', $status);
+                });
             });
-        }
-
-        if (isset($filters['email']) && $filters['email'] !== '') {
-            $query->where('email', 'like', '%' . $filters['email'] . '%');
-        }
-
-        if (isset($filters['phone_number']) && $filters['phone_number'] !== '') {
-            $query->where('phone_number', 'like', '%' . $filters['phone_number'] . '%');
-        }
-
-        if (!empty($filters['status'])) {
-            $query->where('status', $filters['status']);
-        }
-
-        if (!empty($filters['term'])) {
-            $query->where('term', $filters['term']);
-        }
-
-        if (!empty($filters['class_name'])) {
-            $query->whereHas('classroom', function ($q) use ($filters) {
-                $q->where('name', 'like', '%' . $filters['class_name'] . '%');
-            });
-        }
-
-        if (!empty($filters['tuition_status'])) {
-            $status = $filters['tuition_status'];
-            $query->whereHas('studentInvoices', function ($q) use ($status) {
-                $q->whereIn('id', function ($sub) {
-                    $sub->selectRaw('MAX(id)')
-                        ->from('student_invoices')
-                        ->groupBy('student_id');
-                })->where('status', $status);
-            });
-        }
     }
 
     // -------------------------------------------------------------------------

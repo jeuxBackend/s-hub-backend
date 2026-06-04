@@ -14,11 +14,10 @@ class FilterStudentRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'classroom_id' => ['nullable', 'exists:classrooms,id'],
-            'term'         => ['nullable', 'string'], // or TermType enum
-            'gender'       => ['nullable', 'string'], // GenderType enum
-            'age'          => ['nullable', 'integer'],
-            'search'       => ['nullable', 'string'],
+            'student_name'   => ['nullable', 'string'],
+            'class_id'       => ['nullable', 'exists:classrooms,id'],
+            'tuition_status' => ['nullable', 'in:paid,unpaid,partial'],
+            'per_page'       => ['nullable', 'integer', 'min:1', 'max:100'],
         ];
     }
 }
