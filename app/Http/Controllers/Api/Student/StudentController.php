@@ -19,6 +19,7 @@ use App\Actions\Student\GetStudentYearMarksAction;
 use App\Actions\Student\GetAllStudentsYearMarksAction;
 use App\Enums\UserRole;
 use App\Models\Subject;
+use App\Models\Student;
 use Illuminate\Http\Request;
 use Throwable;
 
@@ -136,18 +137,18 @@ class StudentController extends Controller
                 ->values();
 
             return response()->json([
-                'success'          => true,
-                'message'          => 'All students year marks retrieved successfully',
-                'data'             => $paginator->items(),
-                'meta'             => [
+                'success' => true,
+                'message' => 'All students year marks retrieved successfully',
+                'data' => $paginator->items(),
+                'meta' => [
                     'subject_headings' => $subjectHeadings,
-                    'pagination'       => [
-                        'total'        => $paginator->total(),
-                        'per_page'     => $paginator->perPage(),
+                    'pagination' => [
+                        'total' => $paginator->total(),
+                        'per_page' => $paginator->perPage(),
                         'current_page' => $paginator->currentPage(),
-                        'last_page'    => $paginator->lastPage(),
-                        'from'         => $paginator->firstItem(),
-                        'to'           => $paginator->lastItem(),
+                        'last_page' => $paginator->lastPage(),
+                        'from' => $paginator->firstItem(),
+                        'to' => $paginator->lastItem(),
                     ],
                 ],
             ]);

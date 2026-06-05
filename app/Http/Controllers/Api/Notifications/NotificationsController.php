@@ -41,6 +41,7 @@ class NotificationsController extends Controller
                 'type' => 'noticeboard',
                 'title' => $request->title,
                 'message' => $request->message,
+                'is_read' => false,
                 'meta' => [
                     'send_to' => $request->send_to,
                 ],
@@ -54,8 +55,10 @@ class NotificationsController extends Controller
     public function getUserNotifications(Request $request)
     {
         $user = auth()->user();
-        $notifications = NotificationLog::where('user_id', $user->id)->get();
-        return $this->successResponse('Notifications fetched successfully', $notifications);
+        $notifications = NotificationLog::where('user_id', $user->id)
+            ->orderByDesc('created_at')
+            ->get();
+        return $this->successResponse($notifications, 'Notifications fetched successfully');
     }
 
     public function readNotification(Request $request, $id)
@@ -65,8 +68,49 @@ class NotificationsController extends Controller
         if (!$notification) {
             return $this->errorResponse('Notification not found', 404);
         }
-        $notification->read_at = now();
-        $notification->save();
-        return $this->successResponse('Notification read successfully');
+        $notification->update(['is_read' => true]);
+        return $this->successResponse('Notification marked as read successfully');
+    }
+
+    /**
+     * Mark all notifications as read for the authenticated user
+     */
+    public function markAllAsRead()
+    {
+        try {
+            $user = auth()->user();
+            
+            $updated = NotificationLog::where('user_id', $user->id)
+                ->where('is_read', false)
+                ->update(['is_read' => true]);
+
+            return $this->successResponse(
+                ['marked_count' => $updated],
+                'All notifications marked as read successfully'
+            );
+        } catch (\Throwable $e) {
+            return $this->exceptionResponse($e);
+        }
+    }
+
+    /**
+     * Get unread notification count for the authenticated user
+     */
+    public function getUnreadCount()
+    {
+        try {
+            $user = auth()->user();
+            
+            $count = NotificationLog::where('user_id', $user->id)
+                ->where('is_read', false)
+                ->count();
+
+            return $this->successResponse(
+                ['unread_count' => $count],
+                'Unread notification count retrieved successfully'
+            );
+        } catch (\Throwable $e) {
+            return $this->exceptionResponse($e);
+        }
     }
 }

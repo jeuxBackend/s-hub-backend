@@ -45,10 +45,11 @@ use App\Http\Controllers\Api\{
     User\UserController
 };
 use App\Http\Controllers\Api\Teacher\TeacherClassroomController;
+use App\Http\Controllers\Api\Teacher\TeacherAttendanceController;
 use App\Http\Controllers\Api\Chat\ChatUserController;
 use App\Http\Controllers\Api\Chat\ConversationController as ChatConversationController;
 use App\Http\Controllers\Api\Chat\MessageController as ChatMessageController;
-use App\Http\Controllers\Api\Principal\TeacherAttendanceController;
+use App\Http\Controllers\Api\Principal\TeacherAttendanceController as PrincipalTeacherAttendanceController;
 
 
 // Rate Limiting
@@ -148,7 +149,8 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'active.user'])->group(function
             // Free Period Teacher - Notify and Mark Extra Attendance
             Route::post('free-period-teachers/notify', [FreePeriodTeacherController::class, 'notifyFreeTeachers']);
             Route::post('free-period-teachers/notify-teacher', [FreePeriodTeacherController::class, 'notifyTeacher']);
-            Route::get('teacher-attendance/{teacherId}', [TeacherAttendanceController::class, 'index']);
+            Route::get('teacher-attendance/{teacherId}', [PrincipalTeacherAttendanceController::class, 'index']);
+            Route::post('teachers/free-during-time', [PrincipalTeacherAttendanceController::class, 'getFreeTeachers']);
         });
 
         Route::put('update-contact', [UserController::class, 'updateContact']);
@@ -172,6 +174,8 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'active.user'])->group(function
     });
     Route::post('get-noticeboard', [NotificationsController::class, 'getUserNotifications']);
     Route::post('read-noticeboard/{id}', [NotificationsController::class, 'readNotification']);
+    Route::post('notifications/mark-all-read', [NotificationsController::class, 'markAllAsRead']);
+    Route::get('notifications/unread-count', [NotificationsController::class, 'getUnreadCount']);
 
     // ===================== VIEW-ONLY FOR ALL AUTH USERS =====================
     Route::get('school/{id}', [InstituteController::class, 'show']);

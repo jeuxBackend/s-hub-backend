@@ -122,6 +122,7 @@ class StudentReportController extends Controller
                     'type' => 'report_rejected',
                     'title' => 'Student Report Rejected',
                     'message' => "The report you submitted for student ID {$report->student_id} was rejected." . ($request->reason ? " Reason: {$request->reason}" : " Please review and update."),
+                    'is_read' => false,
                     'meta' => [
                         'report_id' => $report->id,
                     ],
@@ -136,6 +137,7 @@ class StudentReportController extends Controller
                         'type' => 'report_approved',
                         'title' => 'New Student Report',
                         'message' => "A new {$report->report_type} report has been published for {$student->full_name}.",
+                        'is_read' => false,
                         'meta' => [
                             'report_id' => $report->id,
                             'student_id' => $student->id,

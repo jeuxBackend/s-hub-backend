@@ -50,10 +50,16 @@ class LoginAction
         $token = $user->createToken('auth_token')->plainTextToken;
         $this->loadMinimalRelations($user);
 
+        // Get unread notification count
+        $unreadNotificationCount = \App\Models\NotificationLog::where('user_id', $user->id)
+            ->where('is_read', false)
+            ->count();
+
         return [
             'user' => new UserResource($user),
             'token' => $token,
             'role' => $user->role->value,
+            'unread_notification_count' => $unreadNotificationCount,
         ];
     }
 

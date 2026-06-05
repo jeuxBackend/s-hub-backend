@@ -11,13 +11,19 @@ use Illuminate\Support\Facades\Log;
 
 class FirebaseNotificationService
 {
-    protected Messaging $messaging;
+    protected ?Messaging $messaging = null;
 
     public function __construct()
     {
-        $factory = (new Factory)
-            ->withServiceAccount(storage_path('app/firebase/firebase-creds.json'));
-            
+        $credentialsPath = env('FIREBASE_CREDENTIALS', storage_path('app/firebase/firebase-creds.json'));
+
+        if (!file_exists($credentialsPath)) {
+            Log::warning("Firebase credentials not found at {$credentialsPath}. Push notifications are disabled.");
+            return;
+        }
+
+        $factory = (new Factory)->withServiceAccount($credentialsPath);
+
         $this->messaging = $factory->createMessaging();
     }
 
@@ -33,6 +39,11 @@ class FirebaseNotificationService
     public function sendToToken(string $token, string $title, string $body, array $data = [])
     {
         try {
+            if (!$this->messaging) {
+                Log::warning('Firebase messaging is not initialized. Skipping push notification.');
+                return false;
+            }
+
             $notification = Notification::create($title, $body);
 
             $message = CloudMessage::withTarget('token', $token)
@@ -58,6 +69,11 @@ class FirebaseNotificationService
     public function sendToTopic(string $topic, string $title, string $body, array $data = [])
     {
         try {
+            if (!$this->messaging) {
+                Log::warning('Firebase messaging is not initialized. Skipping topic notification.');
+                return false;
+            }
+
             $notification = Notification::create($title, $body);
 
             $message = CloudMessage::withTarget('topic', $topic)

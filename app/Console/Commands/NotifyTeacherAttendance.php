@@ -84,6 +84,7 @@ class NotifyTeacherAttendance extends Command
                     'type' => 'teacher_attendance_reminder',
                     'title' => $title,
                     'message' => $message,
+                    'is_read' => false,
                     'meta' => [
                         'subject_id' => $subject->id,
                         'subject_name' => $subject->name,

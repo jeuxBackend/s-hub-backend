@@ -11,12 +11,14 @@ class NotificationLog extends Model
         'type',
         'title',
         'message',
+        'is_read',
         'meta',
         'sent_at',
     ];
 
     protected $casts = [
         'meta' => 'array',
+        'is_read' => 'boolean',
         'sent_at' => 'datetime',
     ];
 
