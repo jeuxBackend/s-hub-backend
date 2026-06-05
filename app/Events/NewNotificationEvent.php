@@ -9,6 +9,7 @@ use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 use App\Models\NotificationLog;
+use Illuminate\Support\Facades\Log;
 
 class NewNotificationEvent implements ShouldBroadcastNow
 {
@@ -22,7 +23,12 @@ class NewNotificationEvent implements ShouldBroadcastNow
     public function __construct(NotificationLog $notification)
     {
         $this->notification = $notification;
-        \Illuminate\Support\Facades\Log::info('NewNotificationEvent triggered', ['user_id' => $notification->user_id, 'title' => $notification->title]);
+        Log::info('NewNotificationEvent constructed', [
+            'notification_id' => $notification->id,
+            'user_id' => $notification->user_id,
+            'title' => $notification->title,
+            'type' => $notification->type
+        ]);
     }
 
     /**
@@ -32,9 +38,13 @@ class NewNotificationEvent implements ShouldBroadcastNow
      */
     public function broadcastOn(): array
     {
-        return [
-            new PrivateChannel('notifications.' . $this->notification->user_id),
-        ];
+        $channel = new PrivateChannel('notifications.' . $this->notification->user_id);
+        Log::info('NewNotificationEvent broadcasting on channel', [
+            'channel' => $channel->name,
+            'user_id' => $this->notification->user_id
+        ]);
+        
+        return [$channel];
     }
 
     /**
@@ -50,7 +60,7 @@ class NewNotificationEvent implements ShouldBroadcastNow
      */
     public function broadcastWith(): array
     {
-        return [
+        $payload = [
             'id' => $this->notification->id,
             'title' => $this->notification->title,
             'message' => $this->notification->message,
@@ -58,5 +68,22 @@ class NewNotificationEvent implements ShouldBroadcastNow
             'meta' => $this->notification->meta,
             'sent_at' => clone $this->notification->sent_at,
         ];
+        
+        Log::info('NewNotificationEvent broadcast payload', $payload);
+        
+        return $payload;
+    }
+
+    /**
+     * Handle broadcast failure.
+     */
+    public function broadcastFailed($exception): void
+    {
+        Log::error('NewNotificationEvent broadcast failed', [
+            'notification_id' => $this->notification->id,
+            'user_id' => $this->notification->user_id,
+            'error' => $exception->getMessage(),
+            'trace' => $exception->getTraceAsString()
+        ]);
     }
 }

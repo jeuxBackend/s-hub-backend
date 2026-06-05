@@ -10,51 +10,77 @@ use Carbon\Carbon;
 
 class NotifyTeacherAttendance extends Command
 {
-    /**
-     * The name and signature of the console command.
-     *
-     * @var string
-     */
     protected $signature = 'attendance:notify-teachers';
 
-    /**
-     * The console command description.
-     *
-     * @var string
-     */
     protected $description = 'Notify teachers when it is time to mark attendance for their scheduled classes.';
 
-    /**
-     * Execute the console command.
-     */
     public function handle()
     {
         $now = Carbon::now();
-        $currentTime = $now->format('H:i'); // 24-hour format
 
-        \Log::info("Cron checking teacher attendance at $currentTime");
+        \Log::info("Cron checking teacher attendance at " . $now->format('H:i:s'));
 
-        $subjects = Subject::whereNotNull('start_time')->with('teacher', 'classroom')->get();
+        $subjects = Subject::whereNotNull('start_time')
+            ->with('teacher', 'classroom')
+            ->get();
+
+        \Log::info("Found " . $subjects->count() . " subjects with start_time");
+
+        $notifiedCount = 0;
+        $skippedCount = 0;
 
         foreach ($subjects as $subject) {
+
             if (!$subject->teacher) {
+                \Log::debug("Subject {$subject->id} has no teacher assigned, skipping");
+                $skippedCount++;
+                continue;
+            }
+
+            $teacherId = $subject->teacher->id ?? $subject->teacher_id;
+
+            if (empty($teacherId)) {
+                \Log::warning("Subject {$subject->id} has no teacher ID, skipping");
+                $skippedCount++;
                 continue;
             }
 
             try {
-                $startTime = Carbon::parse($subject->start_time)->format('H:i');
+                $start = Carbon::parse($subject->start_time);
             } catch (\Exception $e) {
+                \Log::error("Invalid start_time for subject {$subject->id}: " . $e->getMessage());
+                $skippedCount++;
                 continue;
             }
 
-            // If the current time matches the subject's start time
-            if ($startTime === $currentTime) {
-                
-                $title = 'Time for Class!';
-                $message = "It is time for your class ({$subject->name}) in {$subject->classroom?->name}. Please mark your attendance.";
-                
+            // Trigger only in the same minute
+            if ($start->format('H:i') !== $now->format('H:i')) {
+                \Log::debug("Subject {$subject->id} start time ({$start->format('H:i')}) does not match current time ({$now->format('H:i')}), skipping");
+                $skippedCount++;
+                continue;
+            }
+
+            \Log::info("Subject {$subject->id} matches current time, checking for duplicates...");
+
+            // Prevent duplicate notifications
+            $alreadySent = NotificationLog::where('user_id', $teacherId)
+                ->where('type', 'teacher_attendance_reminder')
+                ->whereDate('sent_at', $now->toDateString())
+                ->whereJsonContains('meta->subject_id', $subject->id)
+                ->exists();
+
+            if ($alreadySent) {
+                \Log::info("Notification already sent to teacher {$teacherId} for subject {$subject->id} today, skipping");
+                $skippedCount++;
+                continue;
+            }
+
+            $title = 'Time for Class!';
+            $message = "It is time for your class ({$subject->name}) in {$subject->classroom?->name}. Please mark your attendance.";
+
+            try {
                 $log = NotificationLog::create([
-                    'user_id' => $subject->teacher_id,
+                    'user_id' => $teacherId,
                     'type' => 'teacher_attendance_reminder',
                     'title' => $title,
                     'message' => $message,
@@ -62,18 +88,31 @@ class NotifyTeacherAttendance extends Command
                         'subject_id' => $subject->id,
                         'subject_name' => $subject->name,
                         'classroom_id' => $subject->classroom_id,
-                        'classroom_name' => $subject->classroom ? $subject->classroom->name : 'N/A',
-                        'start_time' => $subject->start_time
+                        'classroom_name' => $subject->classroom?->name ?? 'N/A',
+                        'start_time' => $subject->start_time,
                     ],
                     'sent_at' => now(),
                 ]);
 
-                // Broadcast
+                \Log::info("NotificationLog created with ID: {$log->id}, firing NewNotificationEvent...");
+
                 event(new NewNotificationEvent($log));
 
-                $this->info("Notified teacher {$subject->teacher_id} for subject {$subject->id}.");
-                \Log::info("Broadcasted attendance notification to teacher {$subject->teacher_id} for subject {$subject->id}.");
+                \Log::info("NewNotificationEvent fired successfully for teacher {$teacherId}, subject {$subject->id}");
+
+                $this->info("Notified teacher {$teacherId} for subject {$subject->id}");
+
+                $notifiedCount++;
+
+            } catch (\Exception $e) {
+                \Log::error("Failed sending notification for subject {$subject->id}: " . $e->getMessage() . "\n" . $e->getTraceAsString());
+                $this->error("Failed: " . $e->getMessage());
             }
         }
+
+        \Log::info("Teacher attendance notification completed. Notified: {$notifiedCount}, Skipped: {$skippedCount}");
+        $this->info("Completed. Notified: {$notifiedCount}, Skipped: {$skippedCount}");
+
+        return Command::SUCCESS;
     }
 }

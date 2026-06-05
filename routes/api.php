@@ -48,7 +48,7 @@ use App\Http\Controllers\Api\Teacher\TeacherClassroomController;
 use App\Http\Controllers\Api\Chat\ChatUserController;
 use App\Http\Controllers\Api\Chat\ConversationController as ChatConversationController;
 use App\Http\Controllers\Api\Chat\MessageController as ChatMessageController;
-use App\Http\Controllers\Api\Teacher\TeacherAttendanceController;
+use App\Http\Controllers\Api\Principal\TeacherAttendanceController;
 
 
 // Rate Limiting
@@ -148,6 +148,7 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'active.user'])->group(function
             // Free Period Teacher - Notify and Mark Extra Attendance
             Route::post('free-period-teachers/notify', [FreePeriodTeacherController::class, 'notifyFreeTeachers']);
             Route::post('free-period-teachers/notify-teacher', [FreePeriodTeacherController::class, 'notifyTeacher']);
+            Route::get('teacher-attendance/{teacherId}', [TeacherAttendanceController::class, 'index']);
         });
 
         Route::put('update-contact', [UserController::class, 'updateContact']);
@@ -230,6 +231,7 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'active.user'])->group(function
         Route::post('invoices/{id}/pay', [\App\Http\Controllers\Api\Parent\ParentInvoiceController::class, 'pay']);
         Route::post('invoices/{id}/confirm', [\App\Http\Controllers\Api\Parent\ParentInvoiceController::class, 'confirm']);
     });
+
 
     // ===================== CHAT ROUTES (ALL AUTHENTICATED USERS) =====================
     Route::middleware(['otp.verified'])->prefix('chat')->group(function () {

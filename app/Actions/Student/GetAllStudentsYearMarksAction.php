@@ -24,7 +24,11 @@ class GetAllStudentsYearMarksAction
      */
     public function handle(array $filters = []): LengthAwarePaginator
     {
-        $query = Student::with('classroom');
+                $query = Student::with('classroom');
+        // Filter by institution of the authenticated principal
+        if (!empty($filters['institution_id'])) {
+            $query->where('institution_id', $filters['institution_id']);
+        }
 
         // Name filter
         if (!empty($filters['student_name'])) {

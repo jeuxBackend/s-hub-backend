@@ -32,7 +32,7 @@ class NotifyPrincipalLateTeacher extends Command
     {
         $now = Carbon::now();
         // The time exactly 15 minutes ago
-        $timeToCheck = $now->copy()->subMinutes(15)->format('H:i');
+        $timeToCheck = $now->copy()->subMinutes(1)->format('H:i');
 
         \Log::info("Cron checking for late teachers (15 mins late) for start_time = $timeToCheck");
 
@@ -55,7 +55,7 @@ class NotifyPrincipalLateTeacher extends Command
             // We check if startTime is exactly 15 minutes ago
             // This prevents spamming notifications every minute after they are late
             if ($startTime === $timeToCheck) {
-                
+
                 // Check if attendance is marked for today
                 $attendance = TeacherAttendance::where('teacher_id', $subject->teacher_id)
                     ->where('subject_id', $subject->id)
@@ -65,11 +65,11 @@ class NotifyPrincipalLateTeacher extends Command
                 if (!$attendance) {
                     // Teacher is late or hasn't attended, notify principal
                     $principal = $subject->institution->principal;
-                    
+
                     if ($principal) {
                         $title = 'Teacher Late / Absent';
                         $message = "Teacher {$subject->teacher->full_name} has not marked attendance for the class ({$subject->name}) scheduled at {$subject->start_time}. They are 15 or more minutes late.";
-                        
+
                         $log = NotificationLog::create([
                             'user_id' => $principal->id,
                             'type' => 'teacher_late_alert',

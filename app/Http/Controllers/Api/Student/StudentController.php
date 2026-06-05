@@ -17,7 +17,7 @@ use App\Actions\Student\GetStudentAction;
 use App\Actions\Admin\GetStudentWithInvoicesAction;
 use App\Actions\Student\GetStudentYearMarksAction;
 use App\Actions\Student\GetAllStudentsYearMarksAction;
-use App\Models\Student;
+use App\Enums\UserRole;
 use App\Models\Subject;
 use Illuminate\Http\Request;
 use Throwable;
@@ -123,6 +123,10 @@ class StudentController extends Controller
     {
         try {
             $filters = $request->all();
+            // Ensure the query is limited to the principal's institution
+            if ($request->user() && $request->user()->isRole(UserRole::Principal)) {
+                $filters['institution_id'] = $request->user()->institution_id;
+            }
             $paginator = $action->handle($filters);
 
             // All unique subject names in the DB for table headings
