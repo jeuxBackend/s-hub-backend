@@ -77,6 +77,18 @@ class NotifyTeacherAttendance extends Command
 
             $title = 'Time for Class!';
             $message = "It is time for your class ({$subject->name}) in {$subject->classroom?->name}. Please mark your attendance.";
+            $attendanceRequestDate = $now->toDateString();
+            $attendanceRequestKey = NotificationLog::attendanceRequestKey(
+                (int) $subject->id,
+                $attendanceRequestDate,
+                (int) $teacherId
+            );
+
+            if (NotificationLog::attendanceRequestCompleted((int) $subject->id, $attendanceRequestDate, (int) $teacherId)) {
+                \Log::info("Attendance already completed for teacher {$teacherId}, subject {$subject->id}; skipping reminder");
+                $skippedCount++;
+                continue;
+            }
 
             try {
                 $log = NotificationLog::create([
@@ -85,12 +97,14 @@ class NotifyTeacherAttendance extends Command
                     'title' => $title,
                     'message' => $message,
                     'is_read' => false,
+                    'attendance_request_key' => $attendanceRequestKey,
                     'meta' => [
                         'subject_id' => $subject->id,
                         'subject_name' => $subject->name,
                         'classroom_id' => $subject->classroom_id,
                         'classroom_name' => $subject->classroom?->name ?? 'N/A',
                         'start_time' => $subject->start_time,
+                        'attendance_request_key' => $attendanceRequestKey,
                     ],
                     'sent_at' => now(),
                 ]);

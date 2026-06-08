@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\TeacherAttendance;
 use App\Models\Subject;
+use App\Models\NotificationLog;
 use Carbon\Carbon;
 use Throwable;
 
@@ -55,6 +56,13 @@ class TeacherAttendanceController extends Controller
                 return $this->errorResponse('You can only mark attendance during the scheduled time for this class.', 400);
             }
 
+            $attendanceDate = $now->toDateString();
+            $attendanceRequestKey = NotificationLog::attendanceRequestKey(
+                (int) $subject->id,
+                $attendanceDate,
+                (int) $teacher->id
+            );
+
             $isRemote = $teacher->remote_teaching;
 
             if (!$isRemote) {
@@ -81,19 +89,57 @@ class TeacherAttendanceController extends Controller
                 }
             }
 
-            // Mark attendance
-            $attendance = TeacherAttendance::updateOrCreate(
-                [
-                    'teacher_id' => $teacher->id,
-                    'subject_id' => $subject->id,
-                    'date' => $now->toDateString(),
-                ],
-                [
+            $existingAttendance = TeacherAttendance::where('teacher_id', $teacher->id)
+                ->where('subject_id', $subject->id)
+                ->whereDate('date', $attendanceDate)
+                ->first();
+
+            $proxyAttendanceExists = TeacherAttendance::where('subject_id', $subject->id)
+                ->whereDate('date', $attendanceDate)
+                ->where('status', 'proxy')
+                ->exists();
+
+            if ($proxyAttendanceExists) {
+                NotificationLog::expireAttendanceRequest($attendanceRequestKey);
+                return $this->errorResponse('Attendance for this class has already been completed by a proxy teacher.', 409);
+            }
+
+            if ($existingAttendance && in_array($existingAttendance->status, ['present', 'proxy'], true)) {
+                NotificationLog::expireAttendanceRequest($attendanceRequestKey);
+                return $this->errorResponse('Attendance has already been marked for this class.', 409);
+            }
+
+            if ($existingAttendance) {
+                $existingAttendance->update([
                     'institution_id' => $subject->institution_id,
                     'status' => 'present',
+                    'type' => 'regular',
                     'is_remote' => $isRemote,
-                ]
-            );
+                ]);
+
+                $attendance = $existingAttendance;
+            } else {
+                $attendance = TeacherAttendance::create([
+                    'teacher_id' => $teacher->id,
+                    'subject_id' => $subject->id,
+                    'institution_id' => $subject->institution_id,
+                    'date' => $attendanceDate,
+                    'status' => 'present',
+                    'type' => 'regular',
+                    'is_remote' => $isRemote,
+                ]);
+            }
+
+            NotificationLog::expireAttendanceRequest($attendanceRequestKey);
+
+            if ($subject->is_proxy && $subject->proxy_teacher_id) {
+                $subject->update([
+                    'is_proxy' => false,
+                    'proxy_teacher_id' => null,
+                    'proxy_start_time' => null,
+                    'proxy_end_time' => null,
+                ]);
+            }
 
             return $this->successResponse($attendance, 'Attendance marked successfully.');
 

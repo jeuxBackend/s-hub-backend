@@ -12,3 +12,4 @@ Artisan::command('inspire', function () {
 Schedule::command('tuition:process-scheduled')->daily();
 Schedule::command('attendance:notify-teachers')->everyMinute();
 Schedule::command('attendance:notify-principal-absent-teacher')->everyMinute();
+Schedule::command('attendance:reassign-missed-proxy')->everyMinute();

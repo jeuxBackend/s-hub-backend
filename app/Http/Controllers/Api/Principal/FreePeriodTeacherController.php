@@ -69,6 +69,15 @@ class FreePeriodTeacherController extends Controller
             $today = \Carbon\Carbon::today()->format('Y-m-d');
             $proxyStartTime = \Carbon\Carbon::createFromFormat('g:i a', strtolower($lecture->start_time));
             $proxyEndTime = \Carbon\Carbon::createFromFormat('g:i a', strtolower($lecture->end_time));
+            $attendanceRequestKey = NotificationLog::attendanceRequestKey(
+                (int) $lecture->id,
+                $today,
+                (int) $lecture->teacher_id
+            );
+
+            if (NotificationLog::attendanceRequestCompleted((int) $lecture->id, $today, (int) $lecture->teacher_id)) {
+                return $this->errorResponse('Attendance has already been completed for this lecture.', 409);
+            }
 
             $lecture->update([
                 'is_proxy' => true,
@@ -80,13 +89,13 @@ class FreePeriodTeacherController extends Controller
             // Create in-app notification for the proxy teacher
             $notificationTitle = 'Proxy Class Assignment';
             $notificationMessage = $request->message ?? "You have been assigned as a proxy teacher for {$lecture->name} from {$lecture->start_time} to {$lecture->end_time}.";
-
             $proxyNotification = \App\Models\NotificationLog::create([
                 'user_id' => $teacher->id,
                 'type' => 'proxy_class_assignment',
                 'title' => $notificationTitle,
                 'message' => $notificationMessage,
                 'is_read' => false,
+                'attendance_request_key' => $attendanceRequestKey,
                 'meta' => [
                     'subject_id' => (string) $lecture->id,
                     'subject_name' => $lecture->name,
@@ -98,6 +107,7 @@ class FreePeriodTeacherController extends Controller
                     'proxy_end_time' => $proxyEndTime ? $proxyEndTime->format('g:i A') : null,
                     'original_teacher_id' => (string) $lecture->teacher_id,
                     'original_teacher_name' => $lecture->teacher?->full_name ?? 'N/A',
+                    'attendance_request_key' => $attendanceRequestKey,
                 ],
                 'sent_at' => now(),
             ]);
@@ -302,6 +312,25 @@ class FreePeriodTeacherController extends Controller
                 );
             }
 
+            $date = $request->filled('date')
+                ? \Carbon\Carbon::parse($request->date)->toDateString()
+                : \Carbon\Carbon::today()->toDateString();
+
+            $notification = NotificationLog::where('id', $request->notification_id)
+                ->where('user_id', $proxyTeacher->id)
+                ->first();
+
+            $attendanceRequestKey = $notification?->attendance_request_key
+                ?? NotificationLog::attendanceRequestKey(
+                    (int) $subject->id,
+                    $date,
+                    (int) $subject->teacher_id
+                );
+
+            if ($notification && empty($notification->attendance_request_key)) {
+                $notification->update(['attendance_request_key' => $attendanceRequestKey]);
+            }
+
             // Check if proxy has expired (only 15 minutes left in proxy_end_time or time has passed)
             if ($subject->proxy_end_time) {
                 $proxyEndTime = \Carbon\Carbon::parse($subject->proxy_end_time);
@@ -358,10 +387,6 @@ class FreePeriodTeacherController extends Controller
                 'distance_meters' => round($distance, 2),
             ]);
 
-            $date = $request->filled('date')
-                ? \Carbon\Carbon::parse($request->date)->toDateString()
-                : \Carbon\Carbon::today()->toDateString();
-
             // Check if proxy attendance already exists FIRST (before creating any records)
             $existingProxyAttendance = \App\Models\TeacherAttendance::where('teacher_id', $proxyTeacher->id)
                 ->where('subject_id', $subject->id)
@@ -391,11 +416,7 @@ class FreePeriodTeacherController extends Controller
                     ]);
                 }
 
-                $notification = NotificationLog::find($request->notification_id);
-                if ($notification) {
-                    $notification->is_expired = true;
-                    $notification->save();
-                }
+                NotificationLog::expireAttendanceRequest($attendanceRequestKey);
 
                 return $this->successResponse(
                     [
@@ -440,6 +461,7 @@ class FreePeriodTeacherController extends Controller
 
             // If actual teacher attendance exists but is NOT absent (e.g., marked present later), prevent proxy
             if ($existingActualAttendance && $existingActualAttendance->status != 'absent') {
+                NotificationLog::expireAttendanceRequest($attendanceRequestKey);
                 return $this->errorResponse(
                     'Attendance already exists for the actual teacher on ' . $date . ' with status: ' . $existingActualAttendance->status,
                     409
@@ -476,6 +498,8 @@ class FreePeriodTeacherController extends Controller
                 'type' => 'proxy',
                 'is_remote' => false,
             ]);
+
+            NotificationLog::expireAttendanceRequest($attendanceRequestKey);
 
             // Clear proxy-related data from subjects table to prevent reusing this subject for proxy
             $subject->update([

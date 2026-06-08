@@ -80,6 +80,11 @@ class GetAllStudentsYearMarksAction
         // Transform each student record
         $paginated->getCollection()->transform(function ($student) use ($subjectsByClassroom, $grades) {
             $classroomSubjects = $subjectsByClassroom->get($student->classroom_id, collect());
+            $guardian = $student->guardian;
+            $guardianName = $guardian?->guardian_name
+                ?? trim(($guardian?->first_name ?? '') . ' ' . ($guardian?->sur_name ?? ''));
+            $guardianPhone = $guardian?->guardian_phone_number
+                ?? $guardian?->phone_number;
 
             $subjectsData = [];
             foreach ($classroomSubjects as $subject) {
@@ -101,9 +106,9 @@ class GetAllStudentsYearMarksAction
                 'student_id' => $student->id,
                 'full_name' => trim($student->first_name . ' ' . $student->sur_name),
                 'address' => $student->address,
-                'guardianName' => $student->guardian->first_name . ' ' . $student->guardian->sur_name,
-                'guardianPhone' => $student->guardian->phone_number,
-                'guardianRelation' => $student->guardian->guardian_relation,
+                'guardianName' => $guardianName ?: null,
+                'guardianPhone' => $guardianPhone,
+                'guardianRelation' => $guardian?->guardian_relation,
                 'reg_number' => $student->registration_number,
                 'profile_picture' => $student->profile_picture,
                 'classroom_id' => $student->classroom->id ?? null,

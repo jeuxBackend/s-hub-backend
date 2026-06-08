@@ -89,6 +89,11 @@ class NotifyPrincipalLateTeacher extends Command
                     // Teacher is absent (more than 3 minutes late) – notify principal
                     $principal = $subject->institution->principal;
                     $isInCharge = $subject->classroom && $subject->classroom->in_charge_id == $subject->teacher_id;
+                    $attendanceRequestKey = NotificationLog::attendanceRequestKey(
+                        (int) $subject->id,
+                        $now->toDateString(),
+                        (int) $subject->teacher_id
+                    );
 
                     if ($principal) {
                         $title = 'Teacher Absent';
@@ -109,7 +114,9 @@ class NotifyPrincipalLateTeacher extends Command
                                 'start_time' => (string) $subject->start_time,
                                 'end_time' => (string) $subject->end_time,
                                 'is_incharge' => $isInCharge ? 'Yes' : 'No',
+                                'attendance_request_key' => $attendanceRequestKey,
                             ],
+                            attendanceRequestKey: $attendanceRequestKey,
                             firebaseNotificationService: $firebaseNotificationService
                         );
 
@@ -138,7 +145,9 @@ class NotifyPrincipalLateTeacher extends Command
                                 'start_time' => (string) $subject->start_time,
                                 'end_time' => (string) $subject->end_time,
                                 'attendance_status' => AttendanceStatus::Absent->value,
+                                'attendance_request_key' => $attendanceRequestKey,
                             ],
+                            attendanceRequestKey: $attendanceRequestKey,
                             firebaseNotificationService: $firebaseNotificationService
                         );
 
@@ -165,6 +174,7 @@ class NotifyPrincipalLateTeacher extends Command
         string $title,
         string $message,
         array $meta,
+        string $attendanceRequestKey,
         FirebaseNotificationService $firebaseNotificationService
     ): NotificationLog {
         $log = NotificationLog::create([
@@ -173,6 +183,7 @@ class NotifyPrincipalLateTeacher extends Command
             'title' => $title,
             'message' => $message,
             'is_read' => false,
+            'attendance_request_key' => $attendanceRequestKey,
             'meta' => $meta,
             'sent_at' => now(),
         ]);
