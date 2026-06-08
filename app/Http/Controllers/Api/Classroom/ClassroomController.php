@@ -47,14 +47,28 @@ class ClassroomController extends Controller
                     ->first();
                 $classroom->average_attendance = ($attendance->total > 0) ? round(($attendance->present / $attendance->total * 100), 2) : 0;
 
-                // Tuition Counts
+                // Total Amount Paid and Owed
+                // Total amount paid = sum of all paid invoices
                 $classroom->paid_tuition = StudentInvoice::whereHas('student', fn($q) => $q->where('classroom_id', $classroom->id))
                     ->where('status', 'paid')
-                    ->count();
+                    ->sum('amount'); // Sum of paid amounts
 
-                $classroom->owing_tuition = StudentInvoice::whereHas('student', fn($q) => $q->where('classroom_id', $classroom->id))
-                    ->where('due_amount', '>', 0)
-                    ->count();
+                // Total amount owed = sum of latest due amounts for unique students
+                $studentsInClassroom = $classroom->students()->pluck('id');
+                
+                $latestDueAmounts = [];
+                foreach ($studentsInClassroom as $studentId) {
+                    // Get the latest invoice for each student
+                    $latestInvoice = StudentInvoice::where('student_id', $studentId)
+                        ->orderBy('created_at', 'desc')
+                        ->first();
+                    
+                    if ($latestInvoice && $latestInvoice->due_amount > 0) {
+                        $latestDueAmounts[] = $latestInvoice->due_amount;
+                    }
+                }
+                
+                $classroom->owing_tuition = array_sum($latestDueAmounts);
 
                 return $classroom;
             });
@@ -91,14 +105,28 @@ class ClassroomController extends Controller
                     ->first();
                 $classroom->average_attendance = ($attendance->total > 0) ? round(($attendance->present / $attendance->total * 100), 2) : 0;
 
-                // Tuition Counts
+                // Total Amount Paid and Owed
+                // Total amount paid = sum of all paid invoices
                 $classroom->paid_tuition = StudentInvoice::whereHas('student', fn($q) => $q->where('classroom_id', $classroom->id))
                     ->where('status', 'paid')
-                    ->count();
+                    ->sum('amount'); // Sum of paid amounts
 
-                $classroom->owing_tuition = StudentInvoice::whereHas('student', fn($q) => $q->where('classroom_id', $classroom->id))
-                    ->where('due_amount', '>', 0)
-                    ->count();
+                // Total amount owed = sum of latest due amounts for unique students
+                $studentsInClassroom = $classroom->students()->pluck('id');
+                
+                $latestDueAmounts = [];
+                foreach ($studentsInClassroom as $studentId) {
+                    // Get the latest invoice for each student
+                    $latestInvoice = StudentInvoice::where('student_id', $studentId)
+                        ->orderBy('created_at', 'desc')
+                        ->first();
+                    
+                    if ($latestInvoice && $latestInvoice->due_amount > 0) {
+                        $latestDueAmounts[] = $latestInvoice->due_amount;
+                    }
+                }
+                
+                $classroom->owing_tuition = array_sum($latestDueAmounts);
 
                 return $classroom;
             });
@@ -232,14 +260,28 @@ class ClassroomController extends Controller
                         ->first();
                     $classroom->average_attendance = ($attendance->total > 0) ? round(($attendance->present / $attendance->total * 100), 2) : 0;
 
-                    // Tuition Counts
+                    // Total Amount Paid and Owed
+                    // Total amount paid = sum of all paid invoices
                     $classroom->paid_tuition = StudentInvoice::whereHas('student', fn($q) => $q->where('classroom_id', $classroom->id))
                         ->where('status', 'paid')
-                        ->count();
+                        ->sum('amount'); // Sum of paid amounts
 
-                    $classroom->owing_tuition = StudentInvoice::whereHas('student', fn($q) => $q->where('classroom_id', $classroom->id))
-                        ->where('due_amount', '>', 0)
-                        ->count();
+                    // Total amount owed = sum of latest due amounts for unique students
+                    $studentsInClassroom = $classroom->students()->pluck('id');
+                    
+                    $latestDueAmounts = [];
+                    foreach ($studentsInClassroom as $studentId) {
+                        // Get the latest invoice for each student
+                        $latestInvoice = StudentInvoice::where('student_id', $studentId)
+                            ->orderBy('created_at', 'desc')
+                            ->first();
+                        
+                        if ($latestInvoice && $latestInvoice->due_amount > 0) {
+                            $latestDueAmounts[] = $latestInvoice->due_amount;
+                        }
+                    }
+                    
+                    $classroom->owing_tuition = array_sum($latestDueAmounts);
 
                     $totalSubjects = $classroom->subjects->count();
                     $uniqueTeachersCount = $classroom->subjects->pluck('teacher_id')->filter()->unique()->count();
@@ -319,6 +361,7 @@ class ClassroomController extends Controller
                 $attendanceByStudent[] = [
                     'student_id' => $student->id,
                     'student_name' => $student->first_name . ' ' . $student->last_name,
+                    'profile_picture' => $student->profile_picture,
                     'student_registration_number' => $student->registration_number,
                     'overall_attendance' => $studentOverallAttendance,
                     'attendance_by_day' => array_combine($daysOfWeek, $studentAttendanceData)
@@ -377,6 +420,13 @@ class ClassroomController extends Controller
 
             $students = $classroom->students;
 
+            // Get all subjects assigned to this classroom (not just those with performance data)
+            $classroomSubjects = $classroom->subjects; // Assuming there's a relationship defined
+            $subjects = [];
+            foreach ($classroomSubjects as $subject) {
+                $subjects[] = $subject->name;
+            }
+
             // Calculate overall average performance for the class
             $overallAveragePerformance = StudentPerformance::where('class_id', $classroom->id)
                 ->selectRaw('COALESCE(AVG(CASE WHEN total_mark > 0 THEN (obtained_mark / total_mark * 100) ELSE 0 END), 0) as avg_perf')
@@ -386,31 +436,20 @@ class ClassroomController extends Controller
 
             // Get performance data for each student
             $performanceByStudent = [];
-            $subjects = [];
-
-            // First, get all unique subjects in the class
-            $classSubjects = StudentPerformance::where('class_id', $classroom->id)
-                ->join('subjects', 'student_performances.subject_id', '=', 'subjects.id')
-                ->select('subjects.id', 'subjects.name')
-                ->distinct()
-                ->get();
-
-            foreach ($classSubjects as $subject) {
-                $subjects[] = $subject->name;
-            }
 
             // Calculate performance for each student
             foreach ($students as $student) {
                 $studentPerformances = StudentPerformance::where('student_id', $student->id)
                     ->where('class_id', $classroom->id)
                     ->join('subjects', 'student_performances.subject_id', '=', 'subjects.id')
-                    ->select('student_performances.*', 'subjects.name as subject_name')
+                    ->select('student_performances.*', 'subjects.name as subject_name', 'subjects.id as subject_id')
                     ->get();
 
                 $studentPerformanceData = [];
                 $subjectScores = [];
 
-                foreach ($classSubjects as $subject) {
+                // Initialize all subjects with 0, then fill in actual scores
+                foreach ($classroomSubjects as $subject) {
                     $perf = $studentPerformances->firstWhere('subject_id', $subject->id);
                     if ($perf && $perf->total_mark > 0) {
                         $score = round(($perf->obtained_mark / $perf->total_mark * 100), 2);
@@ -432,6 +471,7 @@ class ClassroomController extends Controller
                     'student_id' => $student->id,
                     'student_registration_number' => $student->registration_number,
                     'student_name' => $student->first_name . ' ' . $student->last_name,
+                    'profile_picture' => $student->profile_picture,
                     'overall_performance' => $studentOverallPerformance,
                     'performance_by_subject' => $studentPerformanceData
                 ];
@@ -439,7 +479,7 @@ class ClassroomController extends Controller
 
             // Calculate average performance by subject for the class (for chart)
             $subjectAverages = [];
-            foreach ($classSubjects as $subject) {
+            foreach ($classroomSubjects as $subject) {
                 $avg = StudentPerformance::where('class_id', $classroom->id)
                     ->where('subject_id', $subject->id)
                     ->selectRaw('COALESCE(AVG(CASE WHEN total_mark > 0 THEN (obtained_mark / total_mark * 100) ELSE 0 END), 0) as avg_perf')
@@ -526,6 +566,8 @@ class ClassroomController extends Controller
                 $tuitionByStudent[] = [
                     'student_id' => $student->id,
                     'student_name' => $student->first_name . ' ' . $student->last_name,
+                    'profile_picture' => $student->profile_picture,
+                    'student_registration_number' => $student->registration_number,
                     'paid_invoices' => $paidInvoices,
                     'total_invoices' => $totalInvoices,
                     'total_amount' => $totalAmount,
@@ -545,9 +587,6 @@ class ClassroomController extends Controller
                     [
                         'label' => 'Class Average Latest Due Amount',
                         'data' => [$classAverageLatestDue],
-                        'backgroundColor' => 'rgba(245, 176, 40, 0.2)',
-                        'borderColor' => 'rgba(245, 176, 40, 1)',
-                        'borderWidth' => 2,
                     ]
                 ]
             ];
