@@ -24,7 +24,7 @@ class GetAllStudentsYearMarksAction
      */
     public function handle(array $filters = []): LengthAwarePaginator
     {
-                $query = Student::with('classroom');
+        $query = Student::with(['classroom', 'guardian']);
         // Filter by institution of the authenticated principal
         if (!empty($filters['institution_id'])) {
             $query->where('institution_id', $filters['institution_id']);
@@ -83,28 +83,32 @@ class GetAllStudentsYearMarksAction
 
             $subjectsData = [];
             foreach ($classroomSubjects as $subject) {
-                $key     = $student->id . '_' . $subject->id;
-                $grade   = optional($grades->get($key))->first();
+                $key = $student->id . '_' . $subject->id;
+                $grade = optional($grades->get($key))->first();
                 $obtained = $grade ? (float) $grade->score : 0;
-                $max      = $grade ? (float) $grade->total : 0;
+                $max = $grade ? (float) $grade->total : 0;
 
                 $subjectsData[] = [
-                    'subject_id'   => $subject->id,
+                    'subject_id' => $subject->id,
                     'subject_name' => $subject->name,
-                    'obtained'     => $obtained,
-                    'total'        => $max,
-                    'percentage'   => $max > 0 ? round(($obtained / $max) * 100, 2) : 0,
+                    'obtained' => $obtained,
+                    'total' => $max,
+                    'percentage' => $max > 0 ? round(($obtained / $max) * 100, 2) : 0,
                 ];
             }
 
             return [
-                'student_id'     => $student->id,
-                'full_name'      => trim($student->first_name . ' ' . $student->sur_name),
-                'reg_number'     => $student->registration_number,
+                'student_id' => $student->id,
+                'full_name' => trim($student->first_name . ' ' . $student->sur_name),
+                'address' => $student->address,
+                'guardianName' => $student->guardian->first_name . ' ' . $student->guardian->sur_name,
+                'guardianPhone' => $student->guardian->phone_number,
+                'guardianRelation' => $student->guardian->guardian_relation,
+                'reg_number' => $student->registration_number,
                 'profile_picture' => $student->profile_picture,
-                'classroom_id'   => $student->classroom->id ?? null,
+                'classroom_id' => $student->classroom->id ?? null,
                 'classroom_name' => $student->classroom->name ?? null,
-                'subjects'       => $subjectsData,
+                'subjects' => $subjectsData,
             ];
         });
 
