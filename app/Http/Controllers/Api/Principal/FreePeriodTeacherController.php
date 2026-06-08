@@ -10,6 +10,7 @@ use App\Models\NotificationLog;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Throwable;
+use Carbon\Carbon;
 
 class FreePeriodTeacherController extends Controller
 {
@@ -25,8 +26,10 @@ class FreePeriodTeacherController extends Controller
         $request->validate([
             'lecture_id' => 'required|exists:subjects,id',
             'teacher_id' => 'required|exists:users,id',
-            'message' => 'nullable|string|max:500',
+            // 'message' => 'nullable|string|max:500',
         ]);
+
+
 
         try {
             $requester = auth()->user();
@@ -34,8 +37,20 @@ class FreePeriodTeacherController extends Controller
 
             // Verify lecture belongs to the same institution
             $lecture = Subject::where('id', $request->lecture_id)
-                ->where('institution_id', $institutionId)
+                ->where('institution_id', $institutionId)->with('classroom')
                 ->first();
+
+
+
+            if (!empty($lecture->classroom->in_charge_id)) {
+                $request->merge([
+                    'message' => "You have assigned {$lecture->name} in {$lecture->classroom->name} and marks student attendance also."
+                ]);
+            } else {
+                $request->merge([
+                    'message' => "You have assigned {$lecture->name} in {$lecture->classroom->name}."
+                ]);
+            }
 
             if (!$lecture) {
                 return $this->errorResponse('Lecture not found in your institution.', 404);
@@ -67,8 +82,8 @@ class FreePeriodTeacherController extends Controller
 
             // Convert time strings to proper datetime format for today
             $today = \Carbon\Carbon::today()->format('Y-m-d');
-            $proxyStartTime = \Carbon\Carbon::createFromFormat('g:i a', strtolower($lecture->start_time));
-            $proxyEndTime = \Carbon\Carbon::createFromFormat('g:i a', strtolower($lecture->end_time));
+            $proxyStartTime = \Carbon\Carbon::parse($lecture->start_time);
+            $proxyEndTime = \Carbon\Carbon::parse($lecture->end_time);
             $attendanceRequestKey = NotificationLog::attendanceRequestKey(
                 (int) $lecture->id,
                 $today,
@@ -101,8 +116,8 @@ class FreePeriodTeacherController extends Controller
                     'subject_name' => $lecture->name,
                     'classroom_id' => (string) $lecture->classroom_id,
                     'classroom_name' => $lecture->classroom?->name ?? 'N/A',
-                    'start_time' => (string) $lecture->start_time,
-                    'end_time' => (string) $lecture->end_time,
+                    'start_time' => Carbon::parse($lecture->start_time)->format('g:i a'),
+                    'end_time' => Carbon::parse($lecture->end_time)->format('g:i a'),
                     'proxy_start_time' => $proxyStartTime ? $proxyStartTime->format('g:i A') : null,
                     'proxy_end_time' => $proxyEndTime ? $proxyEndTime->format('g:i A') : null,
                     'original_teacher_id' => (string) $lecture->teacher_id,

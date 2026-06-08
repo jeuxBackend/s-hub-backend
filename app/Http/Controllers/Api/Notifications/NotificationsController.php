@@ -66,18 +66,15 @@ class NotificationsController extends Controller
 
             if ($notification->type == 'teacher_absent_alert') {
                 $class_end_time = $meta['end_time'] ?? null;
-                if ($class_end_time) {
-                    // Parse the end time (format: "12:36 pm")
-                    $endTime = \Carbon\Carbon::createFromFormat('g:i a', strtolower($class_end_time));
+                $endTime = $this->parseNotificationTime($class_end_time);
 
-                    if ($endTime) {
-                        // Calculate minutes remaining until end time
-                        $minutesRemaining = \Carbon\Carbon::now()->diffInMinutes($endTime, false);
+                if ($endTime) {
+                    // Calculate minutes remaining until end time
+                    $minutesRemaining = \Carbon\Carbon::now()->diffInMinutes($endTime, false);
 
-                        // If 15 minutes or less remaining (or time has passed), mark as expired
-                        if ($minutesRemaining <= 15) {
-                            $notification->is_expired = true;
-                        }
+                    // If 15 minutes or less remaining (or time has passed), mark as expired
+                    if ($minutesRemaining <= 15) {
+                        $notification->is_expired = true;
                     }
                 }
             }
@@ -95,6 +92,19 @@ class NotificationsController extends Controller
 
         });
         return $this->successResponse($notifications, 'Notifications fetched successfully');
+    }
+
+    private function parseNotificationTime(?string $time): ?\Carbon\Carbon
+    {
+        if (!$time) {
+            return null;
+        }
+
+        try {
+            return \Carbon\Carbon::createFromFormat('g:i a', strtolower(trim($time)));
+        } catch (\Throwable $e) {
+            return null;
+        }
     }
 
     public function readNotification(Request $request, $id)

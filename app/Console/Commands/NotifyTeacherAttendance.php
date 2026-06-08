@@ -103,7 +103,7 @@ class NotifyTeacherAttendance extends Command
                         'subject_name' => $subject->name,
                         'classroom_id' => $subject->classroom_id,
                         'classroom_name' => $subject->classroom?->name ?? 'N/A',
-                        'start_time' => $subject->start_time,
+                        'start_time' => Carbon::parse($subject->start_time)->format('g:i a'),
                         'attendance_request_key' => $attendanceRequestKey,
                     ],
                     'sent_at' => now(),

@@ -41,7 +41,7 @@ class FindFreeTeachersAction
             return [];
         }
 
-        // Get all teachers who have classes during this time
+        // Get all teachers who have regular classes during this time
         $busyTeachers = Subject::where('institution_id', $institutionId)
             ->where('id', '!=', $lectureId)
             ->whereIn('teacher_id', $allTeachers)
@@ -59,7 +59,26 @@ class FindFreeTeachersAction
             ->unique()
             ->toArray();
 
-        // Free teachers are all teachers minus busy teachers
+        // Also treat active proxy assignments as busy during the proxy window
+        $busyProxyTeachers = Subject::where('institution_id', $institutionId)
+            ->where('id', '!=', $lectureId)
+            ->whereIn('proxy_teacher_id', $allTeachers)
+            ->where('is_proxy', true)
+            ->whereNotNull('proxy_start_time')
+            ->whereNotNull('proxy_end_time')
+            ->get()
+            ->filter(function ($subject) use ($lectureStart, $lectureEnd) {
+                $proxyStart = Carbon::parse($subject->proxy_start_time);
+                $proxyEnd = Carbon::parse($subject->proxy_end_time);
+
+                return !($lectureEnd->lessThanOrEqualTo($proxyStart) || $lectureStart->greaterThanOrEqualTo($proxyEnd));
+            })
+            ->pluck('proxy_teacher_id')
+            ->unique()
+            ->toArray();
+
+        // Free teachers are all teachers minus regular busy teachers and proxy-busy teachers
+        $busyTeachers = array_unique(array_merge($busyTeachers, $busyProxyTeachers));
         $freeTeachers = array_diff($allTeachers, $busyTeachers);
 
         return array_values($freeTeachers);

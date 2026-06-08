@@ -3,7 +3,6 @@
 namespace App\Console\Commands;
 
 use App\Actions\Teacher\FindFreeTeachersAction;
-use App\Events\NewNotificationEvent;
 use App\Models\NotificationLog;
 use App\Models\Subject;
 use App\Models\User;
@@ -17,7 +16,7 @@ class ReassignMissedProxyAttendance extends Command
 
     protected $description = 'Reassign proxy classes when the current proxy teacher does not mark attendance in time.';
 
-    private const RESPONSE_GRACE_MINUTES = 5;
+    private const RESPONSE_GRACE_MINUTES = 1;
 
     private const MINUTES_REQUIRED_FOR_NEW_PROXY = 15;
 
@@ -126,7 +125,7 @@ class ReassignMissedProxyAttendance extends Command
                     ->whereDate('sent_at', $today)
                     ->whereJsonContains('meta->subject_id', (string) $subject->id)
                     ->pluck('user_id')
-                    ->map(fn ($userId) => (int) $userId)
+                    ->map(fn($userId) => (int) $userId)
                     ->all();
 
                 $candidateTeacherIds = array_values(array_diff(
@@ -142,8 +141,6 @@ class ReassignMissedProxyAttendance extends Command
             }
 
             $nextProxyTeacher = User::whereIn('id', $candidateTeacherIds)
-                ->where('institution_id', $subject->institution_id)
-                ->whereIn('role', ['teacher', 'school-admin'])
                 ->where('status', true)
                 ->orderBy('id')
                 ->first();
@@ -176,7 +173,19 @@ class ReassignMissedProxyAttendance extends Command
             );
 
             $title = 'Proxy Class Reassigned';
-            $message = "You have been reassigned as proxy teacher for {$subject->name} in {$subject->classroom?->name}. Please mark attendance within the class window.";
+
+
+            $message = "";
+
+            if (!empty($lecture->classroom->in_charge_id)) {
+
+                $message = "You have assigned {$subject->name} in {$subject->classroom->name} and marks student attendance also.";
+
+            } else {
+
+                $message = "You have assigned {$subject->name} in {$subject->classroom->name}.";
+
+            }
 
             $log = NotificationLog::create([
                 'user_id' => $nextProxyTeacher->id,
@@ -190,10 +199,10 @@ class ReassignMissedProxyAttendance extends Command
                     'subject_name' => $subject->name,
                     'classroom_id' => (string) $subject->classroom_id,
                     'classroom_name' => $subject->classroom?->name ?? 'N/A',
-                    'start_time' => (string) $subject->start_time,
-                    'end_time' => (string) $subject->end_time,
-                    'proxy_start_time' => $proxyStartTime->format('g:i A'),
-                    'proxy_end_time' => $proxyEndTime->format('g:i A'),
+                    'start_time' => Carbon::parse($subject->start_time)->format('g:i a'),
+                    'end_time' => Carbon::parse($subject->end_time)->format('g:i a'),
+                    'proxy_start_time' => $proxyStartTime->format('g:i a'),
+                    'proxy_end_time' => $proxyEndTime->format('g:i a'),
                     'original_teacher_id' => (string) $subject->teacher_id,
                     'original_teacher_name' => $subject->teacher->full_name,
                     'previous_proxy_teacher_id' => (string) $currentProxyTeacherId,
@@ -203,7 +212,7 @@ class ReassignMissedProxyAttendance extends Command
                 'sent_at' => now(),
             ]);
 
-            event(new NewNotificationEvent($log));
+            \Log::info('Sending proxy reassignment notification to ' . $log);
 
             if ($nextProxyTeacher->notifications_enabled && $nextProxyTeacher->fcm_token) {
                 $firebaseNotificationService->sendToToken(
@@ -288,14 +297,12 @@ class ReassignMissedProxyAttendance extends Command
                 'classroom_name' => $subject->classroom?->name ?? 'N/A',
                 'proxy_teacher_id' => (string) $subject->proxy_teacher_id,
                 'proxy_teacher_name' => $currentProxyTeacher->full_name,
-                'start_time' => (string) $subject->start_time,
-                'end_time' => (string) $subject->end_time,
+                'start_time' => Carbon::parse($subject->start_time)->format('g:i a'),
+                'end_time' => Carbon::parse($subject->end_time)->format('g:i a'),
                 'attendance_request_key' => $attendanceRequestKey,
             ],
             'sent_at' => now(),
         ]);
-
-        event(new NewNotificationEvent($log));
 
         if ($principal->notifications_enabled && $principal->fcm_token) {
             $firebaseNotificationService->sendToToken(
@@ -362,14 +369,12 @@ class ReassignMissedProxyAttendance extends Command
                 'classroom_name' => $subject->classroom?->name ?? 'N/A',
                 'proxy_teacher_id' => (string) $subject->proxy_teacher_id,
                 'proxy_teacher_name' => $currentProxyTeacher->full_name,
-                'start_time' => (string) $subject->start_time,
-                'end_time' => (string) $subject->end_time,
+                'start_time' => Carbon::parse($subject->start_time)->format('g:i a'),
+                'end_time' => Carbon::parse($subject->end_time)->format('g:i a'),
                 'attendance_request_key' => $attendanceRequestKey,
             ],
             'sent_at' => now(),
         ]);
-
-        event(new NewNotificationEvent($log));
 
         if ($principal->notifications_enabled && $principal->fcm_token) {
             $firebaseNotificationService->sendToToken(
