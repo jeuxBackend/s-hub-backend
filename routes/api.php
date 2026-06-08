@@ -105,6 +105,7 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'active.user'])->group(function
     Route::put('update-profile', [UserController::class, 'updateProfile']);
     // Route::patch('users/{user}/notifications/toggle', [UserController::class, 'toggleNotification']);
     Route::patch('users/remote/toggle', [UserController::class, 'toggleRemote']);
+    Route::get('me', [UserController::class, 'getAuthenticatedUser']);
 
 
     // ===================== MANAGEMENT ROUTES (PRINCIPAL + SCHOOL ADMIN ONLY) =====================

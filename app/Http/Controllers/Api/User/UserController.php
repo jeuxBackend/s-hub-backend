@@ -70,6 +70,39 @@ class UserController extends Controller
         }
     }
 
+    public function getAuthenticatedUser()
+    {
+        try {
+            $user = auth()->user();
+            
+            if (!$user) {
+                return $this->errorResponse('User not authenticated', 401);
+            }
+            
+            // Load relationships based on user role similar to login action
+            if ($user->role === \App\Enums\UserRole::Principal) {
+                $user->load(['institution']);
+            } elseif ($user->role === \App\Enums\UserRole::SchoolAdmin) {
+                $user->load(['creator.institution']);
+            } elseif ($user->role === \App\Enums\UserRole::Parent) {
+                $user->load(['guardianStudents']);
+            }
+            
+            // Get unread notification count
+            $unreadNotificationCount = \App\Models\NotificationLog::where('user_id', $user->id)
+                ->where('is_read', false)
+                ->count();
+
+            return $this->successResponse([
+                'user' => new UserResource($user),
+                'role' => $user->role->value,
+                'unread_notification_count' => $unreadNotificationCount,
+            ], 'Authenticated user data retrieved successfully');
+        } catch (Throwable $e) {
+            return $this->exceptionResponse($e);
+        }
+    }
+
     public function updateProfile(UpdateUserRequest $request, UpdateUserAction $updateUser)
     {
         try {

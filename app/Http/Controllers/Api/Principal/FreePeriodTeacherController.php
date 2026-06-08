@@ -20,7 +20,7 @@ class FreePeriodTeacherController extends Controller
     public function notifyTeacher(
         Request $request,
         FindFreeTeachersAction $findFreeAction,
-        NotifyFreeTeachersAction $notifyAction
+        // NotifyFreeTeachersAction $notifyAction
     ) {
         $request->validate([
             'lecture_id' => 'required|exists:subjects,id',
@@ -135,6 +135,10 @@ class FreePeriodTeacherController extends Controller
                         ]
                     );
 
+                    \Illuminate\Support\Facades\Log::info('Push notification result', [
+                        'result' => $result,
+                    ]);
+
                     if ($result) {
                         \Illuminate\Support\Facades\Log::info('Push notification sent successfully to proxy teacher', [
                             'teacher_id' => $teacher->id,
@@ -160,12 +164,12 @@ class FreePeriodTeacherController extends Controller
                 ]);
             }
 
-            // Send notification and mark attendance
-            $notificationResult = $notifyAction->handle(
-                $request->lecture_id,
-                [$request->teacher_id],
-                $request->message
-            );
+            // //Send notification and mark attendance
+            // $notificationResult = $notifyAction->handle(
+            //     $request->lecture_id,
+            //     [$request->teacher_id],
+            //     $request->message
+            // );
 
             return $this->successResponse(
                 [
@@ -173,12 +177,12 @@ class FreePeriodTeacherController extends Controller
                     'lecture_name' => $lecture->name,
                     'teacher_id' => $teacher->id,
                     'teacher_name' => $teacher->first_name . ' ' . $teacher->sur_name,
-                    'notified' => $notificationResult['notified'],
-                    'failed' => $notificationResult['failed'],
-                    'status' => $notificationResult['notified'] > 0 ? 'success' : 'failed',
-                    'result' => $notificationResult['results'][0] ?? null,
+                    // 'notified' => $notificationResult['notified'],
+                    // 'failed' => $notificationResult['failed'],
+                    // 'status' => $notificationResult['notified'] > 0 ? 'success' : 'failed',
+                    // 'result' => $notificationResult['results'][0] ?? null,
                 ],
-                $notificationResult['notified'] > 0 ? 'Teacher notified successfully' : 'Failed to notify teacher'
+                // $notificationResult['notified'] > 0 ? 'Teacher notified successfully' : 'Failed to notify teacher'
             );
 
         } catch (Throwable $e) {
@@ -387,9 +391,11 @@ class FreePeriodTeacherController extends Controller
                     ]);
                 }
 
-                $notification = App\Models\NotificationLog::find($request->notification_id);
-                $notification->is_expired;
-                $notification->save();
+                $notification = NotificationLog::find($request->notification_id);
+                if ($notification) {
+                    $notification->is_expired = true;
+                    $notification->save();
+                }
 
                 return $this->successResponse(
                     [
