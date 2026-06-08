@@ -178,7 +178,7 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'active.user'])->group(function
         });
 
         Route::get('dashboard-stats', [PrincipalDashboardController::class, 'stats']);
-        Route::get('settings', [SettingController::class, 'show']);
+        // Route::get('settings', [SettingController::class, 'show']);
     });
     Route::post('get-noticeboard', [NotificationsController::class, 'getUserNotifications']);
     Route::post('read-noticeboard/{id}', [NotificationsController::class, 'readNotification']);
@@ -242,6 +242,7 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'active.user'])->group(function
         Route::get('invoices/{id}/receipt/download', [\App\Http\Controllers\Api\Parent\ParentInvoiceController::class, 'downloadReceipt']);
         Route::post('invoices/{id}/pay', [\App\Http\Controllers\Api\Parent\ParentInvoiceController::class, 'pay']);
         Route::post('invoices/{id}/confirm', [\App\Http\Controllers\Api\Parent\ParentInvoiceController::class, 'confirm']);
+        // Route::get('settings', [SettingController::class, 'show']);
     });
 
 
@@ -260,6 +261,7 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'active.user'])->group(function
         Route::patch('general-reports/{id}/status', [\App\Http\Controllers\Api\GeneralReportController::class, 'updateStatus']);
         Route::apiResource('general-reports', \App\Http\Controllers\Api\GeneralReportController::class)->only(['index', 'store', 'show', 'update', 'destroy']);
     });
+    Route::get('settings', [SettingController::class, 'show']);
 });
 
 
