@@ -29,7 +29,7 @@ class NotifyFreeTeachersAction
     public function handle(int $lectureId, array $freeTeacherIds, string $message = null)
     {
         $lecture = Subject::find($lectureId);
-        
+
         if (!$lecture) {
             throw new \Exception('Lecture not found');
         }
@@ -79,9 +79,9 @@ class NotifyFreeTeachersAction
                     $notificationTitle,
                     $notificationBody,
                     [
-                        'subject_id' => (string)$lecture->id,
+                        'subject_id' => (string) $lecture->id,
                         'subject_name' => $lecture->name,
-                        'classroom_id' => (string)$lecture->classroom_id,
+                        'classroom_id' => (string) $lecture->classroom_id,
                         'type' => 'extra_class_assignment',
                     ]
                 );

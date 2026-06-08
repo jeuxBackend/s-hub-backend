@@ -7,13 +7,17 @@ use Illuminate\Database\Eloquent\Model;
 class Subject extends Model
 {
     protected $fillable = [
-        'name', 
-        'code', 
+        'name',
+        'code',
         'classroom_id',
         'institution_id',
         'teacher_id',
         'start_time',
-        'end_time'
+        'end_time',
+        'is_proxy',
+        'proxy_teacher_id',
+        'proxy_start_time',
+        'proxy_end_time',
     ];
 
     public function teacher()

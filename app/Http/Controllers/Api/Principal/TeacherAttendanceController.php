@@ -41,12 +41,12 @@ class TeacherAttendanceController extends Controller
             // Compute summary statistics
             $total = $paginated->total();
             $presentCount = $items->where('status', AttendanceStatus::Present->value)->count();
-            $absentCount  = $items->where('status', AttendanceStatus::Absent->value)->count();
-            $lateCount    = $items->where('status', AttendanceStatus::Late->value)->count();
+            $absentCount = $items->where('status', AttendanceStatus::Absent->value)->count();
+            $lateCount = $items->where('status', AttendanceStatus::Late->value)->count();
 
             $presentPct = $total ? round(($presentCount / $total) * 100, 2) : 0;
-            $absentPct  = $total ? round(($absentCount / $total) * 100, 2) : 0;
-            $latePct    = $total ? round(($lateCount / $total) * 100, 2) : 0;
+            $absentPct = $total ? round(($absentCount / $total) * 100, 2) : 0;
+            $latePct = $total ? round(($lateCount / $total) * 100, 2) : 0;
 
             return response()->json([
                 'data' => TeacherAttendanceResource::collection($items),
@@ -57,11 +57,11 @@ class TeacherAttendanceController extends Controller
                     'last_page' => $paginated->lastPage(),
                     // summary stats
                     'present_count' => $presentCount,
-                    'absent_count'  => $absentCount,
-                    'late_count'    => $lateCount,
+                    'absent_count' => $absentCount,
+                    'late_count' => $lateCount,
                     'present_percentage' => $presentPct,
-                    'absent_percentage'  => $absentPct,
-                    'late_percentage'    => $latePct,
+                    'absent_percentage' => $absentPct,
+                    'late_percentage' => $latePct,
                 ],
             ]);
         } catch (Throwable $e) {
@@ -83,6 +83,35 @@ class TeacherAttendanceController extends Controller
                 'end_time' => 'required|string',
             ]);
 
+            //if only 15 minutes left in end_time then is_expire check should be true
+            $is_expire = false;
+            $endTime = Carbon::createFromFormat('g:i A', strtoupper($request->end_time));
+            
+            // Check if current time is within 15 minutes of end time (or past it)
+            $minutesRemaining = Carbon::now()->diffInMinutes($endTime, false);
+            if ($minutesRemaining <= 15) {
+                $is_expire = true;
+            }
+
+            if ($is_expire) {
+                return response()->json(
+                    [
+                        'success' => false,
+                        'message' => 'Notification Expired ! ',
+                        'data' => [
+                            'time_range' => [
+                                'start_time' => $request->start_time,
+                                'end_time' => $request->end_time,
+                            ],
+                            'free_teachers' => [],
+                            'total_free' => 0,
+                            'is_expired' => 'Yes',
+                        ],
+                    ],
+                    403
+                );
+            }
+
             $principal = auth()->user();
             $institutionId = $principal->institution_id;
 
@@ -93,7 +122,7 @@ class TeacherAttendanceController extends Controller
                     // Try 24-hour format as fallback
                     $startTime = Carbon::createFromFormat('H:i', $request->start_time);
                 }
-                
+
                 $endTime = Carbon::createFromFormat('g:i A', strtoupper($request->end_time));
                 if (!$endTime) {
                     // Try 24-hour format as fallback
@@ -120,6 +149,8 @@ class TeacherAttendanceController extends Controller
                     422
                 );
             }
+
+
 
             // Get all teachers in the institution
             $allTeachers = User::where('institution_id', $institutionId)

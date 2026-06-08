@@ -8,6 +8,7 @@ enum AttendanceStatus: string
     case Absent = 'absent';
     case Late = 'late';
     case Excused = 'excused';
+    case Proxy = 'proxy';
 
     public function label(): string
     {
@@ -16,6 +17,7 @@ enum AttendanceStatus: string
             self::Absent => 'Absent',
             self::Late => 'Late',
             self::Excused => 'Excused',
+            self::Proxy => 'Proxy',
         };
     }
 }

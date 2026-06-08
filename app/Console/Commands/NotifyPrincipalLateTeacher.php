@@ -88,6 +88,7 @@ class NotifyPrincipalLateTeacher extends Command
 
                     // Teacher is absent (more than 3 minutes late) – notify principal
                     $principal = $subject->institution->principal;
+                    $isInCharge = $subject->classroom && $subject->classroom->in_charge_id == $subject->teacher_id;
 
                     if ($principal) {
                         $title = 'Teacher Absent';
@@ -106,6 +107,8 @@ class NotifyPrincipalLateTeacher extends Command
                                 'classroom_id' => (string) $subject->classroom_id,
                                 'classroom_name' => $subject->classroom ? $subject->classroom->name : 'N/A',
                                 'start_time' => (string) $subject->start_time,
+                                'end_time' => (string) $subject->end_time,
+                                'is_incharge' => $isInCharge ? 'Yes' : 'No',
                             ],
                             firebaseNotificationService: $firebaseNotificationService
                         );
@@ -133,6 +136,7 @@ class NotifyPrincipalLateTeacher extends Command
                                 'classroom_id' => (string) $subject->classroom_id,
                                 'classroom_name' => $subject->classroom ? $subject->classroom->name : 'N/A',
                                 'start_time' => (string) $subject->start_time,
+                                'end_time' => (string) $subject->end_time,
                                 'attendance_status' => AttendanceStatus::Absent->value,
                             ],
                             firebaseNotificationService: $firebaseNotificationService

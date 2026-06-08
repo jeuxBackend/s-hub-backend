@@ -99,9 +99,8 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'active.user'])->group(function
         Route::get('teacher/classrooms/{classroom}', [TeacherClassroomController::class, 'show']);
         Route::get('teacher/timetable', [TeacherClassroomController::class, 'timetable']);
         Route::post('teacher/attendance/mark', [TeacherAttendanceController::class, 'markAttendance']);
+        Route::post('teacher/proxy-attendance/mark', [FreePeriodTeacherController::class, 'markProxyAttendance']);
     });
-
-
 
     Route::put('update-profile', [UserController::class, 'updateProfile']);
     // Route::patch('users/{user}/notifications/toggle', [UserController::class, 'toggleNotification']);
@@ -151,6 +150,10 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'active.user'])->group(function
             Route::post('free-period-teachers/notify-teacher', [FreePeriodTeacherController::class, 'notifyTeacher']);
             Route::get('teacher-attendance/{teacherId}', [PrincipalTeacherAttendanceController::class, 'index']);
             Route::post('teachers/free-during-time', [PrincipalTeacherAttendanceController::class, 'getFreeTeachers']);
+
+            // Fee Payment Notifications
+            Route::post('fee-notifications/notify', [\App\Http\Controllers\Api\Principal\FeeNotificationController::class, 'notify']);
+            Route::get('fee-notifications/schedule', [\App\Http\Controllers\Api\Principal\FeeNotificationController::class, 'getSchedule']);
         });
 
         Route::put('update-contact', [UserController::class, 'updateContact']);

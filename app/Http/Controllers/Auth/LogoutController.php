@@ -13,6 +13,8 @@ class LogoutController extends Controller
         try {
             $user = $request->user();
 
+            $user->fcm_token = null;
+            $user->save();
             $user->tokens()->where('id', $user->currentAccessToken()->id)->delete();
 
             return $this->successResponse(null, 'Logged out successfully');

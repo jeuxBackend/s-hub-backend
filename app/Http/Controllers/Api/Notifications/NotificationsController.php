@@ -58,6 +58,43 @@ class NotificationsController extends Controller
         $notifications = NotificationLog::where('user_id', $user->id)
             ->orderByDesc('created_at')
             ->get();
+        $notifications = $notifications->map(function ($notification) {
+            //if notification type is teacher_abent_alert and only 15 minutes left in class end time return is_expired true , we can get class_start_time and end time from meta which is json feild in database ,  
+
+            $notification->is_expired = false;
+
+            $meta = $notification->meta;
+
+            if ($notification->type == 'teacher_absent_alert') {
+                $class_end_time = $meta['end_time'] ?? null;
+                if ($class_end_time) {
+                    // Parse the end time (format: "12:36 pm")
+                    $endTime = \Carbon\Carbon::createFromFormat('g:i a', strtolower($class_end_time));
+                    
+                    if ($endTime) {
+                        // Calculate minutes remaining until end time
+                        $minutesRemaining = \Carbon\Carbon::now()->diffInMinutes($endTime, false);
+                        
+                        // If 15 minutes or less remaining (or time has passed), mark as expired
+                        if ($minutesRemaining <= 15) {
+                            $notification->is_expired = true;
+                        }
+                    }
+                }
+            }
+
+            return [
+                'id' => $notification->id,
+                'type' => $notification->type,
+                'title' => $notification->title,
+                'message' => $notification->message,
+                'is_read' => $notification->is_read,
+                'meta' => $notification->meta,
+                'is_expired' => $notification->is_expired ? 'Yes' : 'No',
+                'sent_at' => $notification->sent_at,
+            ];
+
+        });
         return $this->successResponse($notifications, 'Notifications fetched successfully');
     }
 
@@ -79,7 +116,7 @@ class NotificationsController extends Controller
     {
         try {
             $user = auth()->user();
-            
+
             $updated = NotificationLog::where('user_id', $user->id)
                 ->where('is_read', false)
                 ->update(['is_read' => true]);
@@ -100,7 +137,7 @@ class NotificationsController extends Controller
     {
         try {
             $user = auth()->user();
-            
+
             $count = NotificationLog::where('user_id', $user->id)
                 ->where('is_read', false)
                 ->count();
