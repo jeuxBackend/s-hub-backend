@@ -15,7 +15,7 @@ class FirebaseNotificationService
 
     public function __construct()
     {
-        $credentialsPath = env('FIREBASE_CREDENTIALS', storage_path('app/firebase/firebase-creds.json'));
+        $credentialsPath = env('FIREBASE_CREDENTIALS', storage_path('app/firebase/firebase.json'));
 
         if (!file_exists($credentialsPath)) {
             Log::warning("Firebase credentials not found at {$credentialsPath}. Push notifications are disabled.");
