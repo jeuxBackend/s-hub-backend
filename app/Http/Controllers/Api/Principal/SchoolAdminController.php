@@ -111,6 +111,7 @@ class SchoolAdminController extends Controller
 
             if ($user->role->value == \App\Enums\UserRole::SchoolAdmin->value) {
                 $user->role = \App\Enums\UserRole::Teacher->value;
+                $user->permissions = null;
                 $user->save();
             } else {
                 return $this->errorResponse('Teacher not a school admin', 400);
