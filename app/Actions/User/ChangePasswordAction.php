@@ -10,7 +10,7 @@ class ChangePasswordAction
     public function handle(array $data, User $user): void
     {
         // ✅ Check current password
-        if (! Hash::check($data['current_password'], $user->password)) {
+        if (!Hash::check($data['current_password'], $user->password)) {
             abort(403, 'Current password is incorrect.');
         }
 

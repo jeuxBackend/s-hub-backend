@@ -125,7 +125,7 @@ class StudentController extends Controller
         try {
             $filters = $request->all();
             // Ensure the query is limited to the principal's institution
-            if ($request->user() && $request->user()->isRole(UserRole::Principal)) {
+            if ($request->user() && (($request->user()->isRole(UserRole::Principal) || $request->user()->isRole(UserRole::Parent)))) {
                 $filters['institution_id'] = $request->user()->institution_id;
             }
             $paginator = $action->handle($filters);

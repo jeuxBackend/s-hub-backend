@@ -12,7 +12,7 @@ class GetStudentYearMarksAction
         $yearMarksRecords = StudentGrade::where('student_id', $student->id)
             ->where('type', 'years_marks')
             ->get();
-            
+
         // Get the latest record for each subject mapped by subject_id
         $latestYearMarks = $yearMarksRecords->sortByDesc('id')->keyBy('subject_id');
 
@@ -26,8 +26,8 @@ class GetStudentYearMarksAction
         foreach ($classroomSubjects as $subject) {
             if ($latestYearMarks->has($subject->id)) {
                 $grade = $latestYearMarks->get($subject->id);
-                $obtained = (float)$grade->score;
-                $max = (float)$grade->total;
+                $obtained = (float) $grade->score;
+                $max = (float) $grade->total;
             } else {
                 $obtained = 0;
                 $max = 0;

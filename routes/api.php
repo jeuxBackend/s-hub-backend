@@ -162,7 +162,7 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'active.user'])->group(function
         });
 
         Route::put('update-contact', [UserController::class, 'updateContact']);
-        Route::put('change-password', [UserController::class, 'changePassword']);
+        // Route::put('change-password', [UserController::class, 'changePassword']);
         Route::patch('users/{user}/notifications/toggle', [UserController::class, 'toggleNotification']);
 
 
@@ -231,6 +231,8 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'active.user'])->group(function
 
     // ===================== PARENT ENDPOINTS =====================
     Route::middleware(['otp.verified', 'role:parent'])->prefix('parent')->group(function () {
+        Route::get('students/year-marks', [StudentController::class, 'allYearMarks']);
+        Route::get('students/{id}/year-marks', [StudentController::class, 'yearMarks']);
         Route::get('students', [\App\Http\Controllers\Api\Parent\ParentController::class, 'getChildrenClassrooms']);
         Route::get('attendances/by-month', [\App\Http\Controllers\Api\Parent\ParentController::class, 'getAttendanceByMonth']);
         Route::get('attendances/by-date', [\App\Http\Controllers\Api\Parent\ParentController::class, 'getAttendanceByDate']);
@@ -262,6 +264,7 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'active.user'])->group(function
         Route::apiResource('general-reports', \App\Http\Controllers\Api\GeneralReportController::class)->only(['index', 'store', 'show', 'update', 'destroy']);
     });
     Route::get('settings', [SettingController::class, 'show']);
+    Route::put('change-password', [UserController::class, 'changePassword']);
 });
 
 
