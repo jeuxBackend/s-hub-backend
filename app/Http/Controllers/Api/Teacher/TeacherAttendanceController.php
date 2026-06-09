@@ -42,7 +42,7 @@ class TeacherAttendanceController extends Controller
             $now = Carbon::now();
             $startTime = Carbon::parse($subject->start_time);
             $endTime = Carbon::parse($subject->end_time);
-            
+
             // Adjust to today's date for accurate comparison
             $startTime->setDate($now->year, $now->month, $now->day);
             $endTime->setDate($now->year, $now->month, $now->day);
@@ -159,8 +159,8 @@ class TeacherAttendanceController extends Controller
         $dLon = deg2rad($lon2 - $lon1);
 
         $a = sin($dLat / 2) * sin($dLat / 2) +
-             cos(deg2rad($lat1)) * cos(deg2rad($lat2)) *
-             sin($dLon / 2) * sin($dLon / 2);
+            cos(deg2rad($lat1)) * cos(deg2rad($lat2)) *
+            sin($dLon / 2) * sin($dLon / 2);
 
         $c = 2 * atan2(sqrt($a), sqrt(1 - $a));
 

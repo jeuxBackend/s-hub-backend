@@ -5,14 +5,17 @@ namespace App\Http\Controllers\Api\Notifications;
 use App\Http\Controllers\Controller;
 use App\Models\NotificationLog;
 use App\Models\User;
+use App\Services\FirebaseNotificationService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
+use Throwable;
 
 class NotificationsController extends Controller
 {
-    public function sendNoticeboard(Request $request)
+    public function sendNoticeboard(Request $request, FirebaseNotificationService $firebaseNotificationService)
     {
-        $user = auth()->user();
+        $authUser = auth()->user();
         $validator = Validator::make($request->all(), [
             'title' => 'required|string|max:255',
             'message' => 'required|string',
@@ -23,7 +26,7 @@ class NotificationsController extends Controller
             return $this->errorResponse('Validation failed', 422, $validator->errors()->all());
         }
 
-        $query = User::where('institution_id', $user->institution_id);
+        $query = User::where('institution_id', $authUser->institution_id);
 
         if ($request->send_to == 'all') {
             $query->whereIn('role', ['teacher', 'parent']);
@@ -34,10 +37,13 @@ class NotificationsController extends Controller
         }
 
         $users = $query->get();
+        $pushSent = 0;
+        $pushSkipped = 0;
+        $pushFailed = 0;
 
-        foreach ($users as $user) {
+        foreach ($users as $recipient) {
             NotificationLog::create([
-                'user_id' => $user->id,
+                'user_id' => $recipient->id,
                 'type' => 'noticeboard',
                 'title' => $request->title,
                 'message' => $request->message,
@@ -47,9 +53,48 @@ class NotificationsController extends Controller
                 ],
                 'sent_at' => now(),
             ]);
+
+            if (!$recipient->notifications_enabled || !$recipient->fcm_token) {
+                $pushSkipped++;
+                continue;
+            }
+
+            try {
+                $sent = $firebaseNotificationService->sendToToken(
+                    $recipient->fcm_token,
+                    $request->title,
+                    $request->message,
+                    [
+                        'type' => 'noticeboard',
+                        'send_to' => $request->send_to,
+                    ]
+                );
+
+                if ($sent) {
+                    $pushSent++;
+                } else {
+                    $pushFailed++;
+                    Log::warning('Noticeboard push notification was not sent', [
+                        'user_id' => $recipient->id,
+                        'send_to' => $request->send_to,
+                    ]);
+                }
+            } catch (Throwable $e) {
+                $pushFailed++;
+                Log::error('Failed to send noticeboard push notification', [
+                    'user_id' => $recipient->id,
+                    'send_to' => $request->send_to,
+                    'error' => $e->getMessage(),
+                ]);
+            }
         }
 
-        return $this->successResponse('Noticeboard sent successfully');
+        return $this->successResponse([
+            'notified_users' => $users->count(),
+            'push_sent' => $pushSent,
+            'push_skipped' => $pushSkipped,
+            'push_failed' => $pushFailed,
+        ], 'Noticeboard sent successfully');
     }
 
     public function getUserNotifications(Request $request)
