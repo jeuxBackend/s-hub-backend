@@ -70,6 +70,11 @@ class NotificationsController extends Controller
                     ]
                 );
 
+                Log::info('Noticeboard push notification was sent', [
+                    'user_id' => $recipient->id,
+                    'send_to' => $request->send_to,
+                ]);
+
                 if ($sent) {
                     $pushSent++;
                 } else {

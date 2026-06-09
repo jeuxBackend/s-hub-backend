@@ -50,6 +50,8 @@ class FirebaseNotificationService
                 ->withNotification($notification)
                 ->withData($data);
 
+            Log::info('Firebase Notification (Token): ' . $message);
+
             return $this->messaging->send($message);
         } catch (Exception $e) {
             Log::error('Firebase Notification Failed (Token): ' . $e->getMessage());
