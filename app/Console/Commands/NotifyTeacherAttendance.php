@@ -18,6 +18,7 @@ class NotifyTeacherAttendance extends Command
 
     public function handle(FirebaseNotificationService $firebaseNotificationService)
     {
+        \Log::info("IS API HIT OR NOT ?");
         $now = Carbon::now();
 
         \Log::info("Cron checking teacher attendance at " . $now->format('H:i:s'));
@@ -118,11 +119,13 @@ class NotifyTeacherAttendance extends Command
                 \Log::info("NewNotificationEvent fired successfully for teacher {$teacherId}, subject {$subject->id}");
 
                 // Send Firebase push notification if the teacher has FCM token, notifications enabled, and has the correct role
-                if ($subject->teacher && 
-                    $subject->teacher->fcm_token && 
+                if (
+                    $subject->teacher &&
+                    $subject->teacher->fcm_token &&
                     $subject->teacher->notifications_enabled &&
-                    ($subject->teacher->isRole(UserRole::Teacher) || $subject->teacher->isRole(UserRole::SchoolAdmin))) {
-                    
+                    ($subject->teacher->isRole(UserRole::Teacher) || $subject->teacher->isRole(UserRole::SchoolAdmin))
+                ) {
+
                     $sent = $firebaseNotificationService->sendToToken(
                         $subject->teacher->fcm_token,
                         $title,

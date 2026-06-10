@@ -16,7 +16,7 @@ class ReassignMissedProxyAttendance extends Command
 
     protected $description = 'Reassign proxy classes when the current proxy teacher does not mark attendance in time.';
 
-    private const RESPONSE_GRACE_MINUTES = 1;
+    private const RESPONSE_GRACE_MINUTES = 3; // Changed from 1 to 3 minutes
 
     private const MINUTES_REQUIRED_FOR_NEW_PROXY = 15;
 
@@ -95,7 +95,7 @@ class ReassignMissedProxyAttendance extends Command
 
             $proxyStartTime = Carbon::parse($subject->proxy_start_time);
             $proxyEndTime = Carbon::parse($subject->proxy_end_time);
-            $proxyResponseDeadline = $proxyStartTime->copy()->addMinutes(self::RESPONSE_GRACE_MINUTES);
+            $proxyResponseDeadline = $proxyStartTime->copy()->addMinutes(self::RESPONSE_GRACE_MINUTES); // Now 3 minutes
             $latestSafeAssignmentTime = $proxyEndTime->copy()->subMinutes(self::MINUTES_REQUIRED_FOR_NEW_PROXY);
 
             if ($now->lessThan($proxyResponseDeadline)) {
@@ -177,7 +177,7 @@ class ReassignMissedProxyAttendance extends Command
 
             $message = "";
 
-            if (!empty($lecture->classroom->in_charge_id)) {
+            if (!empty($subject->classroom->in_charge_id)) { // Fixed: was $lecture
 
                 $message = "You have assigned {$subject->name} in {$subject->classroom->name} and marks student attendance also.";
 
