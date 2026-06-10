@@ -23,7 +23,7 @@ class TeacherAttendanceController extends Controller
         try {
             $query = TeacherAttendance::where('teacher_id', $teacherId)
                 ->with(['subject.classroom'])
-                ->orderBy('date', 'desc');
+                ->orderBy('created_at', 'desc');
 
             // Optional filters: date range
             if ($request->filled('from')) {
@@ -86,7 +86,7 @@ class TeacherAttendanceController extends Controller
             //if only 15 minutes left in end_time then is_expire check should be true
             $is_expire = false;
             $endTime = Carbon::createFromFormat('g:i A', strtoupper($request->end_time));
-            
+
             // Check if current time is within 15 minutes of end time (or past it)
             $minutesRemaining = Carbon::now()->diffInMinutes($endTime, false);
             if ($minutesRemaining <= 15) {

@@ -19,7 +19,7 @@ class FindFreeTeachersAction
     public function handle(int $lectureId, int $institutionId)
     {
         $lecture = Subject::find($lectureId);
-        
+
         if (!$lecture || !$lecture->start_time || !$lecture->end_time) {
             return [];
         }

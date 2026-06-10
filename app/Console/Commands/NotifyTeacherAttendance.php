@@ -6,6 +6,8 @@ use Illuminate\Console\Command;
 use App\Models\Subject;
 use App\Models\NotificationLog;
 use App\Events\NewNotificationEvent;
+use App\Services\FirebaseNotificationService;
+use App\Enums\UserRole;
 use Carbon\Carbon;
 
 class NotifyTeacherAttendance extends Command
@@ -14,7 +16,7 @@ class NotifyTeacherAttendance extends Command
 
     protected $description = 'Notify teachers when it is time to mark attendance for their scheduled classes.';
 
-    public function handle()
+    public function handle(FirebaseNotificationService $firebaseNotificationService)
     {
         $now = Carbon::now();
 
@@ -114,6 +116,35 @@ class NotifyTeacherAttendance extends Command
                 event(new NewNotificationEvent($log));
 
                 \Log::info("NewNotificationEvent fired successfully for teacher {$teacherId}, subject {$subject->id}");
+
+                // Send Firebase push notification if the teacher has FCM token, notifications enabled, and has the correct role
+                if ($subject->teacher && 
+                    $subject->teacher->fcm_token && 
+                    $subject->teacher->notifications_enabled &&
+                    ($subject->teacher->isRole(UserRole::Teacher) || $subject->teacher->isRole(UserRole::SchoolAdmin))) {
+                    
+                    $sent = $firebaseNotificationService->sendToToken(
+                        $subject->teacher->fcm_token,
+                        $title,
+                        $message,
+                        [
+                            'type' => 'teacher_attendance_reminder',
+                            'subject_id' => (string) $subject->id,
+                            'subject_name' => $subject->name,
+                            'classroom_name' => $subject->classroom?->name ?? 'N/A',
+                            'start_time' => Carbon::parse($subject->start_time)->format('g:i a'),
+                        ]
+                    );
+
+                    if ($sent) {
+                        \Log::info("FCM notification sent to teacher {$teacherId} for subject {$subject->id}");
+                    } else {
+                        \Log::warning("FCM notification failed to send to teacher {$teacherId} for subject {$subject->id}");
+                    }
+                } else {
+                    $roleInfo = $subject->teacher ? $subject->teacher->role->value : 'null';
+                    \Log::info("Skipped FCM for teacher {$teacherId} (role: {$roleInfo}) because token is missing, notifications disabled, or role is not teacher/school-admin");
+                }
 
                 $this->info("Notified teacher {$teacherId} for subject {$subject->id}");
 

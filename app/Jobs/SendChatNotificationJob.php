@@ -33,10 +33,10 @@ class SendChatNotificationJob implements ShouldQueue
     {
         $this->message->load(['sender', 'conversation']);
         $conversation = $this->message->conversation;
-        
+
         // Determine the receiver
-        $receiverId = $conversation->user_one_id === $this->message->sender_id 
-            ? $conversation->user_two_id 
+        $receiverId = $conversation->user_one_id === $this->message->sender_id
+            ? $conversation->user_two_id
             : $conversation->user_one_id;
 
         $receiver = \App\Models\User::find($receiverId);
@@ -47,12 +47,12 @@ class SendChatNotificationJob implements ShouldQueue
 
         try {
             // Check if firebase credentials are provided
-            $credentialsPath = storage_path('app/firebase/firebase-creds.json');
-            
+            $credentialsPath = storage_path('app/firebase/firebase_creds.json');
+
             if (env('FIREBASE_CREDENTIALS')) {
                 $credentialsPath = env('FIREBASE_CREDENTIALS');
             }
-            
+
             if (!file_exists($credentialsPath)) {
                 \Log::warning("FCM credentials not found at $credentialsPath. Cannot send push notification.");
                 return;
@@ -62,7 +62,7 @@ class SendChatNotificationJob implements ShouldQueue
             $messaging = $factory->createMessaging();
 
             $senderName = $this->message->sender->full_name ?? 'Someone';
-            
+
             $body = $this->message->body;
             if (!$body && $this->message->attachment) {
                 $body = '📷 Sent an attachment';
@@ -85,9 +85,9 @@ class SendChatNotificationJob implements ShouldQueue
                 ->withData($data);
 
             $messaging->send($cloudMessage);
-            
+
             \Log::info("FCM chat notification sent to user {$receiver->id}");
-            
+
         } catch (\Exception $e) {
             \Log::error("FCM Send Error: " . $e->getMessage());
         }
