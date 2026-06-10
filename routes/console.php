@@ -10,6 +10,6 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 Schedule::command('tuition:process-scheduled')->daily();
-Schedule::command('attendance:notify-teachers')->everyMinute();
-Schedule::command('attendance:notify-principal-absent-teacher')->everyMinute();
-Schedule::command('attendance:reassign-missed-proxy')->everyMinute();
+Schedule::command('attendance:notify-teachers')->everyMinute()->withoutOverlapping();
+Schedule::command('attendance:notify-principal-absent-teacher')->everyMinute()->withoutOverlapping();
+Schedule::command('attendance:reassign-missed-proxy')->everyThreeMinutes()->withoutOverlapping();
