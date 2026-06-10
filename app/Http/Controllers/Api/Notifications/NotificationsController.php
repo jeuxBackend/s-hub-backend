@@ -29,9 +29,9 @@ class NotificationsController extends Controller
         $query = User::where('institution_id', $authUser->institution_id);
 
         if ($request->send_to == 'all') {
-            $query->whereIn('role', ['teacher', 'parent']);
+            $query->whereIn('role', ['teacher', 'parent', 'school-admin']);
         } elseif ($request->send_to == 'teachers') {
-            $query->where('role', 'teacher');
+            $query->whereIn('role', ['teacher', 'school-admin']);
         } elseif ($request->send_to == 'parents') {
             $query->where('role', 'parent');
         }

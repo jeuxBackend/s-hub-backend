@@ -137,7 +137,7 @@ class FreePeriodTeacherController extends Controller
                     ]);
 
                     // Check if Firebase credentials exist
-                    $credentialsPath = env('FIREBASE_CREDENTIALS', storage_path('app/firebase/firebase-creds.json'));
+                    $credentialsPath = env('FIREBASE_CREDENTIALS', storage_path('app/firebase/firebase_creds.json'));
                     if (!file_exists($credentialsPath)) {
                         \Illuminate\Support\Facades\Log::error('Firebase credentials file not found', [
                             'path' => $credentialsPath,
