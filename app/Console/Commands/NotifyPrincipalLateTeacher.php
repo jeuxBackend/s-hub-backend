@@ -97,6 +97,8 @@ class NotifyPrincipalLateTeacher extends Command
                         $nowTeacher->toDateString(),
                         (int) $subject->teacher_id
                     );
+                    // Expire any prior teacher_absent_alert notifications for this request key
+                    \App\Models\NotificationLog::expireAttendanceRequest($attendanceRequestKey);
 
                     if ($principal) {
                         $title = 'Teacher Absent';
@@ -107,24 +109,24 @@ class NotifyPrincipalLateTeacher extends Command
                             title: $title,
                             message: $message,
                             meta: [
-                        'recipient_role' => 'principal',
-                        'teacher_id' => (string) $subject->teacher_id,
-                        'teacher_name' => $subject->teacher->full_name,
-                        'subject_id' => (string) $subject->id,
-                        'subject_name' => $subject->name,
-                        'classroom_id' => (string) $subject->classroom_id,
-                        'classroom_name' => $subject->classroom ? $subject->classroom->name : 'N/A',
-                        'start_time' => $classStartTime->format('g:i a'),
-                        'end_time' => (function () use ($subject, $teacherTimezone) {
-                            $end = Carbon::parse($subject->end_time);
-                            $end->setTimezone($teacherTimezone);
-                            return $end->format('g:i a');
-                        })(),
-                        'is_incharge' => $isInCharge ? 'Yes' : 'No',
-                        'attendance_request_key' => $attendanceRequestKey,
-                        'timezone' => $teacherTimezone,
-                        'principal_timezone' => $principal->timezone ?? 'UTC',
-                    ],
+                                'recipient_role' => 'principal',
+                                'teacher_id' => (string) $subject->teacher_id,
+                                'teacher_name' => $subject->teacher->full_name,
+                                'subject_id' => (string) $subject->id,
+                                'subject_name' => $subject->name,
+                                'classroom_id' => (string) $subject->classroom_id,
+                                'classroom_name' => $subject->classroom ? $subject->classroom->name : 'N/A',
+                                'start_time' => $classStartTime->format('g:i a'),
+                                'end_time' => (function () use ($subject, $teacherTimezone) {
+                                    $end = Carbon::parse($subject->end_time);
+                                    $end->setTimezone($teacherTimezone);
+                                    return $end->format('g:i a');
+                                })(),
+                                'is_incharge' => $isInCharge ? 'Yes' : 'No',
+                                'attendance_request_key' => $attendanceRequestKey,
+                                'timezone' => $teacherTimezone,
+                                'principal_timezone' => $principal->timezone ?? 'UTC',
+                            ],
                             attendanceRequestKey: $attendanceRequestKey,
                             firebaseNotificationService: $firebaseNotificationService
                         );
@@ -146,17 +148,17 @@ class NotifyPrincipalLateTeacher extends Command
                             title: $teacherTitle,
                             message: $teacherMessage,
                             meta: [
-                        'recipient_role' => 'teacher',
-                        'subject_id' => (string) $subject->id,
-                        'subject_name' => $subject->name,
-                        'classroom_id' => (string) $subject->classroom_id,
-                        'classroom_name' => $subject->classroom ? $subject->classroom->name : 'N/A',
-                        'start_time' => Carbon::parse($subject->start_time)->format('g:i a'),
-                        'end_time' => Carbon::parse($subject->end_time)->format('g:i a'),
-                        'attendance_status' => AttendanceStatus::Absent->value,
-                        'attendance_request_key' => $attendanceRequestKey,
-                        'timezone' => $teacherTimezone,
-                    ],
+                                'recipient_role' => 'teacher',
+                                'subject_id' => (string) $subject->id,
+                                'subject_name' => $subject->name,
+                                'classroom_id' => (string) $subject->classroom_id,
+                                'classroom_name' => $subject->classroom ? $subject->classroom->name : 'N/A',
+                                'start_time' => Carbon::parse($subject->start_time)->format('g:i a'),
+                                'end_time' => Carbon::parse($subject->end_time)->format('g:i a'),
+                                'attendance_status' => AttendanceStatus::Absent->value,
+                                'attendance_request_key' => $attendanceRequestKey,
+                                'timezone' => $teacherTimezone,
+                            ],
                             attendanceRequestKey: $attendanceRequestKey,
                             firebaseNotificationService: $firebaseNotificationService
                         );
@@ -198,7 +200,7 @@ class NotifyPrincipalLateTeacher extends Command
             'sent_at' => now($recipient->timezone ?? 'UTC'),
         ]);
 
-        event(new NewNotificationEvent($log));
+        // event(new NewNotificationEvent($log));
 
         if ($recipient->notifications_enabled && $recipient->fcm_token) {
             $sent = $firebaseNotificationService->sendToToken(

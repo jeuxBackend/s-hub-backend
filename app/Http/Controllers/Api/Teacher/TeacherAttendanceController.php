@@ -39,16 +39,21 @@ class TeacherAttendanceController extends Controller
             }
 
             // Check if current time is within subject time (with some buffer, e.g. 30 mins before or after)
-            $now = Carbon::now();
-            $startTime = Carbon::parse($subject->start_time);
-            $endTime = Carbon::parse($subject->end_time);
+            $teacherTimezone = $teacher->timezone ?? 'UTC';
+            $now = Carbon::now($teacherTimezone);
 
-            // Adjust to today's date for accurate comparison
-            $startTime->setDate($now->year, $now->month, $now->day);
-            $endTime->setDate($now->year, $now->month, $now->day);
+            // Determine format of stored time strings (HH:MM or HH:MM:SS)
+            $timeFormat = strlen($subject->start_time) > 5 ? 'H:i:s' : 'H:i';
 
+            // Parse start and end times in teacher's timezone and set today's date
+            $startTime = Carbon::createFromFormat($timeFormat, $subject->start_time, $teacherTimezone)
+                ->setDate($now->year, $now->month, $now->day);
+            $endTime = Carbon::createFromFormat($timeFormat, $subject->end_time, $teacherTimezone)
+                ->setDate($now->year, $now->month, $now->day);
+
+            // Handle overnight classes where end is earlier than start
             if ($endTime->lessThan($startTime)) {
-                $endTime->addDay(); // Handle overnight classes
+                $endTime->addDay();
             }
 
             $bufferMinutes = 30;
@@ -104,9 +109,9 @@ class TeacherAttendanceController extends Controller
                 return $this->errorResponse('Attendance for this class has already been completed by a proxy teacher.', 409);
             }
 
-            if ($existingAttendance && in_array($existingAttendance->status, ['present', 'proxy'], true)) {
+            if ($existingAttendance) {
                 NotificationLog::expireAttendanceRequest($attendanceRequestKey);
-                return $this->errorResponse('Attendance has already been marked for this class.', 409);
+                return $this->errorResponse('Attendance has already been recorded for this class.', 409);
             }
 
             if ($existingAttendance) {
