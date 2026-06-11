@@ -200,7 +200,7 @@ class NotifyPrincipalLateTeacher extends Command
             'sent_at' => now($recipient->timezone ?? 'UTC'),
         ]);
 
-        // event(new NewNotificationEvent($log));
+        event(new NewNotificationEvent($log));
 
         if ($recipient->notifications_enabled && $recipient->fcm_token) {
             $sent = $firebaseNotificationService->sendToToken(

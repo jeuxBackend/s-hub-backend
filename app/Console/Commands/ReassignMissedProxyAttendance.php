@@ -24,9 +24,9 @@ class ReassignMissedProxyAttendance extends Command
         FindFreeTeachersAction $findFreeTeachersAction,
         FirebaseNotificationService $firebaseNotificationService
     ): int {
-        $now = Carbon::now();
+        // $now will be set per subject after we know the appropriate timezone
 
-        \Log::info('Cron checking for missed proxy attendance at ' . $now->format('Y-m-d H:i:s'));
+        \Log::info('Cron checking for missed proxy attendance at ' . Carbon::now()->format('Y-m-d H:i:s'));
 
         $subjects = Subject::where('is_proxy', true)
             ->whereNotNull('proxy_teacher_id')
@@ -50,6 +50,14 @@ class ReassignMissedProxyAttendance extends Command
                 continue;
             }
 
+            // Resolve the timezone for this subject (teacher > proxy teacher > app default)
+            $teacherTimezone = $subject->teacher->timezone
+                ?? ($subject->proxy_teacher_id ? User::find($subject->proxy_teacher_id)->timezone : null)
+                ?? config('app.timezone', 'UTC');
+
+            // Current time in the resolved timezone
+            $now = Carbon::now($teacherTimezone);
+
             $today = $now->toDateString();
             $currentProxyTeacherId = (int) $subject->proxy_teacher_id;
             $currentProxyTeacher = User::find($currentProxyTeacherId);
@@ -60,19 +68,31 @@ class ReassignMissedProxyAttendance extends Command
                 continue;
             }
 
+            // Check if proxy teacher already marked attendance
             $attendanceExists = NotificationLog::attendanceRequestCompleted(
                 (int) $subject->id,
                 $today,
                 $currentProxyTeacherId
             );
 
+            // Check if original teacher has already completed attendance (any status)
             $originalTeacherAttendanceCompleted = NotificationLog::attendanceRequestCompleted(
                 (int) $subject->id,
                 $today,
                 (int) $subject->teacher_id
             );
 
-            if ($originalTeacherAttendanceCompleted) {
+            // Retrieve original teacher's attendance record to see if they are absent
+            $originalTeacherAttendance = \App\Models\TeacherAttendance::where('subject_id', (int) $subject->id)
+                ->whereDate('date', $today)
+                ->where('teacher_id', (int) $subject->teacher_id)
+                ->first();
+
+            if ($originalTeacherAttendance && $originalTeacherAttendance->status === 'absent') {
+                // Original teacher is already absent; we will reassign proxy without marking absent again
+                \Log::info("Original teacher {$subject->teacher_id} is absent for subject {$subject->id}; proxy reassignment will proceed.");
+            } elseif ($originalTeacherAttendanceCompleted) {
+                // Original teacher already completed attendance (present), clear proxy state
                 $this->clearProxyState($subject);
                 NotificationLog::expireAttendanceRequest(
                     NotificationLog::attendanceRequestKey(
@@ -93,8 +113,11 @@ class ReassignMissedProxyAttendance extends Command
                 continue;
             }
 
-            $proxyStartTime = Carbon::parse($subject->proxy_start_time);
-            $proxyEndTime = Carbon::parse($subject->proxy_end_time);
+            // Use Carbon::parse which is tolerant of H:i or H:i:s formats
+            $proxyStartTime = Carbon::parse(trim($subject->proxy_start_time), $teacherTimezone)
+                ->setDate($now->year, $now->month, $now->day);
+            $proxyEndTime = Carbon::parse(trim($subject->proxy_end_time), $teacherTimezone)
+                ->setDate($now->year, $now->month, $now->day);
             $proxyResponseDeadline = $proxyStartTime->copy()->addMinutes(self::RESPONSE_GRACE_MINUTES); // Now 3 minutes
             $latestSafeAssignmentTime = $proxyEndTime->copy()->subMinutes(self::MINUTES_REQUIRED_FOR_NEW_PROXY);
 
@@ -158,11 +181,14 @@ class ReassignMissedProxyAttendance extends Command
             );
 
             $subject->update([
-                'is_proxy' => true,
-                'proxy_teacher_id' => $nextProxyTeacher->id,
-                'proxy_start_time' => $proxyStartTime,
-                'proxy_end_time' => $proxyEndTime,
-            ]);
+    'is_proxy' => true,
+    'proxy_teacher_id' => $nextProxyTeacher->id,
+    'proxy_start_time' => $proxyStartTime,
+    'proxy_end_time' => $proxyEndTime,
+]);
+
+// Log reassignment details
+\Log::info("Proxy for subject {$subject->id} reassigned from teacher {$currentProxyTeacherId} ({$currentProxyTeacher->full_name}) to {$nextProxyTeacher->id} ({$nextProxyTeacher->full_name})");
 
             NotificationLog::expireAttendanceRequest(
                 NotificationLog::attendanceRequestKey(
