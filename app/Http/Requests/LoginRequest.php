@@ -14,11 +14,12 @@ class LoginRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'login'           => ['required', 'string'], // Accepts email or phone
-            'password'        => ['required', 'string'],
-            'institution_id'  => ['nullable', 'string'], // required only for parents (handled in action)
-            'device_id'       => ['nullable', 'string'],
-            'fcm_token'       => ['nullable', 'string'],
+            'login' => ['required', 'string'], // Accepts email or phone
+            'password' => ['required', 'string'],
+            'institution_id' => ['nullable', 'string'], // required only for parents (handled in action)
+            'device_id' => ['nullable', 'string'],
+            'fcm_token' => ['nullable', 'string'],
+            'timezone' => ['nullable', 'string'],
         ];
     }
 

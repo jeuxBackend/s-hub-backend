@@ -45,6 +45,7 @@ class LoginAction
         $user->update([
             'device_id' => $data['device_id'] ?? $user->device_id,
             'fcm_token' => $data['fcm_token'] ?? $user->fcm_token,
+            'timezone' => $data['timezone'] ?? $user->timezone,
         ]);
 
         $token = $user->createToken('auth_token')->plainTextToken;

@@ -33,8 +33,7 @@ class NotifyPrincipalLateTeacher extends Command
      */
     public function handle(FirebaseNotificationService $firebaseNotificationService)
     {
-        $now = Carbon::now();
-
+        // Use teacher's timezone for timing
         \Log::info('Cron checking for absent teachers (>= 3 mins late)');
 
         // Get all subjects with start_time
@@ -52,16 +51,20 @@ class NotifyPrincipalLateTeacher extends Command
                 continue;
             }
 
+            $teacher = $subject->teacher;
+            $teacherTimezone = $teacher->timezone ?? 'UTC';
+            $nowTeacher = Carbon::now($teacherTimezone);
+
             try {
-                // Parse the start_time and set it to today's date
-                $classStartTime = Carbon::parse($subject->start_time);
-                $classStartTime->setDate($now->year, $now->month, $now->day);
+                // Parse start_time as a time in the teacher's timezone and set today's date
+                $classStartTime = Carbon::parse($subject->start_time, $teacherTimezone);
+                $classStartTime->setDate($nowTeacher->year, $nowTeacher->month, $nowTeacher->day);
 
                 // Check if class started 3 or more minutes ago
-                $latenessThreshold = $now->copy()->subMinutes(3);
+                $latenessThreshold = $nowTeacher->copy()->subMinutes(3);
 
                 if ($classStartTime->greaterThan($latenessThreshold)) {
-                    \Log::debug("Subject {$subject->id} start time ({$classStartTime->format('H:i:s')}) is not yet 3 minutes past, skipping");
+                    \Log::debug("Subject {$subject->id} start time ({$classStartTime->format('H:i:s')}) is not yet 3 minutes past (teacher timezone {$teacherTimezone}), skipping");
                     $skippedCount++;
                     continue;
                 }
@@ -71,7 +74,7 @@ class NotifyPrincipalLateTeacher extends Command
                 // Check if attendance is marked for today
                 $attendance = TeacherAttendance::where('teacher_id', $subject->teacher_id)
                     ->where('subject_id', $subject->id)
-                    ->whereDate('date', $now->toDateString())
+                    ->whereDate('date', $nowTeacher->toDateString())
                     ->first();
 
                 if (!$attendance) {
@@ -82,7 +85,7 @@ class NotifyPrincipalLateTeacher extends Command
                         'teacher_id' => $subject->teacher_id,
                         'subject_id' => $subject->id,
                         'institution_id' => $subject->institution_id,
-                        'date' => $now->toDateString(),
+                        'date' => $nowTeacher->toDateString(),
                         'status' => \App\Enums\AttendanceStatus::Absent->value,
                     ]);
 
@@ -91,13 +94,13 @@ class NotifyPrincipalLateTeacher extends Command
                     $isInCharge = $subject->classroom && $subject->classroom->in_charge_id == $subject->teacher_id;
                     $attendanceRequestKey = NotificationLog::attendanceRequestKey(
                         (int) $subject->id,
-                        $now->toDateString(),
+                        $nowTeacher->toDateString(),
                         (int) $subject->teacher_id
                     );
 
                     if ($principal) {
                         $title = 'Teacher Absent';
-                        $message = "Teacher {$subject->teacher->full_name} has not marked attendance for the class ({$subject->name}) scheduled at {$subject->start_time}.";
+                        $message = "Teacher {$subject->teacher->full_name} has not marked attendance for the class ({$subject->name}) scheduled at {$classStartTime->format('g:i a')}.";
                         $this->storeAndSendNotification(
                             recipient: $principal,
                             type: 'teacher_absent_alert',
@@ -111,10 +114,16 @@ class NotifyPrincipalLateTeacher extends Command
                         'subject_name' => $subject->name,
                         'classroom_id' => (string) $subject->classroom_id,
                         'classroom_name' => $subject->classroom ? $subject->classroom->name : 'N/A',
-                        'start_time' => Carbon::parse($subject->start_time)->format('g:i a'),
-                        'end_time' => Carbon::parse($subject->end_time)->format('g:i a'),
+                        'start_time' => $classStartTime->format('g:i a'),
+                        'end_time' => (function () use ($subject, $teacherTimezone) {
+                            $end = Carbon::parse($subject->end_time);
+                            $end->setTimezone($teacherTimezone);
+                            return $end->format('g:i a');
+                        })(),
                         'is_incharge' => $isInCharge ? 'Yes' : 'No',
                         'attendance_request_key' => $attendanceRequestKey,
+                        'timezone' => $teacherTimezone,
+                        'principal_timezone' => $principal->timezone ?? 'UTC',
                     ],
                             attendanceRequestKey: $attendanceRequestKey,
                             firebaseNotificationService: $firebaseNotificationService
@@ -146,6 +155,7 @@ class NotifyPrincipalLateTeacher extends Command
                         'end_time' => Carbon::parse($subject->end_time)->format('g:i a'),
                         'attendance_status' => AttendanceStatus::Absent->value,
                         'attendance_request_key' => $attendanceRequestKey,
+                        'timezone' => $teacherTimezone,
                     ],
                             attendanceRequestKey: $attendanceRequestKey,
                             firebaseNotificationService: $firebaseNotificationService
@@ -185,7 +195,7 @@ class NotifyPrincipalLateTeacher extends Command
             'is_read' => false,
             'attendance_request_key' => $attendanceRequestKey,
             'meta' => $meta,
-            'sent_at' => now(),
+            'sent_at' => now($recipient->timezone ?? 'UTC'),
         ]);
 
         event(new NewNotificationEvent($log));

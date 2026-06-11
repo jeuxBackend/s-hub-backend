@@ -40,13 +40,18 @@ class NotifyTeacherAttendance extends Command
                 continue;
             }
 
-            $teacherId = $subject->teacher->id ?? $subject->teacher_id;
+            $teacher = $subject->teacher;
+            $teacherId = $teacher->id ?? $subject->teacher_id;
 
             if (empty($teacherId)) {
                 \Log::warning("Subject {$subject->id} has no teacher ID, skipping");
                 $skippedCount++;
                 continue;
             }
+
+            // Determine current time in teacher's timezone
+            $teacherTimezone = $teacher->timezone ?? 'UTC';
+            $nowTeacher = Carbon::now($teacherTimezone);
 
             try {
                 $start = Carbon::parse($subject->start_time);
@@ -56,19 +61,19 @@ class NotifyTeacherAttendance extends Command
                 continue;
             }
 
-            // Trigger only in the same minute
-            if ($start->format('H:i') !== $now->format('H:i')) {
-                \Log::debug("Subject {$subject->id} start time ({$start->format('H:i')}) does not match current time ({$now->format('H:i')}), skipping");
+            // Trigger only in the same minute in teacher's local time
+            if ($start->format('H:i') !== $nowTeacher->format('H:i')) {
+                \Log::debug("Subject {$subject->id} start time ({$start->format('H:i')}) does not match teacher's current time ({$nowTeacher->format('H:i')}), skipping");
                 $skippedCount++;
                 continue;
             }
 
-            \Log::info("Subject {$subject->id} matches current time, checking for duplicates...");
+            \Log::info("Subject {$subject->id} matches teacher's current time, checking for duplicates...");
 
-            // Prevent duplicate notifications
+            // Prevent duplicate notifications (using teacher's local date)
             $alreadySent = NotificationLog::where('user_id', $teacherId)
                 ->where('type', 'teacher_attendance_reminder')
-                ->whereDate('sent_at', $now->toDateString())
+                ->whereDate('sent_at', $nowTeacher->toDateString())
                 ->whereJsonContains('meta->subject_id', $subject->id)
                 ->exists();
 
@@ -108,8 +113,9 @@ class NotifyTeacherAttendance extends Command
                         'classroom_name' => $subject->classroom?->name ?? 'N/A',
                         'start_time' => Carbon::parse($subject->start_time)->format('g:i a'),
                         'attendance_request_key' => $attendanceRequestKey,
+                        'timezone' => $teacherTimezone,
                     ],
-                    'sent_at' => now(),
+                    'sent_at' => now($teacherTimezone),
                 ]);
 
                 \Log::info("NotificationLog created with ID: {$log->id}, firing NewNotificationEvent...");

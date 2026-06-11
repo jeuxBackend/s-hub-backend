@@ -60,6 +60,7 @@ class User extends Authenticatable
         'notifications_enabled',
         'email_verified_at',
         'remote_teaching',
+        'timezone',
     ];
 
     // Hidden attributes
