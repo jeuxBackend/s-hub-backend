@@ -235,7 +235,8 @@ class ReassignMissedProxyAttendance extends Command
                     'previous_proxy_teacher_name' => $currentProxyTeacher->full_name,
                     'attendance_request_key' => $attendanceRequestKey,
                 ],
-                'sent_at' => now(),
+                // store sent_at using the proxy teacher's timezone (fallback to app timezone)
+                'sent_at' => now($nextProxyTeacher->timezone ?? config('app.timezone')),
             ]);
 
             \Log::info('Sending proxy reassignment notification to ' . $log);
