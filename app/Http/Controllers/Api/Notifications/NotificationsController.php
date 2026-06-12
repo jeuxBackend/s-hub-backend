@@ -51,7 +51,7 @@ class NotificationsController extends Controller
                 'meta' => [
                     'send_to' => $request->send_to,
                 ],
-                'sent_at' => now(),
+                'sent_at' => now($recipient->timezone ?? 'UTC'),
             ]);
 
             if (!$recipient->notifications_enabled || !$recipient->fcm_token) {
