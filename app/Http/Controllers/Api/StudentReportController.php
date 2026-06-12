@@ -257,12 +257,12 @@ class StudentReportController extends Controller
                         'user_id' => $report->teacher_id,
                         'type' => 'report_approved',
                         'title' => 'Student Report Approved',
-                        'message' => "The report you submitted for {$student->full_name ?? 'student'} has been approved.",
+                        'message' => "The report you submitted for " . (isset($student->full_name) ? $student->full_name : 'student') . " has been approved.",
                         'is_read' => false,
                         'meta' => [
                             'report_id' => $report->id,
                             'student_id' => $report->student_id,
-                            'student_name' => $student->full_name ?? 'Unknown',
+                            'student_name' => isset($student->full_name) ? $student->full_name : 'Unknown',
                             'reviewer_id' => $user->id,
                             'reviewer_name' => $user->full_name,
                         ],
@@ -278,7 +278,7 @@ class StudentReportController extends Controller
                             [
                                 'type' => 'report_approved',
                                 'report_id' => (string)$report->id,
-                                'student_name' => $student->full_name ?? 'Unknown',
+                                'student_name' => isset($student->full_name) ? $student->full_name : 'Unknown',
                             ]
                         );
                     }
