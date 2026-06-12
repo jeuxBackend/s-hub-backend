@@ -33,6 +33,9 @@ class ConversationController extends Controller
                         $q2->where('institution_id', $institutionId);
                     });
                 });
+                
+                // Additional filter: Only show conversations where both user1 and user2 exist
+                $query->whereHas('userOne')->whereHas('userTwo');
             } else {
                 $query->where(function ($q) use ($authId) {
                     $q->where('user_one_id', $authId)
@@ -115,6 +118,11 @@ class ConversationController extends Controller
                 
                 if (($userOneInstitutionId !== $institutionId && $userTwoInstitutionId !== $institutionId) 
                     || (!$userOneInstitutionId && !$userTwoInstitutionId)) {
+                    abort(403, 'Unauthorized access to this conversation.');
+                }
+                
+                // Additionally, ensure both userOne and userTwo exist for principal to access
+                if (!$conversation->userOne || !$conversation->userTwo) {
                     abort(403, 'Unauthorized access to this conversation.');
                 }
             }

@@ -255,6 +255,15 @@ class ReassignMissedProxyAttendance extends Command
                 );
             }
 
+            // Notify the principal about the proxy reassignment
+            $this->notifyPrincipalAboutProxyReassignment(
+                $subject,
+                $currentProxyTeacher,
+                $nextProxyTeacher,
+                $firebaseNotificationService,
+                $now
+            );
+
             \Log::info("Proxy subject {$subject->id} reassigned from teacher {$currentProxyTeacherId} to {$nextProxyTeacher->id}");
             $reassigned++;
         }
@@ -274,6 +283,84 @@ class ReassignMissedProxyAttendance extends Command
             'proxy_start_time' => null,
             'proxy_end_time' => null,
         ]);
+    }
+
+    private function notifyPrincipalAboutProxyReassignment(
+        Subject $subject,
+        User $currentProxyTeacher,
+        User $nextProxyTeacher,
+        FirebaseNotificationService $firebaseNotificationService,
+        Carbon $now
+    ): void {
+        $principal = $subject->institution?->principal;
+
+        if (!$principal) {
+            return;
+        }
+
+        $attendanceRequestKey = NotificationLog::attendanceRequestKey(
+            (int) $subject->id,
+            $now->toDateString(),
+            (int) $nextProxyTeacher->id
+        );
+
+        $alreadySent = NotificationLog::query()
+            ->where('user_id', $principal->id)
+            ->where('type', 'proxy_reassigned_to_principal')
+            ->whereDate('sent_at', $now->toDateString())
+            ->whereJsonContains('meta->subject_id', (string) $subject->id)
+            ->whereJsonContains('meta->new_proxy_teacher_id', (string) $nextProxyTeacher->id)
+            ->exists();
+
+        if ($alreadySent) {
+            return;
+        }
+
+        $title = 'Proxy Teacher Reassigned';
+        $message = "Proxy teacher for {$subject->name} has been reassigned from {$currentProxyTeacher->full_name} to {$nextProxyTeacher->full_name}.";
+
+        $log = NotificationLog::create([
+            'user_id' => $principal->id,
+            'type' => 'proxy_reassigned_to_principal',
+            'title' => $title,
+            'message' => $message,
+            'is_read' => false,
+            'attendance_request_key' => $attendanceRequestKey,
+            'meta' => [
+                'recipient_role' => 'principal',
+                'subject_id' => (string) $subject->id,
+                'subject_name' => $subject->name,
+                'classroom_id' => (string) $subject->classroom_id,
+                'classroom_name' => $subject->classroom?->name ?? 'N/A',
+                'original_teacher_id' => (string) $subject->teacher_id,
+                'original_teacher_name' => $subject->teacher->full_name,
+                'previous_proxy_teacher_id' => (string) $currentProxyTeacher->id,
+                'previous_proxy_teacher_name' => $currentProxyTeacher->full_name,
+                'new_proxy_teacher_id' => (string) $nextProxyTeacher->id,
+                'new_proxy_teacher_name' => $nextProxyTeacher->full_name,
+                'start_time' => Carbon::parse($subject->start_time)->format('g:i a'),
+                'end_time' => Carbon::parse($subject->end_time)->format('g:i a'),
+                'attendance_request_key' => $attendanceRequestKey,
+            ],
+            'sent_at' => now(),
+        ]);
+
+        if ($principal->notifications_enabled && $principal->fcm_token) {
+            $firebaseNotificationService->sendToToken(
+                $principal->fcm_token,
+                $title,
+                $message,
+                [
+                    'type' => 'proxy_reassigned_to_principal',
+                    'subject_id' => (string) $subject->id,
+                    'subject_name' => $subject->name,
+                    'classroom_name' => $subject->classroom?->name ?? 'N/A',
+                    'new_proxy_teacher_name' => $nextProxyTeacher->full_name,
+                ]
+            );
+        }
+
+        \Log::info("Proxy reassignment notification sent to principal for subject {$subject->id}.");
     }
 
     private function notifyPrincipalNoProxyAvailable(
