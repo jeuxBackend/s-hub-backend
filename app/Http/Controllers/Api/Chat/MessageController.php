@@ -10,6 +10,7 @@ use App\Models\Conversation;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
 use Throwable;
 
 class MessageController extends Controller
@@ -67,8 +68,21 @@ class MessageController extends Controller
             // Update conversation's last_message_at for inbox sorting
             $conversation->update(['last_message_at' => now()]);
 
+            Log::info('ChatMessage: About to broadcast MessageSent event', [
+                'conversation_id' => $conversation->id,
+                'message_id' => $message->id,
+                'sender_id' => $authId,
+                'sender_role' => $auth->role,
+            ]);
+
             // Fire broadcast event — delivers to other participant via Reverb in real-time
             broadcast(new MessageSent($message))->toOthers();
+
+            Log::info('ChatMessage: About to dispatch SendChatNotificationJob', [
+                'conversation_id' => $conversation->id,
+                'message_id' => $message->id,
+                'receiver_id' => $conversation->user_one_id === $authId ? $conversation->user_two_id : $conversation->user_one_id,
+            ]);
 
             // Dispatch FCM notification to the receiver
             \App\Jobs\SendChatNotificationJob::dispatch($message);
@@ -76,6 +90,14 @@ class MessageController extends Controller
             // Determine the receiver (other participant in the conversation)
             $receiverId = $conversation->user_one_id === $authId ? $conversation->user_two_id : $conversation->user_one_id;
             $receiver = \App\Models\User::find($receiverId);
+            
+            Log::info('ChatMessage: Processing receiver inbox update', [
+                'conversation_id' => $conversation->id,
+                'message_id' => $message->id,
+                'sender_id' => $authId,
+                'receiver_id' => $receiverId,
+                'receiver_exists' => $receiver ? true : false,
+            ]);
             
             if ($receiver) {
                 $isPrincipal = $receiver->role === \App\Enums\UserRole::Principal;
@@ -127,8 +149,29 @@ class MessageController extends Controller
                     ];
                 }
 
+                Log::info('ChatMessage: Broadcasting InboxUpdatedEvent to receiver', [
+                    'conversation_id' => $conversation->id,
+                    'message_id' => $message->id,
+                    'receiver_id' => $receiverId,
+                    'receiver_role' => $receiver->role,
+                    'is_principal' => $isPrincipal,
+                    'payload_keys' => array_keys($inboxPayload),
+                ]);
+
                 // Broadcast the inbox update to the receiver only
                 broadcast(new \App\Events\InboxUpdatedEvent($inboxPayload, $receiverId));
+                
+                Log::info('ChatMessage: Successfully broadcast InboxUpdatedEvent to receiver', [
+                    'conversation_id' => $conversation->id,
+                    'message_id' => $message->id,
+                    'receiver_id' => $receiverId,
+                ]);
+            } else {
+                Log::warning('ChatMessage: Receiver not found, skipping inbox update', [
+                    'conversation_id' => $conversation->id,
+                    'message_id' => $message->id,
+                    'receiver_id' => $receiverId,
+                ]);
             }
             
             // Notify principals if this is a teacher-parent conversation
@@ -140,6 +183,10 @@ class MessageController extends Controller
                 201
             );
         } catch (Throwable $e) {
+            Log::error('ChatMessage: Error in store method', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
             return $this->exceptionResponse($e);
         }
     }
@@ -149,6 +196,11 @@ class MessageController extends Controller
      */
     private function broadcastToPrincipalsIfNeeded(Conversation $conversation, $message, $senderId)
     {
+        Log::info('ChatMessage: Checking if principal notification is needed', [
+            'conversation_id' => $conversation->id,
+            'message_id' => $message->id,
+        ]);
+
         // Load the conversation participants if not already loaded
         $conversation->load(['userOne', 'userTwo']);
         
@@ -167,6 +219,14 @@ class MessageController extends Controller
                                           ($userOneIsParent && $userTwoIsTeacher);
         }
         
+        Log::info('ChatMessage: Teacher-parent conversation check result', [
+            'conversation_id' => $conversation->id,
+            'message_id' => $message->id,
+            'is_teacher_parent_conversation' => $isTeacherParentConversation,
+            'user_one_role' => $userOne ? $userOne->role : 'null',
+            'user_two_role' => $userTwo ? $userTwo->role : 'null',
+        ]);
+        
         if ($isTeacherParentConversation) {
             // Find all principals in the institutions of both users
             $institutionIds = [];
@@ -179,11 +239,25 @@ class MessageController extends Controller
             
             $institutionIds = array_unique($institutionIds);
             
+            Log::info('ChatMessage: Found institution IDs for principal notification', [
+                'conversation_id' => $conversation->id,
+                'message_id' => $message->id,
+                'institution_ids' => $institutionIds,
+            ]);
+            
             foreach ($institutionIds as $institutionId) {
                 // Get the principal for this institution
                 $principal = User::where('institution_id', $institutionId)
                     ->where('role', \App\Enums\UserRole::Principal)
                     ->first();
+                    
+                Log::info('ChatMessage: Processing principal notification', [
+                    'conversation_id' => $conversation->id,
+                    'message_id' => $message->id,
+                    'institution_id' => $institutionId,
+                    'principal_found' => $principal ? true : false,
+                    'principal_id' => $principal ? $principal->id : null,
+                ]);
                     
                 if ($principal) {
                     // Prepare payload for principal's inbox
@@ -213,10 +287,28 @@ class MessageController extends Controller
                         ],
                     ];
                     
+                    Log::info('ChatMessage: Broadcasting InboxUpdatedEvent to principal', [
+                        'conversation_id' => $conversation->id,
+                        'message_id' => $message->id,
+                        'principal_id' => $principal->id,
+                        'payload_keys' => array_keys($inboxPayload),
+                    ]);
+
                     // Broadcast the event to the principal
                     broadcast(new \App\Events\InboxUpdatedEvent($inboxPayload, $principal->id));
+                    
+                    Log::info('ChatMessage: Successfully broadcast InboxUpdatedEvent to principal', [
+                        'conversation_id' => $conversation->id,
+                        'message_id' => $message->id,
+                        'principal_id' => $principal->id,
+                    ]);
                 }
             }
+        } else {
+            Log::info('ChatMessage: Skipping principal notification, not a teacher-parent conversation', [
+                'conversation_id' => $conversation->id,
+                'message_id' => $message->id,
+            ]);
         }
     }
 
