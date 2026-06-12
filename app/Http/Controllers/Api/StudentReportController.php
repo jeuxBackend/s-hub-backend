@@ -11,6 +11,9 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Throwable;
 use App\Enums\UserRole;
+use App\Services\FirebaseNotificationService;
+use App\Models\Student;
+use App\Models\User;
 
 class StudentReportController extends Controller
 {
@@ -50,7 +53,7 @@ class StudentReportController extends Controller
     }
 
     // Teacher creates a report
-    public function store(Request $request)
+    public function store(Request $request, FirebaseNotificationService $firebaseNotificationService)
     {
         try {
             $user = auth()->user();
@@ -86,6 +89,57 @@ class StudentReportController extends Controller
                 'status' => 'pending',
             ]);
 
+            // Get the student to find their parent/guardian
+            $student = Student::find($request->student_id);
+
+            
+
+            // Also send notification to the institution's principal
+            if ($user->institution_id) {
+                $principal = User::where('institution_id', $user->institution_id)
+                    ->where('role', UserRole::Principal)
+                    ->first();
+
+                if ($principal) {
+                    // Create notification log entry for principal
+                    $principalNotification = NotificationLog::create([
+                        'user_id' => $principal->id,
+                        'type' => 'student_report_created',
+                        'title' => 'New Student Report Created',
+                        'message' => "A new report has been created for {$student->full_name} by {$user->full_name}",
+                        'is_read' => false,
+                        'meta' => [
+                            'report_id' => $report->id,
+                            'student_id' => $student->id,
+                            'student_name' => $student->full_name,
+                            'teacher_id' => $user->id,
+                            'teacher_name' => $user->full_name,
+                            'report_type' => $request->report_type,
+                            'report_title' => $request->title,
+                            'report_description' => $request->description,
+                            'created_at' => now()->toISOString(),
+                        ],
+                        'sent_at' => now(),
+                    ]);
+
+                    // Send FCM notification to principal if they have FCM token and notifications enabled
+                    if ($principal->notifications_enabled && $principal->fcm_token) {
+                        $firebaseNotificationService->sendToToken(
+                            $principal->fcm_token,
+                            'New Student Report Created',
+                            "A new report has been created for {$student->full_name} by {$user->full_name}",
+                            [
+                                'type' => 'student_report_created',
+                                'report_id' => (string)$report->id,
+                                'student_id' => (string)$student->id,
+                                'student_name' => $student->full_name,
+                                'teacher_name' => $user->full_name,
+                            ]
+                        );
+                    }
+                }
+            }
+
             return $this->successResponse(new StudentReportResource($report), 'Report submitted for approval', 201);
         } catch (Throwable $e) {
             return $this->exceptionResponse($e);
@@ -93,7 +147,7 @@ class StudentReportController extends Controller
     }
 
     // Principal/Admin approves or rejects a report
-    public function updateStatus(Request $request, $id)
+    public function updateStatus(Request $request, $id, FirebaseNotificationService $firebaseNotificationService)
     {
         try {
             $user = auth()->user();
@@ -117,33 +171,118 @@ class StudentReportController extends Controller
 
             // Handle notifications
             if ($report->status == 'rejected') {
-                NotificationLog::create([
-                    'user_id' => $report->teacher_id,
-                    'type' => 'report_rejected',
-                    'title' => 'Student Report Rejected',
-                    'message' => "The report you submitted for student ID {$report->student_id} was rejected." . ($request->reason ? " Reason: {$request->reason}" : " Please review and update."),
-                    'is_read' => false,
-                    'meta' => [
-                        'report_id' => $report->id,
-                    ],
-                    'sent_at' => now(),
-                ]);
+                // Notify the teacher about the rejection
+                $teacher = User::find($report->teacher_id);
+                
+                if ($teacher) {
+                    NotificationLog::create([
+                        'user_id' => $report->teacher_id,
+                        'type' => 'report_rejected',
+                        'title' => 'Student Report Rejected',
+                        'message' => "The report you submitted for student ID {$report->student_id} was rejected." . ($request->reason ? " Reason: {$request->reason}" : " Please review and update."),
+                        'is_read' => false,
+                        'meta' => [
+                            'report_id' => $report->id,
+                            'student_id' => $report->student_id,
+                            'student_name' => $report->student->full_name ?? 'Unknown',
+                            'reviewer_id' => $user->id,
+                            'reviewer_name' => $user->full_name,
+                            'rejection_reason' => $request->reason,
+                        ],
+                        'sent_at' => now(),
+                    ]);
+
+                    // Send FCM notification to teacher if they have FCM token and notifications enabled
+                    if ($teacher->notifications_enabled && $teacher->fcm_token) {
+                        $firebaseNotificationService->sendToToken(
+                            $teacher->fcm_token,
+                            'Student Report Rejected',
+                            "The report you submitted for {$report->student->full_name ?? 'student'} was rejected." . ($request->reason ? " Reason: {$request->reason}" : ""),
+                            [
+                                'type' => 'report_rejected',
+                                'report_id' => (string)$report->id,
+                                'student_name' => $report->student->full_name ?? 'Unknown',
+                                'rejection_reason' => $request->reason ?? '',
+                            ]
+                        );
+                    }
+                }
             } elseif ($report->status == 'approved') {
                 // If you want to notify the parent when it's approved
                 $student = $report->student;
                 if ($student && $student->guardian_id) {
+                    $parent = User::find($student->guardian_id);
+                    
+                    if ($parent) {
+                        NotificationLog::create([
+                            'user_id' => $student->guardian_id,
+                            'type' => 'report_approved',
+                            'title' => 'New Student Report',
+                            'message' => "A new {$report->report_type} report has been published for {$student->full_name}.",
+                            'is_read' => false,
+                            'meta' => [
+                                'report_id' => $report->id,
+                                'student_id' => $student->id,
+                                'student_name' => $student->full_name,
+                                'report_type' => $report->report_type,
+                                'report_title' => $report->title,
+                                'reviewer_id' => $user->id,
+                                'reviewer_name' => $user->full_name,
+                            ],
+                            'sent_at' => now(),
+                        ]);
+
+                        // Send FCM notification to parent if they have FCM token and notifications enabled
+                        if ($parent->notifications_enabled && $parent->fcm_token) {
+                            $firebaseNotificationService->sendToToken(
+                                $parent->fcm_token,
+                                'New Student Report',
+                                "A new {$report->report_type} report has been published for {$student->full_name}.",
+                                [
+                                    'type' => 'report_approved',
+                                    'report_id' => (string)$report->id,
+                                    'student_name' => $student->full_name,
+                                    'report_type' => $report->report_type,
+                                ]
+                            );
+                        }
+                    }
+                }
+
+                // Also notify the teacher about the approval
+                $teacher = User::find($report->teacher_id);
+                
+                if ($teacher) {
                     NotificationLog::create([
-                        'user_id' => $student->guardian_id,
+                        'user_id' => $report->teacher_id,
                         'type' => 'report_approved',
-                        'title' => 'New Student Report',
-                        'message' => "A new {$report->report_type} report has been published for {$student->full_name}.",
+                        'title' => 'Student Report Approved',
+                        'message' => "The report you submitted for {$student->full_name ?? 'student'} has been approved.",
                         'is_read' => false,
                         'meta' => [
                             'report_id' => $report->id,
-                            'student_id' => $student->id,
+                            'student_id' => $report->student_id,
+                            'student_name' => $student->full_name ?? 'Unknown',
+                            'reviewer_id' => $user->id,
+                            'reviewer_name' => $user->full_name,
                         ],
                         'sent_at' => now(),
                     ]);
+
+                    // Send FCM notification to teacher if they have FCM token and notifications enabled
+                    if ($teacher->notifications_enabled && $teacher->fcm_token) {
+                        $firebaseNotificationService->sendToToken(
+                            $teacher->fcm_token,
+                            'Student Report Approved',
+                            "The report you submitted for {$student->full_name ?? 'student'} has been approved.",
+                            [
+                                'type' => 'report_approved',
+                                'report_id' => (string)$report->id,
+                                'student_name' => $student->full_name ?? 'Unknown',
+                            ]
+                        );
+                    }
+                }
                 }
             }
 
