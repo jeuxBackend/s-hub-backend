@@ -73,52 +73,62 @@ class MessageController extends Controller
             // Dispatch FCM notification to the receiver
             \App\Jobs\SendChatNotificationJob::dispatch($message);
 
-            // Trigger global Inbox Update for the receiver
-            $receiverId = $conversation->user_one_id === $authId ? $conversation->user_two_id : $conversation->user_one_id;
-            $receiver = \App\Models\User::find($receiverId);
-            
-            if ($receiver) {
-                $isPrincipal = $receiver->role === \App\Enums\UserRole::Principal;
-                
-                $inboxPayload = [
-                    'id' => $conversation->id,
-                    'last_message' => [
-                        'body' => $message->body,
-                        'attachment_type' => $message->attachment_type,
-                        'is_mine' => false,
-                        'created_at' => $message->created_at?->toISOString(),
-                    ],
-                    'unread_count' => $conversation->unreadCountFor($receiverId),
-                    'last_message_at' => $conversation->last_message_at?->toISOString(),
-                ];
+            // Get both participants in the conversation
+            $participants = [
+                $conversation->user_one_id,
+                $conversation->user_two_id
+            ];
 
-                if ($isPrincipal) {
-                    $conversation->load(['userOne', 'userTwo']);
-                    $inboxPayload['user_one'] = [
-                        'id' => $conversation->userOne->id,
-                        'full_name' => $conversation->userOne->full_name,
-                        'role' => $conversation->userOne->role?->value,
-                        'position' => $conversation->userOne->position,
-                        'profile_picture' => $conversation->userOne->profile_picture,
-                    ];
-                    $inboxPayload['user_two'] = [
-                        'id' => $conversation->userTwo->id,
-                        'full_name' => $conversation->userTwo->full_name,
-                        'role' => $conversation->userTwo->role?->value,
-                        'position' => $conversation->userTwo->position,
-                        'profile_picture' => $conversation->userTwo->profile_picture,
-                    ];
-                } else {
-                    $inboxPayload['participant'] = [
-                        'id' => $auth->id,
-                        'full_name' => $auth->full_name,
-                        'role' => $auth->role?->value,
-                        'position' => $auth->position,
-                        'profile_picture' => $auth->profile_picture,
-                    ];
+            // Trigger Inbox Update for both participants
+            foreach ($participants as $participantId) {
+                if ($participantId) {
+                    $participant = \App\Models\User::find($participantId);
+                    
+                    if ($participant) {
+                        $isPrincipal = $participant->role === \App\Enums\UserRole::Principal;
+                        
+                        $inboxPayload = [
+                            'id' => $conversation->id,
+                            'last_message' => [
+                                'body' => $message->body,
+                                'attachment_type' => $message->attachment_type,
+                                'is_mine' => ($participantId === $authId), // True if this participant is the sender
+                                'created_at' => $message->created_at?->toISOString(),
+                            ],
+                            'unread_count' => $conversation->unreadCountFor($participantId),
+                            'last_message_at' => $conversation->last_message_at?->toISOString(),
+                        ];
+
+                        if ($isPrincipal) {
+                            $conversation->load(['userOne', 'userTwo']);
+                            $inboxPayload['user_one'] = [
+                                'id' => $conversation->userOne->id,
+                                'full_name' => $conversation->userOne->full_name,
+                                'role' => $conversation->userOne->role?->value,
+                                'position' => $conversation->userOne->position,
+                                'profile_picture' => $conversation->userOne->profile_picture,
+                            ];
+                            $inboxPayload['user_two'] = [
+                                'id' => $conversation->userTwo->id,
+                                'full_name' => $conversation->userTwo->full_name,
+                                'role' => $conversation->userTwo->role?->value,
+                                'position' => $conversation->userTwo->position,
+                                'profile_picture' => $conversation->userTwo->profile_picture,
+                            ];
+                        } else {
+                            $inboxPayload['participant'] = [
+                                'id' => $auth->id,
+                                'full_name' => $auth->full_name,
+                                'role' => $auth->role?->value,
+                                'position' => $auth->position,
+                                'profile_picture' => $auth->profile_picture,
+                            ];
+                        }
+
+                        // Broadcast the inbox update to this participant
+                        broadcast(new \App\Events\InboxUpdatedEvent($inboxPayload, $participantId))->toOthers();
+                    }
                 }
-
-                broadcast(new \App\Events\InboxUpdatedEvent($inboxPayload, $receiverId))->toOthers();
             }
             
             // Notify principals if this is a teacher-parent conversation
