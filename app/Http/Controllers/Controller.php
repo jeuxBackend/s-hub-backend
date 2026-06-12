@@ -8,6 +8,7 @@ use Illuminate\Foundation\Validation\ValidatesRequests;
 use Illuminate\Routing\Controller as BaseController;
 use App\Traits\ResponsesTrait;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 abstract class Controller extends BaseController
 {
@@ -16,13 +17,7 @@ abstract class Controller extends BaseController
     protected function handleUserFileUpload(Request $request, $fieldName, $directory)
     {
         if ($request->hasFile($fieldName)) {
-            $fileName = rand() . time() . '.' . $request->file($fieldName)->extension();
-
-            // Store file in public/candidatefiles
-            $request->file($fieldName)->move(public_path('candidatefiles'), $fileName);
-
-            // Return only file name (to save in DB)
-            return $fileName;
+            return Storage::disk('public')->putFile($directory, $request->file($fieldName));
         }
 
         return null;
