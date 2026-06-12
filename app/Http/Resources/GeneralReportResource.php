@@ -16,6 +16,7 @@ class GeneralReportResource extends JsonResource
                 'full_name' => $this->reporter->full_name ?? null,
                 'role' => $this->reporter->role?->value ?? null,
                 'profile_picture' => $this->reporter->profile_picture ?? null,
+                'email' => $this->reporter->email ?? null,
             ],
             'reported_to_role' => $this->reported_to_role,
             'institution_id' => $this->institution_id,
