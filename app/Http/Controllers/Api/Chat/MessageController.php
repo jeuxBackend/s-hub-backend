@@ -94,20 +94,29 @@ class MessageController extends Controller
 
                 if ($isPrincipal) {
                     $conversation->load(['userOne', 'userTwo']);
-                    $inboxPayload['user_one'] = [
-                        'id' => $conversation->userOne->id,
-                        'full_name' => $conversation->userOne->full_name,
-                        'role' => $conversation->userOne->role?->value,
-                        'position' => $conversation->userOne->position,
-                        'profile_picture' => $conversation->userOne->profile_picture,
-                    ];
-                    $inboxPayload['user_two'] = [
-                        'id' => $conversation->userTwo->id,
-                        'full_name' => $conversation->userTwo->full_name,
-                        'role' => $conversation->userTwo->role?->value,
-                        'position' => $conversation->userTwo->position,
-                        'profile_picture' => $conversation->userTwo->profile_picture,
-                    ];
+                    if ($conversation->userOne && $conversation->userTwo) {
+                        $inboxPayload['user_one'] = [
+                            'id' => $conversation->userOne->id,
+                            'full_name' => $conversation->userOne->full_name,
+                            'role' => $conversation->userOne->role?->value,
+                            'position' => $conversation->userOne->position,
+                            'profile_picture' => $conversation->userOne->profile_picture,
+                        ];
+                        $inboxPayload['user_two'] = [
+                            'id' => $conversation->userTwo->id,
+                            'full_name' => $conversation->userTwo->full_name,
+                            'role' => $conversation->userTwo->role?->value,
+                            'position' => $conversation->userTwo->position,
+                            'profile_picture' => $conversation->userTwo->profile_picture,
+                        ];
+                    } else {
+                        // If either user is null, skip sending to principal
+                        return $this->successResponse(
+                            new MessageResource($message->load('sender')),
+                            'Message sent successfully',
+                            201
+                        );
+                    }
                 } else {
                     $inboxPayload['participant'] = [
                         'id' => $auth->id,
@@ -146,7 +155,7 @@ class MessageController extends Controller
         $userOne = $conversation->userOne;
         $userTwo = $conversation->userTwo;
         
-        // Check if this is a teacher-parent conversation
+        // Check if this is a teacher-parent conversation and both users exist
         $isTeacherParentConversation = false;
         if ($userOne && $userTwo) {
             $userOneIsTeacher = $userOne->role === \App\Enums\UserRole::Teacher || $userOne->role === \App\Enums\UserRole::SchoolAdmin;
