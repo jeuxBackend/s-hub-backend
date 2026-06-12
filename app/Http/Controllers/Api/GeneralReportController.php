@@ -60,9 +60,9 @@ class GeneralReportController extends Controller
         $allowedTargets = match ($user->role) {
             UserRole::Parent => [UserRole::Principal->value, AdminRole::Manager->value],
             UserRole::Teacher => [UserRole::Principal->value, AdminRole::Manager->value],
-            UserRole::Principal => [AdminRole::Admin->value, AdminRole::Manager->value],
+            UserRole::Principal => [AdminRole::Admin->value, AdminRole::Manager->value, UserRole::SchoolAdmin->value],
             AdminRole::Manager => [AdminRole::Admin->value, AdminRole::SubAdmin->value],
-            UserRole::SchoolAdmin => [AdminRole::Admin->value, AdminRole::Manager->value],
+            UserRole::SchoolAdmin => [AdminRole::Admin->value, AdminRole::Manager->value, UserRole::Principal->value],
             default => []
         };
 

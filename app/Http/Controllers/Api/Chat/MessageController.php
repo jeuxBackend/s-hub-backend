@@ -3,9 +3,11 @@
 namespace App\Http\Controllers\Api\Chat;
 
 use App\Events\MessageSent;
+use App\Events\InboxUpdatedEvent;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\Chat\MessageResource;
 use App\Models\Conversation;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Throwable;
@@ -118,6 +120,9 @@ class MessageController extends Controller
 
                 broadcast(new \App\Events\InboxUpdatedEvent($inboxPayload, $receiverId))->toOthers();
             }
+            
+            // Additionally, notify principals if this is a teacher-parent conversation
+            $this->notifyPrincipalsOfTeacherParentInteraction($conversation, $message);
 
             return $this->successResponse(
                 new MessageResource($message->load('sender')),
@@ -126,6 +131,82 @@ class MessageController extends Controller
             );
         } catch (Throwable $e) {
             return $this->exceptionResponse($e);
+        }
+    }
+
+    /**
+     * Notify principals when teachers and parents interact
+     */
+    private function notifyPrincipalsOfTeacherParentInteraction(Conversation $conversation, $message)
+    {
+        // Load the conversation participants if not already loaded
+        $conversation->load(['userOne', 'userTwo']);
+        
+        $userOne = $conversation->userOne;
+        $userTwo = $conversation->userTwo;
+        
+        // Check if this is a teacher-parent conversation
+        $isTeacherParentConversation = false;
+        if ($userOne && $userTwo) {
+            $userOneIsTeacher = $userOne->role === \App\Enums\UserRole::Teacher || $userOne->role === \App\Enums\UserRole::SchoolAdmin;
+            $userOneIsParent = $userOne->role === \App\Enums\UserRole::Parent;
+            $userTwoIsTeacher = $userTwo->role === \App\Enums\UserRole::Teacher || $userTwo->role === \App\Enums\UserRole::SchoolAdmin;
+            $userTwoIsParent = $userTwo->role === \App\Enums\UserRole::Parent;
+            
+            $isTeacherParentConversation = ($userOneIsTeacher && $userTwoIsParent) || 
+                                          ($userOneIsParent && $userTwoIsTeacher);
+        }
+        
+        if ($isTeacherParentConversation) {
+            // Find all principals in the institutions of both users
+            $institutionIds = [];
+            if ($userOne && $userOne->institution_id) {
+                $institutionIds[] = $userOne->institution_id;
+            }
+            if ($userTwo && $userTwo->institution_id) {
+                $institutionIds[] = $userTwo->institution_id;
+            }
+            
+            $institutionIds = array_unique($institutionIds);
+            
+            foreach ($institutionIds as $institutionId) {
+                // Get the principal for this institution
+                $principal = User::where('institution_id', $institutionId)
+                    ->where('role', \App\Enums\UserRole::Principal)
+                    ->first();
+                    
+                if ($principal) {
+                    // Prepare payload for principal's inbox
+                    $inboxPayload = [
+                        'id' => $conversation->id,
+                        'last_message' => [
+                            'body' => $message->body,
+                            'attachment_type' => $message->attachment_type,
+                            'is_mine' => false, // From principal's perspective, this isn't their message
+                            'created_at' => $message->created_at?->toISOString(),
+                        ],
+                        'unread_count' => $conversation->unreadCountFor($principal->id),
+                        'last_message_at' => $conversation->last_message_at?->toISOString(),
+                        'user_one' => [
+                            'id' => $userOne->id,
+                            'full_name' => $userOne->full_name,
+                            'role' => $userOne->role?->value,
+                            'position' => $userOne->position,
+                            'profile_picture' => $userOne->profile_picture,
+                        ],
+                        'user_two' => [
+                            'id' => $userTwo->id,
+                            'full_name' => $userTwo->full_name,
+                            'role' => $userTwo->role?->value,
+                            'position' => $userTwo->position,
+                            'profile_picture' => $userTwo->profile_picture,
+                        ],
+                    ];
+                    
+                    // Broadcast the event to the principal
+                    broadcast(new \App\Events\InboxUpdatedEvent($inboxPayload, $principal->id))->toOthers();
+                }
+            }
         }
     }
 
