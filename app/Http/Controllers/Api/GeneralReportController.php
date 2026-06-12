@@ -5,10 +5,14 @@ namespace App\Http\Controllers\Api;
 use App\Enums\AdminRole;
 use App\Http\Controllers\Controller;
 use App\Models\GeneralReport;
+use App\Models\NotificationLog;
 use App\Http\Resources\GeneralReportResource;
+use App\Services\FirebaseNotificationService;
+use App\Events\NewNotificationEvent;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use App\Enums\UserRole;
+use App\Models\User;
 
 class GeneralReportController extends Controller
 {
@@ -53,7 +57,7 @@ class GeneralReportController extends Controller
     /**
      * Store a newly created report.
      */
-    public function store(Request $request)
+    public function store(Request $request, FirebaseNotificationService $firebaseNotificationService)
     {
         $user = auth()->user();
 
@@ -82,6 +86,54 @@ class GeneralReportController extends Controller
             'status' => 'pending'
         ]);
 
+        // Find the target user who will receive the notification
+        $targetUsers = User::where('role', $validated['reported_to_role'])
+            ->when($user->institution_id, function ($query) use ($user) {
+                // If the reporter has an institution, limit to same institution
+                $query->where('institution_id', $user->institution_id);
+            })
+            ->get();
+
+        foreach ($targetUsers as $targetUser) {
+            // Create notification log record
+            $notification = NotificationLog::create([
+                'user_id' => $targetUser->id,
+                'type' => 'general_report_received',
+                'title' => 'New Report Received',
+                'message' => "You have received a new report from {$user->full_name}: {$validated['title']}",
+                'is_read' => false,
+                'meta' => [
+                    'report_id' => $report->id,
+                    'reporter_id' => $user->id,
+                    'reporter_name' => $user->full_name,
+                    'report_title' => $validated['title'],
+                    'report_description' => $validated['description'],
+                    'report_status' => 'pending',
+                    'reported_to_role' => $validated['reported_to_role'],
+                    'institution_id' => $user->institution_id,
+                ],
+                'sent_at' => now(),
+            ]);
+
+            // // Trigger the NewNotificationEvent for real-time updates
+            // event(new NewNotificationEvent($notification));
+
+            // Send FCM notification if the target user has FCM token and notifications enabled
+            if ($targetUser->notifications_enabled && $targetUser->fcm_token) {
+                $firebaseNotificationService->sendToToken(
+                    $targetUser->fcm_token,
+                    'New Report Received',
+                    "You have received a new report from {$user->full_name}: {$validated['title']}",
+                    [
+                        'type' => 'general_report_received',
+                        'report_id' => (string)$report->id,
+                        'reporter_name' => $user->full_name,
+                        'report_title' => $validated['title'],
+                    ]
+                );
+            }
+        }
+
         return $this->successResponse(
             new GeneralReportResource($report->load(['reporter'])),
             'Report submitted successfully.',
@@ -92,7 +144,7 @@ class GeneralReportController extends Controller
     /**
      * Update the specified report.
      */
-    public function update(Request $request, $id)
+    public function update(Request $request, $id, FirebaseNotificationService $firebaseNotificationService)
     {
         $user = auth()->user();
         $report = GeneralReport::findOrFail($id);
@@ -111,9 +163,9 @@ class GeneralReportController extends Controller
         $allowedTargets = match ($user->role) {
             UserRole::Parent => [UserRole::Principal->value, \App\Enums\AdminRole::Manager->value],
             UserRole::Teacher => [UserRole::Principal->value, \App\Enums\AdminRole::Manager->value],
-            UserRole::Principal => [\App\Enums\AdminRole::Admin->value, \App\Enums\AdminRole::Manager->value],
+            UserRole::Principal => [\App\Enums\AdminRole::Admin->value, \App\Enums\AdminRole::Manager->value, UserRole::SchoolAdmin->value],
             \App\Enums\AdminRole::Manager => [\App\Enums\AdminRole::Admin->value, \App\Enums\AdminRole::SubAdmin->value],
-            UserRole::SchoolAdmin => [\App\Enums\AdminRole::Admin->value, \App\Enums\AdminRole::Manager->value],
+            UserRole::SchoolAdmin => [\App\Enums\AdminRole::Admin->value, \App\Enums\AdminRole::Manager->value, UserRole::Principal->value],
             default => []
         };
 
@@ -125,6 +177,57 @@ class GeneralReportController extends Controller
 
         $report->update($validated);
 
+        // If the reported_to_role was updated, notify the new target user
+        if (isset($validated['reported_to_role'])) {
+            // Find the new target user who will receive the notification
+            $targetUsers = User::where('role', $validated['reported_to_role'])
+                ->when($user->institution_id, function ($query) use ($user) {
+                    // If the reporter has an institution, limit to same institution
+                    $query->where('institution_id', $user->institution_id);
+                })
+                ->get();
+
+            foreach ($targetUsers as $targetUser) {
+                // Prepare the title for the notification
+                $titleForNotification = isset($validated['title']) ? $validated['title'] : $report->title;
+                
+                // Create notification log record
+                $notification = NotificationLog::create([
+                    'user_id' => $targetUser->id,
+                    'type' => 'general_report_updated',
+                    'title' => 'Report Updated',
+                    'message' => "A report from {$user->full_name} has been updated: {$titleForNotification}",
+                    'is_read' => false,
+                    'meta' => [
+                        'report_id' => $report->id,
+                        'reporter_id' => $user->id,
+                        'reporter_name' => $user->full_name,
+                        'report_title' => $titleForNotification,
+                        'report_description' => isset($validated['description']) ? $validated['description'] : $report->description,
+                        'report_status' => $report->status,
+                        'reported_to_role' => $validated['reported_to_role'],
+                        'institution_id' => $user->institution_id,
+                    ],
+                    'sent_at' => now(),
+                ]);
+
+                // Send FCM notification if the target user has FCM token and notifications enabled
+                if ($targetUser->notifications_enabled && $targetUser->fcm_token) {
+                    $firebaseNotificationService->sendToToken(
+                        $targetUser->fcm_token,
+                        'Report Updated',
+                        "A report from {$user->full_name} has been updated: {$titleForNotification}",
+                        [
+                            'type' => 'general_report_updated',
+                            'report_id' => (string)$report->id,
+                            'reporter_name' => $user->full_name,
+                            'report_title' => $titleForNotification,
+                        ]
+                    );
+                }
+            }
+        }
+
         return $this->successResponse(
             new GeneralReportResource($report->load(['reporter', 'resolvedBy'])),
             'Report updated successfully.'
@@ -134,7 +237,7 @@ class GeneralReportController extends Controller
     /**
      * Resolve or reject the report (for upper management).
      */
-    public function updateStatus(Request $request, $id)
+    public function updateStatus(Request $request, $id, FirebaseNotificationService $firebaseNotificationService)
     {
         $user = auth()->user();
         $report = GeneralReport::findOrFail($id);
@@ -159,10 +262,55 @@ class GeneralReportController extends Controller
 
         $report->update([
             'status' => $validated['status'],
-            'response' => $validated['response'] ?? $report->response,
+            'response' => isset($validated['response']) ? $validated['response'] : $report->response,
             'resolved_by_id' => $isClosing ? $user->id : $report->resolved_by_id,
             'resolved_by_type' => $isClosing ? get_class($user) : $report->resolved_by_type,
         ]);
+
+        // Notify the reporter about the status change
+        $reporter = User::find($report->reporter_id);
+        if ($reporter) {
+            // Prepare the response for the notification
+            $responseForNotification = isset($validated['response']) ? $validated['response'] : $report->response;
+
+            // Create notification log record for the reporter
+            $notification = NotificationLog::create([
+                'user_id' => $reporter->id,
+                'type' => 'general_report_status_update',
+                'title' => 'Report Status Updated',
+                'message' => "Your report '{$report->title}' status has been updated to: {$validated['status']}",
+                'is_read' => false,
+                'meta' => [
+                    'report_id' => $report->id,
+                    'reporter_id' => $reporter->id,
+                    'reporter_name' => $reporter->full_name,
+                    'report_title' => $report->title,
+                    'report_status' => $validated['status'],
+                    'report_response' => $responseForNotification,
+                    'resolver_name' => $user->full_name,
+                    'resolved_at' => now()->toISOString(),
+                ],
+                'sent_at' => now(),
+            ]);
+
+            // Trigger the NewNotificationEvent for real-time updates
+            event(new NewNotificationEvent($notification));
+
+            // Send FCM notification if the reporter has FCM token and notifications enabled
+            if ($reporter->notifications_enabled && $reporter->fcm_token) {
+                $firebaseNotificationService->sendToToken(
+                    $reporter->fcm_token,
+                    'Report Status Updated',
+                    "Your report '{$report->title}' status has been updated to: {$validated['status']}",
+                    [
+                        'type' => 'general_report_status_update',
+                        'report_id' => (string)$report->id,
+                        'report_status' => $validated['status'],
+                        'report_title' => $report->title,
+                    ]
+                );
+            }
+        }
 
         return $this->successResponse(
             new GeneralReportResource($report->load(['reporter', 'resolvedBy'])),

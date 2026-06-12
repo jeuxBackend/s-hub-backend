@@ -121,8 +121,8 @@ class MessageController extends Controller
                 broadcast(new \App\Events\InboxUpdatedEvent($inboxPayload, $receiverId))->toOthers();
             }
             
-            // Additionally, notify principals if this is a teacher-parent conversation
-            $this->notifyPrincipalsOfTeacherParentInteraction($conversation, $message);
+            // Notify principals if this is a teacher-parent conversation
+            $this->broadcastToPrincipalsIfNeeded($conversation, $message, $authId);
 
             return $this->successResponse(
                 new MessageResource($message->load('sender')),
@@ -135,9 +135,9 @@ class MessageController extends Controller
     }
 
     /**
-     * Notify principals when teachers and parents interact
+     * Broadcast to principals if this is a teacher-parent conversation
      */
-    private function notifyPrincipalsOfTeacherParentInteraction(Conversation $conversation, $message)
+    private function broadcastToPrincipalsIfNeeded(Conversation $conversation, $message, $senderId)
     {
         // Load the conversation participants if not already loaded
         $conversation->load(['userOne', 'userTwo']);
