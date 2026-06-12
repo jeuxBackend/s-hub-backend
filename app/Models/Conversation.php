@@ -72,7 +72,7 @@ class Conversation extends Model
     /**
      * Get the OTHER participant (not the authenticated user).
      */
-    public function participant(int $authUserId): User
+    public function participant(int $authUserId): ?User
     {
         return $this->user_one_id === $authUserId
             ? $this->userTwo

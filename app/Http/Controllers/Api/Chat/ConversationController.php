@@ -110,7 +110,11 @@ class ConversationController extends Controller
             if ($isPrincipalOrAdmin) {
                 $institutionId = $auth->institution_id;
                 // Principal can only view conversations if one of the users belongs to their institution
-                if ($conversation->userOne->institution_id !== $institutionId && $conversation->userTwo->institution_id !== $institutionId) {
+                $userOneInstitutionId = $conversation->userOne?->institution_id;
+                $userTwoInstitutionId = $conversation->userTwo?->institution_id;
+                
+                if (($userOneInstitutionId !== $institutionId && $userTwoInstitutionId !== $institutionId) 
+                    || (!$userOneInstitutionId && !$userTwoInstitutionId)) {
                     abort(403, 'Unauthorized access to this conversation.');
                 }
             }
