@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\TeacherAttendance;
 
@@ -25,6 +26,22 @@ class NotificationLog extends Model
         'is_expired' => 'boolean',
         'sent_at' => 'datetime',
     ];
+
+    protected static function booted(): void
+    {
+        static::creating(function (NotificationLog $notification): void {
+            if (!$notification->user_id) {
+                $notification->sent_at = $notification->sent_at ?? now();
+                return;
+            }
+
+            $recipientTimezone = User::query()
+                ->whereKey($notification->user_id)
+                ->value('timezone') ?? config('app.timezone', 'UTC');
+
+            $notification->sent_at = Carbon::now($recipientTimezone);
+        });
+    }
 
     public function user()
     {
