@@ -155,6 +155,11 @@ class User extends Authenticatable
         return $this->hasMany(Student::class, 'guardian_id');
     }
 
+    public function publishedFinalResults()
+    {
+        return $this->hasMany(FinalResultSubmission::class, 'published_by');
+    }
+
     /*
     |--------------------------------------------------------------------------
     | Role / Status Helpers

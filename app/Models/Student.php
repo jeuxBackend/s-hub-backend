@@ -104,6 +104,11 @@ class Student extends Model
         return $this->hasMany(StudentGrade::class);
     }
 
+    public function finalResultSubmissions()
+    {
+        return $this->hasMany(FinalResultSubmission::class, 'classroom_id', 'classroom_id');
+    }
+
     // ✅ Today's attendance relation
     public function todayAttendance()
     {

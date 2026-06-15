@@ -34,9 +34,14 @@ class Classroom extends Model
         ->withPivot(['assigned_by', 'term', 'year', 'section'])
         ->withTimestamps();
 }
-public function students()
+    public function students()
 {
     return $this->hasMany(Student::class);
+}
+
+public function finalResultSubmissions()
+{
+    return $this->hasMany(FinalResultSubmission::class);
 }
 
 
