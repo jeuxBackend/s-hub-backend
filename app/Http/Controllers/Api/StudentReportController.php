@@ -197,7 +197,7 @@ class StudentReportController extends Controller
                         $firebaseNotificationService->sendToToken(
                             $teacher->fcm_token,
                             'Student Report Rejected',
-                            "The report you submitted for {$report->student->full_name ?? 'student'} was rejected." . ($request->reason ? " Reason: {$request->reason}" : ""),
+                            "The report you submitted for {$report->student->full_name} was rejected." . ($request->reason ? " Reason: {$request->reason}" : ""),
                             [
                                 'type' => 'report_rejected',
                                 'report_id' => (string)$report->id,
@@ -274,7 +274,7 @@ class StudentReportController extends Controller
                         $firebaseNotificationService->sendToToken(
                             $teacher->fcm_token,
                             'Student Report Approved',
-                            "The report you submitted for {$student->full_name ?? 'student'} has been approved.",
+                            "The report you submitted for {$student->full_name} has been approved.",
                             [
                                 'type' => 'report_approved',
                                 'report_id' => (string)$report->id,
@@ -283,11 +283,10 @@ class StudentReportController extends Controller
                         );
                     }
                 }
-                }
             }
 
             return $this->successResponse(new StudentReportResource($report), "Report {$report->status} successfully");
-        } catch (Throwable $e) {
+        } catch(Throwable $e) {
             return $this->exceptionResponse($e);
         }
     }
