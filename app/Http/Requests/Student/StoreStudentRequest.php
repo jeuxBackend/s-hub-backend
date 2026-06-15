@@ -21,6 +21,7 @@ class StoreStudentRequest extends FormRequest
             'profile_picture'             => ['nullable', 'image', 'max:2048'],
             'student_phone_number'        => ['nullable', 'string'],
             'gender'                      => ['required', 'in:' . implode(',', GenderType::values())],
+            'dob'                         => ['required', 'date', 'before:today'],
             'age'                         => ['nullable', 'integer', 'min:3'],
             'religion'                    => ['nullable', 'string'],
             'term'                        => ['required', 'in:' . implode(',', TermType::values())],

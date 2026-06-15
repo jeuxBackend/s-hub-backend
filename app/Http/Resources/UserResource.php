@@ -85,6 +85,7 @@ class UserResource extends JsonResource
                             'profile_picture' => $student->profile_picture,
                             'student_phone_number' => $student->student_phone_number,
                             'gender' => $student->gender->value ?? null,
+                            'dob' => $student->dob?->toDateString(),
                             'age' => $student->age,
                             'term' => $student->term->value ?? null,
                             'registration_number' => $student->registration_number,

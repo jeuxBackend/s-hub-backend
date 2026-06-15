@@ -17,6 +17,7 @@ class Student extends Model
         'sur_name',
         'student_phone_number',
         'gender',
+        'dob',
         'age',
         'religion',
         'term',
@@ -32,6 +33,7 @@ class Student extends Model
     protected $casts = [
         'status' => 'boolean',
         'gender' => \App\Enums\GenderType::class,
+        'dob' => 'date',
         'term' => \App\Enums\TermType::class,
     ];
 

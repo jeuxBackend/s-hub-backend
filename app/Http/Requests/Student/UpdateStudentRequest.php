@@ -21,6 +21,7 @@ class UpdateStudentRequest extends FormRequest
             'term'                       => ['nullable', 'string'], // You may use enum validation here
             'classroom_id'               => ['nullable', 'exists:classrooms,id'],
             // 'gender'                     => ['nullable', 'string'], // Enum: GenderType
+            'dob'                        => ['nullable', 'date', 'before:today'],
             'age'                        => ['nullable', 'integer'],
             'religion'                   => ['nullable', 'string'],
             'address'                    => ['nullable', 'string'],

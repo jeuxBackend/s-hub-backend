@@ -26,6 +26,7 @@ class CreateStudentAction
                 'term' => TermType::from($data['term']),
                 'classroom_id' => $data['classroom_id'],
                 'gender' => GenderType::from($data['gender']),
+                'dob' => $data['dob'],
                 'age' => $data['age'] ?? null,
                 'religion' => $data['religion'] ?? null,
                 'profile_picture' => $data['profile_picture'] ?? null,

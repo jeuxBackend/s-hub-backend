@@ -17,6 +17,7 @@ class StudentWithInvoicesResource extends JsonResource
             'profile_picture' => $this->profile_picture,
             'student_phone_number' => $this->student_phone_number,
             'gender' => $this->gender->value ?? null,
+            'dob' => $this->dob?->toDateString(),
             'age' => $this->age,
             'religion' => $this->religion,
             'term' => $this->term->value ?? null,
