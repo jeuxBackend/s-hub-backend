@@ -20,6 +20,7 @@ class NotificationsController extends Controller
             'title' => 'required|string|max:255',
             'message' => 'required|string',
             'send_to' => 'required|in:parents,teachers,all',
+            'document' => 'nullable|file|mimes:pdf,doc,docx,xls,xlsx,ppt,pptx,txt,jpg,jpeg,png|max:10240',
         ]);
 
         if ($validator->fails()) {
@@ -40,6 +41,17 @@ class NotificationsController extends Controller
         $pushSent = 0;
         $pushSkipped = 0;
         $pushFailed = 0;
+        $documentMeta = [];
+
+        if ($request->hasFile('document')) {
+            $documentPath = $request->file('document')->store('noticeboard_documents', 'public');
+
+            $documentMeta = [
+                'document_url' => asset('storage/' . $documentPath),
+                'document_name' => $request->file('document')->getClientOriginalName(),
+                'document_path' => $documentPath,
+            ];
+        }
 
         foreach ($users as $recipient) {
             NotificationLog::create([
@@ -48,9 +60,9 @@ class NotificationsController extends Controller
                 'title' => $request->title,
                 'message' => $request->message,
                 'is_read' => false,
-                'meta' => [
+                'meta' => array_merge([
                     'send_to' => $request->send_to,
-                ],
+                ], $documentMeta),
                 'sent_at' => now($recipient->timezone ?? 'UTC'),
             ]);
 
@@ -60,14 +72,21 @@ class NotificationsController extends Controller
             }
 
             try {
+                $payload = [
+                    'type' => 'noticeboard',
+                    'send_to' => $request->send_to,
+                ];
+
+                if (!empty($documentMeta['document_url'])) {
+                    $payload['document_url'] = $documentMeta['document_url'];
+                    $payload['document_name'] = $documentMeta['document_name'];
+                }
+
                 $sent = $firebaseNotificationService->sendToToken(
                     $recipient->fcm_token,
                     $request->title,
                     $request->message,
-                    [
-                        'type' => 'noticeboard',
-                        'send_to' => $request->send_to,
-                    ]
+                    $payload
                 );
 
                 Log::info('Noticeboard push notification was sent', [
@@ -99,6 +118,7 @@ class NotificationsController extends Controller
             'push_sent' => $pushSent,
             'push_skipped' => $pushSkipped,
             'push_failed' => $pushFailed,
+            'document_url' => $documentMeta['document_url'] ?? null,
         ], 'Noticeboard sent successfully');
     }
 
