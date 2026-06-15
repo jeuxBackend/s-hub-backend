@@ -58,7 +58,7 @@ class StudentReportController extends Controller
         try {
             $user = auth()->user();
 
-            if (!$user->isRole(UserRole::Teacher)) {
+            if (!$user->isRole(UserRole::Teacher) && !$user->isRole(UserRole::SchoolAdmin)) {
                 return $this->errorResponse('Only teachers can create student reports.', 403);
             }
 
@@ -210,9 +210,10 @@ class StudentReportController extends Controller
             } elseif ($report->status == 'approved') {
                 // If you want to notify the parent when it's approved
                 $student = $report->student;
+                $student->full_name = $student->first_name . ' ' . $student->sur_name;
                 if ($student && $student->guardian_id) {
                     $parent = User::find($student->guardian_id);
-                    
+                    $parent->full_name = $parent->first_name . ' ' . $parent->sur_name;
                     if ($parent) {
                         NotificationLog::create([
                             'user_id' => $student->guardian_id,
