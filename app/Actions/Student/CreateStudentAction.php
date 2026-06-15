@@ -3,6 +3,7 @@
 namespace App\Actions\Student;
 
 use App\Models\Student;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use App\Enums\GenderType;
@@ -13,6 +14,8 @@ class CreateStudentAction
     public function handle(array $data): Student
     {
         return DB::transaction(function () use ($data) {
+            $calculatedAge = !empty($data['dob']) ? Carbon::parse($data['dob'])->age : ($data['age'] ?? null);
+
             // Handle profile picture upload
             if (!empty($data['profile_picture']) && $data['profile_picture'] instanceof \Illuminate\Http\UploadedFile) {
                 $data['profile_picture'] = $data['profile_picture']->store('student_profiles', 'public');
@@ -27,7 +30,7 @@ class CreateStudentAction
                 'classroom_id' => $data['classroom_id'],
                 'gender' => GenderType::from($data['gender']),
                 'dob' => $data['dob'],
-                'age' => $data['age'] ?? null,
+                'age' => $calculatedAge,
                 'religion' => $data['religion'] ?? null,
                 'profile_picture' => $data['profile_picture'] ?? null,
                 'guardian_id' => $data['guardian_id'], // FK to users table

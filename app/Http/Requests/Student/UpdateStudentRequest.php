@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Student;
 
+use Carbon\Carbon;
 use Illuminate\Foundation\Http\FormRequest;
 
 class UpdateStudentRequest extends FormRequest
@@ -30,9 +31,19 @@ class UpdateStudentRequest extends FormRequest
 
     protected function prepareForValidation(): void
     {
-        $this->merge([
+        $payload = [
             'first_name' => trim($this->input('first_name')),
             'sur_name'   => trim($this->input('sur_name')),
-        ]);
+        ];
+
+        if ($this->filled('dob')) {
+            try {
+                $payload['age'] = Carbon::parse($this->input('dob'))->age;
+            } catch (\Throwable $e) {
+                // Let validation handle invalid dates.
+            }
+        }
+
+        $this->merge($payload);
     }
 }

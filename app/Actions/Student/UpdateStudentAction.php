@@ -3,6 +3,7 @@
 namespace App\Actions\Student;
 
 use App\Models\Student;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Storage;
 
 class UpdateStudentAction
@@ -16,6 +17,10 @@ class UpdateStudentAction
             }
 
             $data['profile_picture'] = $data['profile_picture']->store('student_profiles', 'public');
+        }
+
+        if (!empty($data['dob'])) {
+            $data['age'] = Carbon::parse($data['dob'])->age;
         }
 
         $student->update($data);

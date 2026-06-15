@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Student;
 
+use Carbon\Carbon;
 use Illuminate\Foundation\Http\FormRequest;
 use App\Enums\GenderType;
 use App\Enums\TermType;
@@ -33,11 +34,23 @@ class StoreStudentRequest extends FormRequest
 
     protected function prepareForValidation(): void
     {
+        $payload = [];
+
         if ($this->has('first_name')) {
-            $this->merge([
-                'first_name' => trim($this->input('first_name')),
-                'sur_name'   => trim($this->input('sur_name')),
-            ]);
+            $payload['first_name'] = trim($this->input('first_name'));
+            $payload['sur_name'] = trim($this->input('sur_name'));
+        }
+
+        if ($this->filled('dob')) {
+            try {
+                $payload['age'] = Carbon::parse($this->input('dob'))->age;
+            } catch (\Throwable $e) {
+                // Let validation handle invalid dates.
+            }
+        }
+
+        if (!empty($payload)) {
+            $this->merge($payload);
         }
     }
 }
