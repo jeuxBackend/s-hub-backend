@@ -19,11 +19,18 @@ class StudentInvoice extends Model
         'status',
         'payment_date',
         'payment_method',
+        'payment_type',
+        'document',
         'reference_no',
         'invoice_uuid',
         'stripe_payment_intent_id',
         'stripe_charge_id',
     ];
+
+    public function getDocumentAttribute($value): ?string
+    {
+        return $value ? asset('storage/' . $value) : null;
+    }
 
     public function student()
     {

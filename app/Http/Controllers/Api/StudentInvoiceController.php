@@ -12,6 +12,7 @@ use App\Actions\StudentInvoice\DeleteStudentInvoiceAction;
 use App\Actions\StudentInvoice\ListStudentInvoicesAction;
 use App\Actions\StudentInvoice\GetStudentInvoiceAction;
 use App\Actions\StudentInvoice\GenerateInvoiceReceiptPdfAction;
+use Illuminate\Validation\Rule;
 use Throwable;
 
 class StudentInvoiceController extends Controller
@@ -71,7 +72,9 @@ class StudentInvoiceController extends Controller
         $request->validate([
             'paid_amount' => ['required', 'numeric', 'min:0.01'],
             'paid_date' => ['required', 'date'],
-            'payment_method' => ['required', 'in:cash,card,check'],
+            'payment_method' => ['required', 'string', 'max:255'],
+            'payment_type' => ['nullable', Rule::in(['internal', 'external'])],
+            'document' => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png,doc,docx', 'max:10240'],
         ]);
 
         try {
@@ -86,10 +89,20 @@ class StudentInvoiceController extends Controller
                 return $this->errorResponse('Paid amount cannot exceed invoice total.', 422);
             }
 
+            $paymentType = $request->input('payment_type', 'internal');
+
+            if ($paymentType === 'external' && !$request->hasFile('document')) {
+                return $this->errorResponse('Payment proof document is required for external payments.', 422);
+            }
+
             return DB::transaction(function () use ($request, $studentInvoice, $paidAmount) {
                 $paymentDate = $request->input('paid_date');
                 $paymentMethod = $request->input('payment_method');
+                $paymentType = $request->input('payment_type', 'internal');
                 $invoiceUuid = $studentInvoice->invoice_uuid ?: \Illuminate\Support\Str::uuid()->toString();
+                $documentPath = $paymentType === 'external' && $request->hasFile('document')
+                    ? $request->file('document')->store('invoice_payment_proofs', 'public')
+                    : null;
 
                 $studentInvoice->update([
                     'invoice_uuid' => $invoiceUuid,
@@ -98,6 +111,8 @@ class StudentInvoiceController extends Controller
                     'status' => $paidAmount === (float) $studentInvoice->total_amount ? 'paid' : 'partial',
                     'payment_date' => $paymentDate,
                     'payment_method' => $paymentMethod,
+                    'payment_type' => $paymentType,
+                    'document' => $documentPath,
                 ]);
 
                 if ($paidAmount < (float) $studentInvoice->total_amount) {
@@ -117,6 +132,8 @@ class StudentInvoiceController extends Controller
                         'status' => 'unpaid',
                         'payment_date' => null,
                         'payment_method' => null,
+                        'payment_type' => null,
+                        'document' => null,
                         'reference_no' => null,
                         'invoice_uuid' => $invoiceUuid,
                     ]);

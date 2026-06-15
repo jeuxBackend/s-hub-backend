@@ -56,6 +56,8 @@ class StudentWithInvoicesResource extends JsonResource
                     'status' => $invoice->status,
                     'payment_date' => $invoice->payment_date,
                     'payment_method' => $invoice->payment_method,
+                    'payment_type' => $invoice->payment_type,
+                    'document' => $invoice->document,
                     'reference_no' => $invoice->reference_no,
                     'created_at' => $invoice->created_at,
                     'updated_at' => $invoice->updated_at,
