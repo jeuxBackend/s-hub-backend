@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class FinalResultSubmission extends Model
 {
+    protected $table = 'final_results_submissions';
+
     protected $fillable = [
         'institution_id',
         'classroom_id',
