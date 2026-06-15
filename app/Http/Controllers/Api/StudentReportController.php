@@ -165,9 +165,12 @@ class StudentReportController extends Controller
                 return $this->errorResponse('Validation failed', 422, $validator->errors()->all());
             }
 
-            $report = StudentReport::where('institution_id', $user->institution_id)->findOrFail($id);
+            $report = StudentReport::with('student')->where('institution_id', $user->institution_id)->findOrFail($id);
             $report->status = $request->status;
             $report->save();
+
+            $student = $report->student;
+            $studentName = $student?->full_name ?: 'Unknown';
 
             // Handle notifications
             if ($report->status == 'rejected') {
@@ -184,12 +187,12 @@ class StudentReportController extends Controller
                         'meta' => [
                             'report_id' => $report->id,
                             'student_id' => $report->student_id,
-                            'student_name' => $report->student->full_name ?? 'Unknown',
+                            'student_name' => $studentName,
                             'reviewer_id' => $user->id,
                             'reviewer_name' => $user->full_name,
                             'rejection_reason' => $request->reason,
                         ],
-                        'sent_at' => now(),
+                        'sent_at' => now($teacher->timezone ?? config('app.timezone', 'UTC')),
                     ]);
 
                     // Send FCM notification to teacher if they have FCM token and notifications enabled
@@ -197,11 +200,11 @@ class StudentReportController extends Controller
                         $firebaseNotificationService->sendToToken(
                             $teacher->fcm_token,
                             'Student Report Rejected',
-                            "The report you submitted for {$report->student->full_name} was rejected." . ($request->reason ? " Reason: {$request->reason}" : ""),
+                            "The report you submitted for {$studentName} was rejected." . ($request->reason ? " Reason: {$request->reason}" : ""),
                             [
                                 'type' => 'report_rejected',
                                 'report_id' => (string)$report->id,
-                                'student_name' => $report->student->full_name ?? 'Unknown',
+                                'student_name' => $studentName,
                                 'rejection_reason' => $request->reason ?? '',
                             ]
                         );
@@ -209,28 +212,25 @@ class StudentReportController extends Controller
                 }
             } elseif ($report->status == 'approved') {
                 // If you want to notify the parent when it's approved
-                $student = $report->student;
-                $student->full_name = $student->first_name . ' ' . $student->sur_name;
                 if ($student && $student->guardian_id) {
                     $parent = User::find($student->guardian_id);
-                    $parent->full_name = $parent->first_name . ' ' . $parent->sur_name;
                     if ($parent) {
                         NotificationLog::create([
                             'user_id' => $student->guardian_id,
                             'type' => 'report_approved',
                             'title' => 'New Student Report',
-                            'message' => "A new {$report->report_type} report has been published for {$student->full_name}.",
+                            'message' => "A new {$report->report_type} report has been published for {$studentName}.",
                             'is_read' => false,
                             'meta' => [
                                 'report_id' => $report->id,
                                 'student_id' => $student->id,
-                                'student_name' => $student->full_name,
+                                'student_name' => $studentName,
                                 'report_type' => $report->report_type,
                                 'report_title' => $report->title,
                                 'reviewer_id' => $user->id,
                                 'reviewer_name' => $user->full_name,
                             ],
-                            'sent_at' => now(),
+                            'sent_at' => now($parent->timezone ?? config('app.timezone', 'UTC')),
                         ]);
 
                         // Send FCM notification to parent if they have FCM token and notifications enabled
@@ -238,11 +238,11 @@ class StudentReportController extends Controller
                             $firebaseNotificationService->sendToToken(
                                 $parent->fcm_token,
                                 'New Student Report',
-                                "A new {$report->report_type} report has been published for {$student->full_name}.",
+                                "A new {$report->report_type} report has been published for {$studentName}.",
                                 [
                                     'type' => 'report_approved',
                                     'report_id' => (string)$report->id,
-                                    'student_name' => $student->full_name,
+                                    'student_name' => $studentName,
                                     'report_type' => $report->report_type,
                                 ]
                             );
@@ -258,16 +258,16 @@ class StudentReportController extends Controller
                         'user_id' => $report->teacher_id,
                         'type' => 'report_approved',
                         'title' => 'Student Report Approved',
-                        'message' => "The report you submitted for " . (isset($student->full_name) ? $student->full_name : 'student') . " has been approved.",
+                        'message' => "The report you submitted for {$studentName} has been approved.",
                         'is_read' => false,
                         'meta' => [
                             'report_id' => $report->id,
                             'student_id' => $report->student_id,
-                            'student_name' => isset($student->full_name) ? $student->full_name : 'Unknown',
+                            'student_name' => $studentName,
                             'reviewer_id' => $user->id,
                             'reviewer_name' => $user->full_name,
                         ],
-                        'sent_at' => now(),
+                        'sent_at' => now($teacher->timezone ?? config('app.timezone', 'UTC')),
                     ]);
 
                     // Send FCM notification to teacher if they have FCM token and notifications enabled
@@ -275,11 +275,11 @@ class StudentReportController extends Controller
                         $firebaseNotificationService->sendToToken(
                             $teacher->fcm_token,
                             'Student Report Approved',
-                            "The report you submitted for {$student->full_name} has been approved.",
+                            "The report you submitted for {$studentName} has been approved.",
                             [
                                 'type' => 'report_approved',
                                 'report_id' => (string)$report->id,
-                                'student_name' => isset($student->full_name) ? $student->full_name : 'Unknown',
+                                'student_name' => $studentName,
                             ]
                         );
                     }

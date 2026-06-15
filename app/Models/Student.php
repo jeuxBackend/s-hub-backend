@@ -51,6 +51,11 @@ class Student extends Model
         return asset('candidatefiles/' . $value);
     }
 
+    public function getFullNameAttribute(): string
+    {
+        return trim("{$this->first_name} {$this->sur_name}");
+    }
+
     // 👥 Relationships
     public function guardian()
     {
