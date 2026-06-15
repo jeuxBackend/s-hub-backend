@@ -100,6 +100,22 @@ class ListStudentsAction
             ->when(!empty($filters['class_id']), function ($q) use ($filters) {
                 $q->where('classroom_id', $filters['class_id']);
             })
+            ->when(!empty($filters['gender']), function ($q) use ($filters) {
+                $q->where('gender', $filters['gender']);
+            })
+            ->when(!empty($filters['age_group']), function ($q) use ($filters) {
+                $ageGroup = trim($filters['age_group']);
+
+                if (str_contains($ageGroup, '+')) {
+                    $minimumAge = (int) rtrim($ageGroup, '+');
+                    $q->where('age', '>=', $minimumAge);
+
+                    return;
+                }
+
+                [$minimumAge, $maximumAge] = array_map('intval', explode('-', $ageGroup));
+                $q->whereBetween('age', [$minimumAge, $maximumAge]);
+            })
             ->when(isset($filters['student_name']) && $filters['student_name'] !== '', function ($q) use ($filters) {
                 $search = mb_strtolower(trim($filters['student_name']));
 

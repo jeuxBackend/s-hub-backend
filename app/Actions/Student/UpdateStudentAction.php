@@ -17,6 +17,8 @@ class UpdateStudentAction
             }
 
             $data['profile_picture'] = $data['profile_picture']->store('student_profiles', 'public');
+        } else {
+            unset($data['profile_picture']);
         }
 
         if (!empty($data['dob'])) {
