@@ -70,9 +70,7 @@ class LoginAction
             'user' => new UserResource($user),
             'token' => $token,
             'role' => $user->role->value,
-            'runtime_check' => [
-                'is_registered' => $isRegistered,
-            ],
+            'is_registered' => $isRegistered,
             'unread_notification_count' => $unreadNotificationCount,
         ];
     }
