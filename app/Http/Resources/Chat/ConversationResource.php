@@ -31,32 +31,42 @@ class ConversationResource extends JsonResource
         ];
 
         if ($isPrincipalOrAdmin) {
-            $response['user_one'] = $this->whenLoaded('userOne') ? [
-                'id'              => $this->userOne?->id,
-                'full_name'       => $this->userOne?->full_name,
-                'role'            => $this->userOne?->role?->value,
-                'position'        => $this->userOne?->position,
-                'profile_picture' => $this->userOne?->profile_picture,
-            ] : null;
+            $response['user_one'] = $this->whenLoaded('userOne')
+                ? $this->formatParticipant($this->userOne)
+                : null;
             
-            $response['user_two'] = $this->whenLoaded('userTwo') ? [
-                'id'              => $this->userTwo?->id,
-                'full_name'       => $this->userTwo?->full_name,
-                'role'            => $this->userTwo?->role?->value,
-                'position'        => $this->userTwo?->position,
-                'profile_picture' => $this->userTwo?->profile_picture,
-            ] : null;
+            $response['user_two'] = $this->whenLoaded('userTwo')
+                ? $this->formatParticipant($this->userTwo)
+                : null;
         } else {
             $participant = $this->participant($authId);
-            $response['participant'] = [
-                'id'              => $participant?->id,
-                'full_name'       => $participant?->full_name,
-                'role'            => $participant?->role?->value,
-                'position'        => $participant?->position,
-                'profile_picture' => $participant?->profile_picture,
-            ];
+            $response['participant'] = $this->formatParticipant($participant);
         }
 
         return $response;
+    }
+
+    private function formatParticipant($participant): ?array
+    {
+        if (!$participant) {
+            return null;
+        }
+
+        return [
+            'id' => $participant->id,
+            'full_name' => $participant->full_name,
+            'role' => $participant->role?->value,
+            'position' => $participant->position,
+            'profile_picture' => $participant->profile_picture,
+            'children' => $participant->role?->value === 'parent' && $participant->relationLoaded('guardianStudents')
+                ? $participant->guardianStudents->map(function ($child) {
+                    return [
+                        'id' => $child->id,
+                        'full_name' => trim($child->first_name . ' ' . $child->sur_name),
+                        'classroom' => $child->classroom?->name,
+                    ];
+                })->values()
+                : [],
+        ];
     }
 }

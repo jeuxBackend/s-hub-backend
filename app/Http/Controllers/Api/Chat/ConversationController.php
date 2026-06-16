@@ -143,7 +143,11 @@ class ConversationController extends Controller
 
             return $this->successResponse([
                 'conversation' => new ConversationResource(
-                    $conversation->load(['userOne', 'userTwo', 'latestMessage'])
+                    $conversation->load([
+                        'userOne.guardianStudents.classroom',
+                        'userTwo.guardianStudents.classroom',
+                        'latestMessage',
+                    ])
                 ),
                 'messages' => MessageResource::collection($messages),
                 'pagination' => [
