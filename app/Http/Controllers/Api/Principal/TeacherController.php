@@ -33,7 +33,7 @@ class TeacherController extends Controller
             'phone_number' => 'required|string|unique:users,phone_number',
             'password' => 'nullable|string|min:8',
             'profile_picture' => 'nullable|image|max:2048',
-            'position' => 'required|string|max:255',
+            'position' => 'nullable|string|max:255',
             'staff_number' => 'nullable|string|max:255',
         ]);
 
