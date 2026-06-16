@@ -36,14 +36,14 @@ class SignupRequest extends FormRequest
                 'title'        => ['required', 'string'],
                 'first_name'   => ['required', 'string'],
                 'sur_name'     => ['required', 'string'],
-                'position'     => ['required', 'string'],
+                // 'position'     => ['required', 'string'],
                 'staff_number' => ['nullable', 'string', 'unique:users,staff_number'],
             ],
 
             UserRole::Teacher->value => [
                 'first_name'   => ['required', 'string'],
                 'sur_name'     => ['required', 'string'],
-                'position'     => ['required', 'string'],
+                // 'position'     => ['required', 'string'],
                 'staff_number' => ['required', 'string', 'unique:users,staff_number'],
             ],
 
@@ -60,7 +60,7 @@ class SignupRequest extends FormRequest
             UserRole::SchoolAdmin->value => [
                 'first_name'   => ['required', 'string'],
                 'sur_name'     => ['required', 'string'],
-                'position'     => ['nullable', 'string'],
+                // 'position'     => ['nullable', 'string'],
                 'staff_number' => ['nullable', 'string', 'unique:users,staff_number'],
                 'permissions'  => ['nullable', 'array'],
             ],

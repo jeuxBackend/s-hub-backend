@@ -27,7 +27,8 @@ class LoginRequest extends FormRequest
     {
         if ($this->has('login')) {
             $this->merge([
-                'login' => trim($this->input('login')),
+                'login' => trim($this->input('loginsystemctl restart php8.4-fpm
+systemctl reload nginx')),
             ]);
         }
     }

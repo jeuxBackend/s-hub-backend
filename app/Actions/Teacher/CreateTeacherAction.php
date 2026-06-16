@@ -11,7 +11,7 @@ class CreateTeacherAction
 {
     public function handle(array $data, int $institutionId, int $creatorId): User
     {
-        $data['password'] = Hash::make($data['password'] ?? 'password123'); // Default password if not provided
+        $data['password'] = Hash::make($data['password'] ?? 'i7f@et#$HK7j&$#90'); // Default password if not provided
         $data['role'] = UserRole::Teacher->value;
         $data['institution_id'] = $institutionId;
         $data['created_by'] = $creatorId;
