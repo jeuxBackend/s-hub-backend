@@ -27,10 +27,20 @@ class LoginAction
             ]);
         }
 
-        if (!Hash::check($data['password'], $user->password)) {
-            throw ValidationException::withMessages([
-                'password' => 'Incorrect password.',
-            ]);
+        $isRegistered = !is_null($user->password);
+
+        if ($isRegistered) {
+            if (!isset($data['password']) || !Hash::check($data['password'], $user->password)) {
+                throw ValidationException::withMessages([
+                    'password' => 'Incorrect password.',
+                ]);
+            }
+        } else {
+            if ($loginField !== 'email') {
+                throw ValidationException::withMessages([
+                    'login' => 'Please login using your registered email.',
+                ]);
+            }
         }
 
         if (!$user->status) {
@@ -60,6 +70,9 @@ class LoginAction
             'user' => new UserResource($user),
             'token' => $token,
             'role' => $user->role->value,
+            'runtime_check' => [
+                'is_registered' => $isRegistered,
+            ],
             'unread_notification_count' => $unreadNotificationCount,
         ];
     }

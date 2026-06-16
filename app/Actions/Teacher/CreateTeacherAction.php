@@ -4,14 +4,13 @@ namespace App\Actions\Teacher;
 
 use App\Models\User;
 use App\Enums\UserRole;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 
 class CreateTeacherAction
 {
     public function handle(array $data, int $institutionId, int $creatorId): User
     {
-        $data['password'] = Hash::make($data['password'] ?? 'i7f@et#$HK7j&$#90'); // Default password if not provided
+        $data['password'] = filled($data['password'] ?? null) ? $data['password'] : null;
         $data['role'] = UserRole::Teacher->value;
         $data['institution_id'] = $institutionId;
         $data['created_by'] = $creatorId;

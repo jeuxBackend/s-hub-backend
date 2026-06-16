@@ -15,7 +15,7 @@ class LoginRequest extends FormRequest
     {
         return [
             'login' => ['required', 'string'], // Accepts email or phone
-            'password' => ['required', 'string'],
+            'password' => ['nullable', 'string'],
             'institution_id' => ['nullable', 'string'], // required only for parents (handled in action)
             'device_id' => ['nullable', 'string'],
             'fcm_token' => ['nullable', 'string'],
@@ -27,8 +27,7 @@ class LoginRequest extends FormRequest
     {
         if ($this->has('login')) {
             $this->merge([
-                'login' => trim($this->input('loginsystemctl restart php8.4-fpm
-systemctl reload nginx')),
+                'login' => trim((string) $this->input('login')),
             ]);
         }
     }
