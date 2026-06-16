@@ -18,7 +18,8 @@ class ListTeachersAction
 
         $query = User::query()
             ->whereIn('role', ['teacher', 'school-admin'])
-            ->where('institution_id', $requester->institution_id);
+            ->where('institution_id', $requester->institution_id)
+            ->whereNotNull('password');
 
         return $query
             ->when($request->filled('name'), function ($q) use ($request) {

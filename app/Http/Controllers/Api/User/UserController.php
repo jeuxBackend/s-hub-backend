@@ -96,6 +96,7 @@ class UserController extends Controller
             return $this->successResponse([
                 'user' => new UserResource($user),
                 'role' => $user->role->value,
+                'is_registered' => !is_null($user->password),
                 'unread_notification_count' => $unreadNotificationCount,
             ], 'Authenticated user data retrieved successfully');
         } catch (Throwable $e) {

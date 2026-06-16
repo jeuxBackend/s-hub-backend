@@ -86,7 +86,11 @@ class SchoolAdminController extends Controller
     {
         try {
             $requester = auth()->user();
-            $teachers = User::where('institution_id', $requester->institution_id)->where('role', \App\Enums\UserRole::Teacher->value)->get(['id', 'first_name', 'sur_name'])->map(function ($user) {
+            $teachers = User::where('institution_id', $requester->institution_id)
+                ->where('role', \App\Enums\UserRole::Teacher->value)
+                ->whereNotNull('password')
+                ->get(['id', 'first_name', 'sur_name'])
+                ->map(function ($user) {
                 return [
                     'id' => $user->id,
                     'full_name' => $user->full_name,
