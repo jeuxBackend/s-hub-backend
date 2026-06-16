@@ -20,6 +20,7 @@ class UpdateUserRequest extends FormRequest
         return [
             'email' => ['nullable', 'email', Rule::unique('users')->ignore($ignoredUserId)],
             'phone_number' => ['nullable', 'string', Rule::unique('users')->ignore($ignoredUserId)],
+            'password' => ['nullable', 'string', 'min:6', 'confirmed'],
             'first_name' => ['nullable', 'string', 'max:100'],
             'guardian_relation' => ['nullable', 'string', 'max:100'],
             'alternative_guardian_phone_number' => ['nullable', 'string', 'max:100'],
