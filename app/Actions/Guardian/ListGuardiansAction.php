@@ -14,6 +14,10 @@ class ListGuardiansAction
         return User::query()
             ->where('role', 'parent')
             ->where('institution_id', $requester->institution_id)
+            ->when(
+                in_array($requester->role?->value ?? null, ['principal', 'school-admin'], true),
+                fn ($query) => $query->whereNotNull('password')
+            )
             ->with([
                 'guardianStudents.classroom',
                 'guardianStudents.studentInvoices',
