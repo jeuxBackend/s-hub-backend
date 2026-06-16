@@ -15,9 +15,11 @@ class UpdateUserRequest extends FormRequest
 
     public function rules(): array
     {
+        $ignoredUserId = $this->route('user')?->id ?? $this->user()?->id;
+
         return [
-            'email' => ['nullable', 'email', Rule::unique('users')->ignore($this->route('user'))],
-            'phone_number' => ['nullable', 'string', Rule::unique('users')->ignore($this->route('user'))],
+            'email' => ['nullable', 'email', Rule::unique('users')->ignore($ignoredUserId)],
+            'phone_number' => ['nullable', 'string', Rule::unique('users')->ignore($ignoredUserId)],
             'first_name' => ['nullable', 'string', 'max:100'],
             'guardian_relation' => ['nullable', 'string', 'max:100'],
             'alternative_guardian_phone_number' => ['nullable', 'string', 'max:100'],

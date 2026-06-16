@@ -3,6 +3,7 @@
 namespace App\Http\Requests\User;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class UpdateContactRequest extends FormRequest
 {
@@ -11,7 +12,7 @@ class UpdateContactRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -21,10 +22,11 @@ class UpdateContactRequest extends FormRequest
      */
     public function rules(): array
     {
+        $ignoredUserId = $this->user()?->id;
+
         return [
-                    'email'        => ['nullable', 'email', 'max:255'],
-            'phone_number' => ['nullable', 'string', 'max:15'],
-            //
+            'email' => ['nullable', 'email', 'max:255', Rule::unique('users')->ignore($ignoredUserId)],
+            'phone_number' => ['nullable', 'string', 'max:15', Rule::unique('users')->ignore($ignoredUserId)],
         ];
     }
 }
