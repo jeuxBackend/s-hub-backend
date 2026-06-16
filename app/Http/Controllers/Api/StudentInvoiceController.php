@@ -72,7 +72,7 @@ class StudentInvoiceController extends Controller
             'paid_amount' => ['required', 'numeric', 'min:0.01'],
             'paid_date' => ['required', 'date'],
             'payment_method' => ['required', 'string', 'max:255'],
-            'document' => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png,doc,docx', 'max:10240'],
+            'document' => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png,doc,docx', 'max:5120'],
         ]);
 
         try {
