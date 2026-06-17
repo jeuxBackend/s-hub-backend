@@ -167,6 +167,7 @@ class StudentReportController extends Controller
 
             $report = StudentReport::with('student')->where('institution_id', $user->institution_id)->findOrFail($id);
             $report->status = $request->status;
+            $report->reason = $request->reason ?? null;
             $report->save();
 
             $student = $report->student;
@@ -182,7 +183,7 @@ class StudentReportController extends Controller
                         'user_id' => $report->teacher_id,
                         'type' => 'report_rejected',
                         'title' => 'Student Report Rejected',
-                        'message' => "The report you submitted for student ID {$report->student_id} was rejected." . ($request->reason ? " Reason: {$request->reason}" : " Please review and update."),
+                        'message' => "The report you submitted for student ID {$report->student_id} was rejected.",
                         'is_read' => false,
                         'meta' => [
                             'report_id' => $report->id,

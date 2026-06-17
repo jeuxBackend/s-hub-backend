@@ -24,6 +24,7 @@ class StudentReportResource extends JsonResource
                 'name' => $this->teacher->full_name ?? null,
             ],
             'report_type' => $this->report_type,
+            'rejection_reason' => $this->reason,
             'title' => $this->title,
             'description' => $this->description,
             'file_url' => $this->file_url,
