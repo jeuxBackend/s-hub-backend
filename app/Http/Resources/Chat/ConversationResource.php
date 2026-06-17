@@ -64,6 +64,7 @@ class ConversationResource extends JsonResource
                         'id' => $child->id,
                         'full_name' => trim($child->first_name . ' ' . $child->sur_name),
                         'classroom' => $child->classroom?->name,
+                        'profile_picture' => $child->profile_picture,
                     ];
                 })->values()
                 : [],
