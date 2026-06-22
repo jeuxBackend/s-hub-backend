@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Support\Facades\Storage;
 use App\Models\studentInvoices;
+use App\Models\Assignment;
+use App\Models\AssignmentSubmission;
 
 class Student extends Model
 {
@@ -88,6 +90,16 @@ class Student extends Model
             ->withTimestamps();
     }
 
+    /**
+     * Define the assignments relationship (many-to-many).
+     */
+    public function assignments()
+    {
+        return $this->belongsToMany(Assignment::class, 'assignment_submissions')
+            ->withPivot(['submitted_at', 'file_path', 'file_original_name', 'score', 'feedback'])
+            ->withTimestamps();
+    }
+
     public function attendanceRecords()
     {
         return $this->hasMany(StudentAttendance::class);
@@ -96,6 +108,14 @@ class Student extends Model
     public function studentInvoices()
     {
         return $this->hasMany(StudentInvoice::class);
+    }
+
+    /**
+     * Define the assignmentSubmissions relationship (one-to-many).
+     */
+    public function assignmentSubmissions()
+    {
+        return $this->hasMany(AssignmentSubmission::class);
     }
 
     public function studentGrades()

@@ -10,6 +10,7 @@ class NotificationLog extends Model
 {
     protected $fillable = [
         'user_id',
+        'student_id',  // Added student_id
         'type',
         'title',
         'message',
@@ -46,6 +47,12 @@ class NotificationLog extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    // Added relationship to student
+    public function student()
+    {
+        return $this->belongsTo(Student::class);
     }
 
     public static function attendanceRequestKey(int $subjectId, string $date, int $teacherId): string

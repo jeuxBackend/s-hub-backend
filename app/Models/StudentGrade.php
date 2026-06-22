@@ -18,6 +18,8 @@ class StudentGrade extends Model
         'date',
         'total',
         'recorded_by',
+        'file_path',
+        'file_original_name',
     ];
 
     protected $casts = [
@@ -58,4 +60,28 @@ class StudentGrade extends Model
     {
         return $query->where('subject_id', $subjectId);
     }
+
+    // Accessor for file URL
+    public function getFileUrlAttribute()
+    {
+        return $this->file_path ? asset('storage/' . $this->file_path) : null;
+    }
+
+    // Mutator for file storage
+    public function setFile($file)
+    {
+        if ($file) {
+            $filename = time() . '_' . $file->getClientOriginalName();
+            $path = $file->storeAs('grades', $filename, 'public');
+            
+            $this->file_path = $path;
+            $this->file_original_name = $file->getClientOriginalName();
+            
+            return $this;
+        }
+        
+        return $this;
+    }
+    
+    protected $appends = ['file_url'];
 }

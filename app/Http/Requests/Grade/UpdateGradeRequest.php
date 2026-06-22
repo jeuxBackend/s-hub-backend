@@ -25,9 +25,10 @@ class UpdateGradeRequest extends FormRequest
         return [
             'score' => 'nullable',
             'remarks' => 'nullable|string|max:255',
-            'total' => 'nullable|numeric|min:0|max:100',
-            'type' => 'nullable|string|max:100',
+            'type' => ['nullable', 'string', 'max:50'],
+            'total' => 'nullable|numeric|min:0',
             'date' => 'nullable|date',
+            'file' => 'nullable|file|mimes:pdf,jpg,png,jpeg,doc,docx|max:10240',
         ];
     }
 }

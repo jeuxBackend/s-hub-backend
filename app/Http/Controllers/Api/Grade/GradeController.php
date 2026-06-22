@@ -31,7 +31,7 @@ class GradeController extends Controller
 
         $students = \App\Models\Student::with('guardian')->where('classroom_id', $classroom)->where('status', true)->get();
 
-        $gradesQuery = \App\Models\StudentGrade::where('classroom_id', $classroom);
+        $gradesQuery = \App\Models\StudentGrade::with('subject', 'recordedBy')->where('classroom_id', $classroom);
         
         if (!empty($filters['subject_id'])) {
             $gradesQuery->where('subject_id', $filters['subject_id']);
@@ -51,23 +51,34 @@ class GradeController extends Controller
         $result = $students->map(function ($student) use ($allGrades) {
             $studentGrades = $allGrades->where('student_id', $student->id);
             
+            // Group grades by type dynamically
+            $gradesByType = $studentGrades->groupBy('type')->map(function ($grades) {
+                return $grades->first(); // Take the first grade of each type
+            })->toArray();
+            
+            // Predefined grade types for backward compatibility
+            $predefinedGrades = [
+                'test_1' => $studentGrades->where('type', 'test_1')->first(),
+                'test_2' => $studentGrades->where('type', 'test_2')->first(),
+                'test_3' => $studentGrades->where('type', 'test_3')->first(),
+                'test_4' => $studentGrades->where('type', 'test_4')->first(),
+                'final_marks' => $studentGrades->where('type', 'final_marks')->first(),
+                'exam_marks' => $studentGrades->where('type', 'exam_marks')->first(),
+                'years_marks' => $studentGrades->where('type', 'years_marks')->first(),
+                // 'exam' => $studentGrades->where('type', 'exam')->first(),
+                // 'assignment' => $studentGrades->where('type', 'assignment')->first(),
+                // 'quiz' => $studentGrades->where('type', 'quiz')->first(),
+            ];
+            
+            // Merge predefined grades with dynamic grades
+            $allGradesArray = array_merge($predefinedGrades, $gradesByType);
+            
             return [
                 'student_id' => $student->id,
                 'student_name' => trim($student->first_name . ' ' . $student->sur_name),
                 'profile_picture' => $student->profile_picture,
                 'registration_number' => $student->registration_number,
-                'grades' => [
-                    'test_1' => $studentGrades->where('type', 'test_1')->first(),
-                    'test_2' => $studentGrades->where('type', 'test_2')->first(),
-                    'test_3' => $studentGrades->where('type', 'test_3')->first(),
-                    'test_4' => $studentGrades->where('type', 'test_4')->first(),
-                    'final_marks' => $studentGrades->where('type', 'final_marks')->first(),
-                    'exam_marks' => $studentGrades->where('type', 'exam_marks')->first(),
-                    'years_marks' => $studentGrades->where('type', 'years_marks')->first(),
-                    'exam' => $studentGrades->where('type', 'exam')->first(),
-                    'assignment' => $studentGrades->where('type', 'assignment')->first(),
-                    'quiz' => $studentGrades->where('type', 'quiz')->first(),
-                ]
+                'grades' => $allGradesArray
             ];
         });
 

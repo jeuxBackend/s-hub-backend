@@ -13,6 +13,9 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        // Call the AssignmentSeeder along with other seeders
+        $this->call(AssignmentSeeder::class);
+        
         // User::factory(10)->create();
 
         User::factory()->create([

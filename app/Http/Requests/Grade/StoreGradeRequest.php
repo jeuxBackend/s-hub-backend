@@ -29,8 +29,9 @@ class StoreGradeRequest extends FormRequest
             'score' => 'nullable',
             'remarks' => 'nullable|string|max:255',
             'date' => 'nullable|date',
-            'type' => ['nullable'],
-            'total' => 'nullable|numeric|min:0|max:100',
+            'type' => ['nullable', 'string', 'max:50'], // Allow custom types like test_1, test_2, etc.
+            'total' => 'nullable|numeric|min:0',
+            'file' => 'nullable|file|mimes:pdf,jpg,png,jpeg,doc,docx|max:10240', // max 10MB
         ];
     }
 }

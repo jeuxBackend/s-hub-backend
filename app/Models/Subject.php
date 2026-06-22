@@ -34,10 +34,17 @@ class Subject extends Model
     {
         return $this->belongsTo(Institution::class);
     }
+    
     public function enrolledStudents()
     {
         return $this->belongsToMany(Student::class, 'classroom_student_subject')
             ->withPivot(['classroom_id', 'term', 'academic_year'])
             ->withTimestamps();
+    }
+    
+    // New relationship for assignments
+    public function assignments()
+    {
+        return $this->hasMany(Assignment::class);
     }
 }

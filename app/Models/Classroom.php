@@ -27,22 +27,28 @@ class Classroom extends Model
     {
         return $this->hasMany(Subject::class);
     }
- public function teachers()
-{
-    return $this->belongsToMany(User::class, 'classroom_teachers', 'classroom_id', 'teacher_id')
-        ->using(\App\Models\ClassroomTeacher::class)
-        ->withPivot(['assigned_by', 'term', 'year', 'section'])
-        ->withTimestamps();
-}
+    
+    public function teachers()
+    {
+        return $this->belongsToMany(User::class, 'classroom_teachers', 'classroom_id', 'teacher_id')
+            ->using(\App\Models\ClassroomTeacher::class)
+            ->withPivot(['assigned_by', 'term', 'year', 'section'])
+            ->withTimestamps();
+    }
+    
     public function students()
-{
-    return $this->hasMany(Student::class);
-}
+    {
+        return $this->hasMany(Student::class);
+    }
 
-public function finalResultSubmissions()
-{
-    return $this->hasMany(FinalResultSubmission::class);
-}
-
-
+    public function finalResultSubmissions()
+    {
+        return $this->hasMany(FinalResultSubmission::class);
+    }
+    
+    // New relationship for assignments
+    public function assignments()
+    {
+        return $this->hasMany(Assignment::class);
+    }
 }

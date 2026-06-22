@@ -155,6 +155,14 @@ class User extends Authenticatable
         return $this->hasMany(Student::class, 'guardian_id');
     }
 
+    /**
+     * Relationship for assignments created by the teacher.
+     */
+    public function assignments()
+    {
+        return $this->hasMany(Assignment::class, 'teacher_id');
+    }
+
     public function publishedFinalResults()
     {
         return $this->hasMany(FinalResultSubmission::class, 'published_by');

@@ -100,6 +100,16 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'active.user'])->group(function
         Route::get('teacher/timetable', [TeacherClassroomController::class, 'timetable']);
         Route::post('teacher/attendance/mark', [TeacherAttendanceController::class, 'markAttendance']);
         Route::post('teacher/proxy-attendance/mark', [FreePeriodTeacherController::class, 'markProxyAttendance']);
+        
+        // Assignment Routes - Teacher Side
+        Route::apiResource('assignments', \App\Http\Controllers\Api\Assignment\AssignmentController::class);
+    });
+
+    // Assignment Routes - Parent Side
+    Route::middleware(['otp.verified', 'role:parent'])->prefix('parent')->group(function () {
+        Route::get('assignments', [\App\Http\Controllers\Api\Assignment\ParentAssignmentController::class, 'index']);
+        Route::get('assignments/{assignment}', [\App\Http\Controllers\Api\Assignment\ParentAssignmentController::class, 'show']);
+        Route::get('students/{student}/assignments', [\App\Http\Controllers\Api\Assignment\ParentAssignmentController::class, 'assignmentsForChild']);
     });
 
     Route::put('update-profile', [UserController::class, 'updateProfile']);

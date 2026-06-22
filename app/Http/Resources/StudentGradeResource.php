@@ -23,8 +23,12 @@ class StudentGradeResource extends JsonResource
             'score'        => $this->score,
             'remarks'      => $this->remarks,
             'type'         => $this->type,
-           'recorded_by' => new UserResource($this->recordedBy),
+            'recorded_by' => new UserResource($this->recordedBy),
             'date'        => $this->date,
+            'total'       => $this->total,
+            'file_path'   => $this->file_path,
+            'file_original_name' => $this->file_original_name,
+            'file_url'    => $this->file_url, // Using accessor
         ];
     }
 }
