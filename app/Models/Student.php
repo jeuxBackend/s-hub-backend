@@ -28,6 +28,7 @@ class Student extends Model
         'registration_number',
         'status',
         'address',
+        'is_flag',
     ];
 
     protected $casts = [
@@ -35,6 +36,7 @@ class Student extends Model
         'gender' => \App\Enums\GenderType::class,
         'dob' => 'date',
         'term' => \App\Enums\TermType::class,
+        'is_flag' => 'boolean',
     ];
 
     // ✅ Accessor
@@ -67,11 +69,6 @@ class Student extends Model
     public function createdBy()
     {
         return $this->belongsTo(User::class, 'created_by');
-    }
-
-    public function classroom()
-    {
-        return $this->belongsTo(Classroom::class);
     }
 
     public function institution()
@@ -121,6 +118,12 @@ class Student extends Model
     public function attendanceOn($date)
     {
         return $this->hasOne(StudentAttendance::class)->whereDate('date', $date);
+    }
+
+    // Relationship to classroom
+    public function classroom()
+    {
+        return $this->belongsTo(Classroom::class);
     }
 
     public function toggleStatus()

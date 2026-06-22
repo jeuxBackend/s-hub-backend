@@ -230,7 +230,7 @@ class ParentController extends Controller
                         'classroom' => $student->classroom ? [
                             'id' => $student->classroom->id,
                             'name' => $student->classroom->name,
-                            'code' => $student->classroom->code,
+                            // 'code' => $student->classroom->code,
                             'in_charge' => $student->classroom->inCharge ? [
                                 'id' => $student->classroom->inCharge->id,
                                 'name' => $student->classroom->inCharge->full_name,
