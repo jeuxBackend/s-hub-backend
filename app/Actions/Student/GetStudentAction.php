@@ -8,7 +8,7 @@ class GetStudentAction
 {
     public function handle(int $id): Student
     {
-        return Student::with(['classroom', 'guardian', 'feeRecords', 'attendanceRecords'])
+        return Student::with(['classroom', 'classroom.subjects', 'guardian', 'feeRecords', 'attendanceRecords', 'studentGrades', 'preregistrations'])
             ->findOrFail($id);
     }
 }

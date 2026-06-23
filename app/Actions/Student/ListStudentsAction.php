@@ -14,10 +14,12 @@ class ListStudentsAction
     // Only load relations actually needed — callers can extend if required
     private array $baseRelations = [
         'classroom',
+        'classroom.subjects',
         'guardian',
         'studentInvoices',
         'studentGrades',
         'attendanceRecords',
+        'preregistrations',
     ];
 
     public function handle(array $filters = [], array $relations = [])

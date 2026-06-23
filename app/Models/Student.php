@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Storage;
 use App\Models\studentInvoices;
 use App\Models\Assignment;
 use App\Models\AssignmentSubmission;
+use App\Models\Subject;
 
 class Student extends Model
 {
@@ -83,6 +84,11 @@ class Student extends Model
         return $this->hasMany(StudentFee::class);
     }
 
+    public function preregistrations()
+    {
+        return $this->hasMany(StudentPreregistration::class);
+    }
+
     public function classroomSubjects()
     {
         return $this->belongsToMany(Subject::class, 'classroom_student_subject')
@@ -149,5 +155,72 @@ class Student extends Model
     public function toggleStatus()
     {
         return !$this->status;
+    }
+
+    public function promotionEligibility(): array
+    {
+        $grades = $this->relationLoaded('studentGrades')
+            ? $this->studentGrades
+            : $this->studentGrades()->get();
+
+        $latestPromotion = $this->relationLoaded('preregistrations')
+            ? $this->preregistrations->sortByDesc('id')->first()
+            : $this->preregistrations()->latest('id')->first();
+
+        $hasExamMarks = $grades->where('type', 'exam_marks')
+            ->whereNotNull('score')
+            ->isNotEmpty();
+
+        $classroomSubjects = $this->relationLoaded('classroom') && $this->classroom
+            ? $this->classroom->subjects
+            : Subject::where('classroom_id', $this->classroom_id)->get();
+
+        $yearMarksRecords = $grades->where('type', 'years_marks');
+        $totalObtainedSum = 0;
+        $totalMaxSum = 0;
+
+        foreach ($classroomSubjects as $subject) {
+            $latestGrade = $yearMarksRecords
+                ->where('subject_id', $subject->id)
+                ->sortByDesc('id')
+                ->first();
+
+            $obtained = $latestGrade ? (float) $latestGrade->score : 0;
+            $max = $latestGrade ? (float) $latestGrade->total : 0;
+
+            $totalObtainedSum += $obtained;
+            $totalMaxSum += $max;
+        }
+
+        $overallPercentage = $totalMaxSum > 0
+            ? round(($totalObtainedSum / $totalMaxSum) * 100, 2)
+            : 0;
+
+        $hasYearMarks = $totalMaxSum > 0;
+        $promotionStatus = $latestPromotion?->status;
+        $promotionSent = in_array($promotionStatus, ['submitted', 'approved'], true);
+        $eligible = $hasExamMarks && $hasYearMarks && $overallPercentage > 50 && !$promotionSent;
+
+        if (!$hasExamMarks) {
+            $reason = 'No exam marks available yet.';
+        } elseif (!$hasYearMarks) {
+            $reason = 'Year marks are not calculated yet.';
+        } elseif ($overallPercentage <= 50) {
+            $reason = 'Year marks must be above 50% to promote.';
+        } elseif ($promotionSent) {
+            $reason = 'Promotion request already sent.';
+        } else {
+            $reason = 'Eligible for promotion.';
+        }
+
+        return [
+            'has_exam_marks' => $hasExamMarks,
+            'overall_percentage' => $overallPercentage,
+            'eligible' => $eligible,
+            'promotion_sent' => $promotionSent,
+            'promotion_status' => $promotionStatus,
+            'promotion_id' => $latestPromotion?->id,
+            'reason' => $reason,
+        ];
     }
 }

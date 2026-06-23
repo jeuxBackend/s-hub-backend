@@ -27,6 +27,17 @@ class StudentResource extends JsonResource
         }
 
         $latestInvoice = $this->relationLoaded('studentInvoices') ? $this->studentInvoices->sortByDesc('id')->first() : null;
+        $promotionEligibility = method_exists($this->resource, 'promotionEligibility')
+            ? $this->resource->promotionEligibility()
+            : [
+                'has_exam_marks' => false,
+                'overall_percentage' => 0,
+                'eligible' => false,
+                'promotion_sent' => false,
+                'promotion_status' => null,
+                'promotion_id' => null,
+                'reason' => 'Promotion eligibility unavailable.',
+            ];
 
         $attendancePercentage = 0;
         $attendanceIndicator = 'N/A';
@@ -82,6 +93,10 @@ class StudentResource extends JsonResource
             'performance_indicator' => $performanceIndicator,
             'attendance_percentage' => $attendancePercentage,
             'attendance_indicator' => $attendanceIndicator,
+            'can_promote' => $promotionEligibility['eligible'],
+            'promotion_sent' => $promotionEligibility['promotion_sent'],
+            'promotion_status' => $promotionEligibility['promotion_status'],
+            'promotion_id' => $promotionEligibility['promotion_id'],
         ];
     }
 }

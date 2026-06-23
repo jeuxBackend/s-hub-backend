@@ -41,6 +41,16 @@ class Classroom extends Model
         return $this->hasMany(Student::class);
     }
 
+    public function currentPreregistrations()
+    {
+        return $this->hasMany(StudentPreregistration::class, 'current_classroom_id');
+    }
+
+    public function targetPreregistrations()
+    {
+        return $this->hasMany(StudentPreregistration::class, 'target_classroom_id');
+    }
+
     public function finalResultSubmissions()
     {
         return $this->hasMany(FinalResultSubmission::class);

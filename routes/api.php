@@ -35,6 +35,7 @@ use App\Http\Controllers\Api\{
     Institute\InstituteController,
     Principal\PrincipalDashboardController,
     Principal\SchoolAdminController,
+    Principal\StudentPromotionController as PrincipalStudentPromotionController,
     Principal\TeacherController,
     Principal\GuardianController,
     Principal\FreePeriodTeacherController,
@@ -50,6 +51,7 @@ use App\Http\Controllers\Api\Chat\ChatUserController;
 use App\Http\Controllers\Api\Chat\ConversationController as ChatConversationController;
 use App\Http\Controllers\Api\Chat\MessageController as ChatMessageController;
 use App\Http\Controllers\Api\Principal\TeacherAttendanceController as PrincipalTeacherAttendanceController;
+use App\Http\Controllers\Api\Parent\StudentPromotionController as ParentStudentPromotionController;
 
 
 // Rate Limiting
@@ -153,6 +155,8 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'active.user'])->group(function
             Route::get('classrooms/{id}/performance-stats', [ClassroomController::class, 'performanceStats']);
             Route::apiResource('classrooms', ClassroomController::class);
             Route::apiResource('subjects', SubjectController::class);
+            Route::get('student-promotions', [PrincipalStudentPromotionController::class, 'index']);
+            Route::post('students/{student}/promote', [PrincipalStudentPromotionController::class, 'store']);
 
             Route::post('send-noticeboard', [NotificationsController::class, 'sendNoticeboard']);
 
@@ -250,6 +254,9 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'active.user'])->group(function
         Route::get('grades', [\App\Http\Controllers\Api\Parent\ParentController::class, 'getGrades']);
         Route::get('results', [\App\Http\Controllers\Api\Parent\ParentResultController::class, 'index']);
         Route::get('results/{submission}/download/{student}', [\App\Http\Controllers\Api\Parent\ParentResultController::class, 'download']);
+        Route::get('student-promotions', [ParentStudentPromotionController::class, 'index']);
+        Route::post('student-promotions/{id}/approve', [ParentStudentPromotionController::class, 'approve']);
+        Route::post('student-promotions/{id}/reject', [ParentStudentPromotionController::class, 'reject']);
 
         // Invoices & Payments
         Route::get('invoices', [\App\Http\Controllers\Api\Parent\ParentInvoiceController::class, 'index']);
