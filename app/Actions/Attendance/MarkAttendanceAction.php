@@ -8,7 +8,6 @@ use App\Models\NotificationLog;
 use App\Models\User;
 use App\Enums\AttendanceStatus;
 use App\Enums\UserRole;
-use App\Events\NewNotificationEvent;
 use App\Services\FirebaseNotificationService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -26,6 +25,7 @@ class MarkAttendanceAction
             'classroom_id' => $data['classroom_id'],
         ]);
 
+        $previousStatus = $attendance->status?->value ?? $attendance->status;
         // Get the student's attendance percentage BEFORE updating
         $previousAttendancePercentage = $this->getStudentAttendancePercentage($data['student_id']);
         
@@ -37,6 +37,11 @@ class MarkAttendanceAction
 
         // After marking attendance, check and update the student's flag
         $this->updateStudentAttendanceFlag($data['student_id'], $previousAttendancePercentage);
+
+        $newStatus = $attendance->fresh()->status?->value ?? $attendance->fresh()->status;
+        if ($newStatus === AttendanceStatus::Absent->value && $previousStatus !== AttendanceStatus::Absent->value) {
+            $this->notifyParentOfAbsence($attendance->fresh());
+        }
 
         return $attendance;
     }
@@ -203,5 +208,58 @@ class MarkAttendanceAction
                 Log::info("Skipped FCM for principal {$principal->id} because the token is missing or notifications are disabled.");
             }
         }
+    }
+
+    private function notifyParentOfAbsence(StudentAttendance $attendance): void
+    {
+        $student = $attendance->student()->with('guardian', 'classroom')->first();
+        if (!$student || !$student->guardian) {
+            return;
+        }
+
+        $parent = $student->guardian;
+        $classroomName = $student->classroom?->name ?? DB::table('classrooms')->where('id', $student->classroom_id)->value('name');
+        $title = 'Student Marked Absent';
+        $message = "{$student->full_name} was marked absent in {$classroomName} on {$attendance->date?->toDateString()}. Please provide a reason.";
+
+        $notificationLog = NotificationLog::create([
+            'user_id' => $parent->id,
+            'student_id' => $student->id,
+            'type' => 'student_absent_alert',
+            'title' => $title,
+            'message' => $message,
+            'is_read' => false,
+            'meta' => [
+                'recipient_role' => 'parent',
+                'student_id' => (string) $student->id,
+                'student_name' => $student->full_name,
+                'classroom_id' => (string) $student->classroom_id,
+                'classroom_name' => $classroomName,
+                'attendance_id' => (string) $attendance->id,
+                'attendance_date' => $attendance->date?->toDateString(),
+                'attendance_status' => 'absent',
+            ],
+            'sent_at' => now($parent->timezone ?? 'UTC'),
+        ]);
+
+        if ($parent->notifications_enabled && $parent->fcm_token) {
+            $firebaseNotificationService = app(FirebaseNotificationService::class);
+
+            $firebaseNotificationService->sendToToken(
+                $parent->fcm_token,
+                $title,
+                $message,
+                [
+                    'type' => 'student_absent_alert',
+                    'student_id' => (string) $student->id,
+                    'student_name' => $student->full_name,
+                    'classroom_name' => $classroomName,
+                    'attendance_id' => (string) $attendance->id,
+                    'attendance_date' => $attendance->date?->toDateString(),
+                ]
+            );
+        }
+
+        Log::info("Created absent notification {$notificationLog->id} for parent {$parent->id}.");
     }
 }

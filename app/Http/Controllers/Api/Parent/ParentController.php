@@ -189,6 +189,38 @@ class ParentController extends Controller
         );
     }
 
+    public function updateAttendanceReason(Request $request, $attendanceId)
+    {
+        try {
+            $validated = $request->validate([
+                'reason' => ['required', 'string', 'max:2000'],
+            ]);
+
+            $attendance = StudentAttendance::with(['student', 'student.classroom'])
+                ->whereKey($attendanceId)
+                ->firstOrFail();
+
+            if ($attendance->student?->guardian_id !== auth()->id()) {
+                return $this->errorResponse('Unauthorized access to this attendance record.', 403);
+            }
+
+            if (($attendance->status?->value ?? $attendance->status) !== AttendanceStatus::Absent->value) {
+                return $this->errorResponse('Reason can only be added for absent attendance records.', 422);
+            }
+
+            $attendance->update([
+                'reason' => $validated['reason'],
+            ]);
+
+            return $this->successResponse(
+                new \App\Http\Resources\StudentAttendanceResource($attendance->fresh(['student', 'subject', 'recordedBy'])),
+                'Attendance reason updated successfully'
+            );
+        } catch (Throwable $e) {
+            return $this->exceptionResponse($e);
+        }
+    }
+
     /**
      * GET /v1/parent/classrooms
      * Fetch children with their classrooms and individual stats

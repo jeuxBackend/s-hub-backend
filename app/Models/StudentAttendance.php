@@ -13,6 +13,7 @@ class StudentAttendance extends Model
         'date',
         'status',
         'remarks',
+        'reason',
     ];
 
     protected $casts = [

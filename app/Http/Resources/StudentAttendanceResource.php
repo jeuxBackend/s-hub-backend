@@ -19,6 +19,7 @@ class StudentAttendanceResource extends JsonResource
             'student' => StudentResource::make($this->whenLoaded('student')),
             'status' => $this->status?->value ?? null,
             'remarks' => $this->remarks,
+            'reason' => $this->reason,
             'date' => $this->date?->toDateString() ?? "",
             'subject' => SubjectResource::make($this->whenLoaded('subject')),
             'term' => $this->term ?? null,

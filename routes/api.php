@@ -100,6 +100,7 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'active.user'])->group(function
         Route::get('teacher/classrooms', [TeacherClassroomController::class, 'index']);
         Route::get('teacher/classrooms/{classroom}', [TeacherClassroomController::class, 'show']);
         Route::get('teacher/timetable', [TeacherClassroomController::class, 'timetable']);
+        Route::get('teacher/academic-documents', [\App\Http\Controllers\Api\Teacher\AcademicDocumentController::class, 'index']);
         Route::post('teacher/attendance/mark', [TeacherAttendanceController::class, 'markAttendance']);
         Route::post('teacher/proxy-attendance/mark', [FreePeriodTeacherController::class, 'markProxyAttendance']);
         
@@ -112,6 +113,7 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'active.user'])->group(function
         Route::get('assignments', [\App\Http\Controllers\Api\Assignment\ParentAssignmentController::class, 'index']);
         Route::get('assignments/{assignment}', [\App\Http\Controllers\Api\Assignment\ParentAssignmentController::class, 'show']);
         Route::get('students/{student}/assignments', [\App\Http\Controllers\Api\Assignment\ParentAssignmentController::class, 'assignmentsForChild']);
+        Route::get('academic-documents', [\App\Http\Controllers\Api\Parent\AcademicDocumentController::class, 'index']);
     });
 
     Route::put('update-profile', [UserController::class, 'updateProfile']);
@@ -157,6 +159,9 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'active.user'])->group(function
             Route::apiResource('subjects', SubjectController::class);
             Route::get('student-promotions', [PrincipalStudentPromotionController::class, 'index']);
             Route::post('students/{student}/promote', [PrincipalStudentPromotionController::class, 'store']);
+            Route::post('classrooms/{classroom}/exam-schedules', [\App\Http\Controllers\Api\Principal\AcademicDocumentController::class, 'storeExamSchedule']);
+            Route::post('classrooms/{classroom}/test-schedules', [\App\Http\Controllers\Api\Principal\AcademicDocumentController::class, 'storeTestSchedule']);
+            Route::post('students/{student}/transcripts', [\App\Http\Controllers\Api\Principal\AcademicDocumentController::class, 'storeTranscript']);
 
             Route::post('send-noticeboard', [NotificationsController::class, 'sendNoticeboard']);
 
@@ -251,6 +256,7 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'active.user'])->group(function
         Route::get('students', [\App\Http\Controllers\Api\Parent\ParentController::class, 'getChildrenClassrooms']);
         Route::get('attendances/by-month', [\App\Http\Controllers\Api\Parent\ParentController::class, 'getAttendanceByMonth']);
         Route::get('attendances/by-date', [\App\Http\Controllers\Api\Parent\ParentController::class, 'getAttendanceByDate']);
+        Route::post('attendances/{attendance}/reason', [\App\Http\Controllers\Api\Parent\ParentController::class, 'updateAttendanceReason']);
         Route::get('grades', [\App\Http\Controllers\Api\Parent\ParentController::class, 'getGrades']);
         Route::get('results', [\App\Http\Controllers\Api\Parent\ParentResultController::class, 'index']);
         Route::get('results/{submission}/download/{student}', [\App\Http\Controllers\Api\Parent\ParentResultController::class, 'download']);

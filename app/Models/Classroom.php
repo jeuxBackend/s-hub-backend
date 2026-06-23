@@ -51,6 +51,11 @@ class Classroom extends Model
         return $this->hasMany(StudentPreregistration::class, 'target_classroom_id');
     }
 
+    public function academicDocuments()
+    {
+        return $this->hasMany(AcademicDocument::class);
+    }
+
     public function finalResultSubmissions()
     {
         return $this->hasMany(FinalResultSubmission::class);

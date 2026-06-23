@@ -89,6 +89,11 @@ class Student extends Model
         return $this->hasMany(StudentPreregistration::class);
     }
 
+    public function academicDocuments()
+    {
+        return $this->hasMany(AcademicDocument::class);
+    }
+
     public function classroomSubjects()
     {
         return $this->belongsToMany(Subject::class, 'classroom_student_subject')
