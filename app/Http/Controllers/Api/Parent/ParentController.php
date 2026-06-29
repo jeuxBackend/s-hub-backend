@@ -8,6 +8,8 @@ use App\Models\StudentAttendance;
 use App\Enums\AttendanceStatus;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\File;
+
 use Throwable;
 
 class ParentController extends Controller
@@ -301,9 +303,9 @@ class ParentController extends Controller
 
         $grades = \App\Models\StudentGrade::where('student_id', $student->id)
             ->where('subject_id', $filters['subject_id'])
-            ->where(function($q) use ($filters) {
+            ->where(function ($q) use ($filters) {
                 $q->where('term', $filters['term'])
-                  ->orWhere('type', 'years_marks');
+                    ->orWhere('type', 'years_marks');
             })
             ->get();
 
@@ -328,5 +330,53 @@ class ParentController extends Controller
         ];
 
         return $this->successResponse($result, 'Grades retrieved successfully.');
+    }
+
+    public function updateChildProfilePic(Request $request, $id)
+    {
+
+        $request->validate([
+            'profile_pic' => ['required', 'image', 'mimes:jpeg,png,jpg,gif', 'max:2048'],
+        ]);
+
+        $authId = auth()->id();
+
+        $student = Student::where('id', $id)
+            ->where('guardian_id', $authId)
+            ->first();
+
+        if (!$student) {
+            return $this->errorResponse(
+                'Unauthorized access. This student is not registered under your profile.',
+                403
+            );
+        }
+
+        if ($request->hasFile('profile_pic')) {
+
+            // Delete old profile picture if it exists
+            if (!empty($student->profile_pic)) {
+                $oldFilePath = public_path($student->profile_pic);
+
+                if (File::exists($oldFilePath)) {
+                    File::delete($oldFilePath);
+                }
+            }
+
+            // Upload new profile picture
+            $file = $request->file('profile_pic');
+            $fileName = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
+
+            $file->move(public_path('uploads/profile-pics'), $fileName);
+
+            // Save new file path
+            $student->profile_pic = 'uploads/profile-pics/' . $fileName;
+            $student->save();
+        }
+
+        return $this->successResponse(
+            $student,
+            'Profile picture updated successfully.'
+        );
     }
 }

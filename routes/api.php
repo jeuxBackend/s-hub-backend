@@ -103,7 +103,7 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'active.user'])->group(function
         Route::get('teacher/academic-documents', [\App\Http\Controllers\Api\Teacher\AcademicDocumentController::class, 'index']);
         Route::post('teacher/attendance/mark', [TeacherAttendanceController::class, 'markAttendance']);
         Route::post('teacher/proxy-attendance/mark', [FreePeriodTeacherController::class, 'markProxyAttendance']);
-        
+
         // Assignment Routes - Teacher Side
         Route::apiResource('assignments', \App\Http\Controllers\Api\Assignment\AssignmentController::class);
     });
@@ -270,6 +270,7 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'active.user'])->group(function
         Route::get('invoices/{id}/receipt/download', [\App\Http\Controllers\Api\Parent\ParentInvoiceController::class, 'downloadReceipt']);
         Route::post('invoices/{id}/pay', [\App\Http\Controllers\Api\Parent\ParentInvoiceController::class, 'pay']);
         Route::post('invoices/{id}/confirm', [\App\Http\Controllers\Api\Parent\ParentInvoiceController::class, 'confirm']);
+        Route::post('child/picture/{id}', [\App\Http\Controllers\Api\Parent\ParentController::class, 'updateChildProfilePic']);
         // Route::get('settings', [SettingController::class, 'show']);
     });
 
