@@ -8,8 +8,7 @@ use App\Models\StudentAttendance;
 use App\Enums\AttendanceStatus;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\File;
-
+use Illuminate\Support\Facades\Storage;
 use Throwable;
 
 class ParentController extends Controller
@@ -353,24 +352,22 @@ class ParentController extends Controller
         }
 
         if ($request->hasFile('profile_pic')) {
+            // Delete the existing profile picture from the same storage path used elsewhere
+            if (!empty($student->profile_picture)) {
+                Storage::disk('public')->delete($student->profile_picture);
 
-            // Delete old profile picture if it exists
-            if (!empty($student->profile_pic)) {
-                $oldFilePath = public_path($student->profile_pic);
-
-                if (File::exists($oldFilePath)) {
-                    File::delete($oldFilePath);
+                // Legacy fallback for older records stored under public/uploads/profile-pics
+                if (str_starts_with($student->profile_picture, 'uploads/')) {
+                    $legacyPath = public_path($student->profile_picture);
+                    if (file_exists($legacyPath)) {
+                        @unlink($legacyPath);
+                    }
                 }
             }
 
-            // Upload new profile picture
+            // Upload the new profile picture to the shared student profile folder
             $file = $request->file('profile_pic');
-            $fileName = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
-
-            $file->move(public_path('uploads/profile-pics'), $fileName);
-
-            // Save new file path
-            $student->profile_pic = 'uploads/profile-pics/' . $fileName;
+            $student->profile_picture = $file->store('student_profiles', 'public');
             $student->save();
         }
 
