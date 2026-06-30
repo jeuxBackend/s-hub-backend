@@ -6,14 +6,19 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\AcademicDocumentResource;
 use App\Models\AcademicDocument;
 use App\Models\Student;
+use Illuminate\Http\Request;
 use Throwable;
 
 class AcademicDocumentController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         try {
             $parent = auth()->user();
+
+            $validated = $request->validate([
+                'per_page' => ['sometimes', 'integer', 'min:1', 'max:100'],
+            ]);
 
             $studentIds = Student::query()
                 ->where('guardian_id', $parent->id)
@@ -38,10 +43,11 @@ class AcademicDocumentController extends Controller
                             ->where('document_type', 'academic_transcript');
                     });
                 })
+                ->with(['student.guardian', 'student.classroom', 'classroom', 'publisher'])
                 ->latest()
-                ->get();
+                ->paginate($validated['per_page'] ?? 15);
 
-            return $this->successResponse(
+            return $this->paginatedResponse(
                 AcademicDocumentResource::collection($documents),
                 'Academic documents retrieved successfully.'
             );

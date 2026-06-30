@@ -16,6 +16,7 @@ class AcademicDocumentResource extends JsonResource
             'document_type' => $this->document_type,
             'title' => $this->title,
             'file_url' => $this->file_url,
+            'student' => new StudentResource($this->whenLoaded('student')),
         ];
 
         if ($this->classroom_id !== null) {

@@ -71,6 +71,9 @@ class UserResource extends JsonResource
                 'guardian_relation' => $this->guardian_relation,
                 'guardian_phone_number' => $this->guardian_phone_number,
                 'alternative_guardian_phone_number' => $this->alternative_guardian_phone_number,
+                'family_members' => $this->whenLoaded('familyMembers', function () {
+                    return FamilyMemberResource::collection($this->familyMembers);
+                }),
                 'children' => $this->whenLoaded('guardianStudents', function () {
                     return $this->guardianStudents->map(function ($student) {
                         $latestInvoice = $student->relationLoaded('studentInvoices')
