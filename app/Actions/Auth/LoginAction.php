@@ -2,14 +2,14 @@
 
 namespace App\Actions\Auth;
 
+use App\Http\Resources\FamilyMemberResource;
 use App\Models\User;
+use App\Models\FamilyMember;
 use App\Enums\UserRole;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Validation\ValidationException;
 use App\Http\Resources\UserResource;
-use App\Http\Resources\InstitutionResource;
-use App\Http\Resources\StudentResource;
 
 class LoginAction
 {
@@ -19,29 +19,7 @@ class LoginAction
             ? 'email'
             : 'phone_number';
 
-        $user = User::where($loginField, $data['login'])->first();
-
-        if (!$user) {
-            throw ValidationException::withMessages([
-                'login' => 'Invalid credentials.',
-            ]);
-        }
-
-        $isRegistered = !is_null($user->password);
-
-        if ($isRegistered) {
-            if (!isset($data['password']) || !Hash::check($data['password'], $user->password)) {
-                throw ValidationException::withMessages([
-                    'password' => 'Incorrect password.',
-                ]);
-            }
-        } else {
-            if ($loginField !== 'email') {
-                throw ValidationException::withMessages([
-                    'login' => 'Please login using your registered email.',
-                ]);
-            }
-        }
+        [$user, $familyMember, $isRegistered] = $this->resolveLoginTarget($data, $loginField);
 
         if (!$user->status) {
             throw new AuthorizationException('Your account has been blocked.');
@@ -72,7 +50,48 @@ class LoginAction
             'role' => $user->role->value,
             'is_registered' => $isRegistered,
             'unread_notification_count' => $unreadNotificationCount,
+            'logged_in_via_family_member' => (bool) $familyMember,
+            'family_member' => $familyMember ? new FamilyMemberResource($familyMember) : null,
         ];
+    }
+
+    private function resolveLoginTarget(array $data, string $loginField): array
+    {
+        $user = User::where($loginField, $data['login'])->first();
+
+        if ($user) {
+            $isRegistered = !is_null($user->password);
+
+            if ($isRegistered) {
+                if (!isset($data['password']) || !Hash::check($data['password'], $user->password)) {
+                    throw ValidationException::withMessages([
+                        'password' => 'Incorrect password.',
+                    ]);
+                }
+            } elseif ($loginField !== 'email') {
+                throw ValidationException::withMessages([
+                    'login' => 'Please login using your registered email.',
+                ]);
+            }
+
+            return [$user, null, $isRegistered];
+        }
+
+        $familyMember = FamilyMember::with('parent')->where($loginField, $data['login'])->first();
+
+        if (!$familyMember || !isset($data['password']) || !Hash::check($data['password'], $familyMember->password)) {
+            throw ValidationException::withMessages([
+                'login' => 'Invalid credentials.',
+            ]);
+        }
+
+        if (!$familyMember->parent) {
+            throw ValidationException::withMessages([
+                'login' => 'This family member is not linked to an active parent account.',
+            ]);
+        }
+
+        return [$familyMember->parent, $familyMember, true];
     }
 
     private function validateRoleSpecific(User $user, array $data): void
@@ -102,6 +121,7 @@ class LoginAction
 
         if ($user->role === UserRole::Parent) {
             $relations[] = 'guardianStudents';
+            $relations[] = 'familyMembers';
         }
 
         $user->load($relations);

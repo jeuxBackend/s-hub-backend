@@ -56,10 +56,25 @@ class SchoolController extends Controller
             'email' => 'sometimes|email|unique:institutions,email,' . $id,
             'phone_number' => 'sometimes|string|unique:institutions,phone_number,' . $id,
             'physical_address' => 'nullable|string',
+            'alert_feature_enabled' => 'sometimes|boolean',
         ]);
 
         $school = $this->updateSchoolAction->handle($data, $id);
         return $this->successResponse($school, 'School updated successfully');
+    }
+
+    public function toggleAlertFeature(Request $request, string $id)
+    {
+        $data = $request->validate([
+            'alert_feature_enabled' => 'required|boolean',
+        ]);
+
+        $school = Institution::findOrFail($id);
+        $school->update([
+            'alert_feature_enabled' => $data['alert_feature_enabled'],
+        ]);
+
+        return $this->successResponse($school, 'School alert feature updated successfully');
     }
 
     public function destroy(string $id)

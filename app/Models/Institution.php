@@ -29,6 +29,7 @@ class Institution extends Model
         'telephone',
         'email_verified',
         'phone_verified',
+        'alert_feature_enabled',
         'subjects',
         'latitude',
         'longitude',
@@ -37,6 +38,7 @@ class Institution extends Model
     protected $casts = [
         'email_verified' => 'boolean',
         'phone_verified' => 'boolean',
+        'alert_feature_enabled' => 'boolean',
         'subjects' => 'array',
     ];
 
