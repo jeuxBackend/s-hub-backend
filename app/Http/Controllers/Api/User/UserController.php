@@ -85,7 +85,7 @@ class UserController extends Controller
             } elseif ($user->role === \App\Enums\UserRole::SchoolAdmin) {
                 $user->load(['creator.institution']);
             } elseif ($user->role === \App\Enums\UserRole::Parent) {
-                $user->load(['guardianStudents']);
+                $user->load(['guardianStudents', 'familyMembers']);
             }
             
             // Get unread notification count

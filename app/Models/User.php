@@ -160,6 +160,11 @@ class User extends Authenticatable
         return $this->hasMany(StudentPreregistration::class, 'guardian_id');
     }
 
+    public function familyMembers()
+    {
+        return $this->hasMany(FamilyMember::class, 'parent_id');
+    }
+
     /**
      * Relationship for assignments created by the teacher.
      */

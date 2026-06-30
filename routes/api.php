@@ -14,6 +14,7 @@ use App\Http\Controllers\Api\Manager\PrincipalController as ManagerPrincipalCont
 use App\Http\Controllers\Api\Manager\StudentController as ManagerStudentController;
 use App\Http\Controllers\Api\Manager\ManagerDashboardController;
 use App\Http\Controllers\Api\Notifications\NotificationsController;
+use App\Http\Controllers\Api\Alerts\SchoolAlertController;
 use App\Http\Controllers\Auth\AdminLoginController;
 use Illuminate\Support\Facades\Broadcast;
 use Illuminate\Support\Facades\Route;
@@ -114,12 +115,25 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'active.user'])->group(function
         Route::get('assignments/{assignment}', [\App\Http\Controllers\Api\Assignment\ParentAssignmentController::class, 'show']);
         Route::get('students/{student}/assignments', [\App\Http\Controllers\Api\Assignment\ParentAssignmentController::class, 'assignmentsForChild']);
         Route::get('academic-documents', [\App\Http\Controllers\Api\Parent\AcademicDocumentController::class, 'index']);
+        Route::get('family-members', [\App\Http\Controllers\Api\Parent\FamilyMemberController::class, 'index']);
+        Route::post('family-members', [\App\Http\Controllers\Api\Parent\FamilyMemberController::class, 'store']);
+        Route::post('family-members/{familyMember}', [\App\Http\Controllers\Api\Parent\FamilyMemberController::class, 'update']);
+        Route::delete('family-members/{familyMember}', [\App\Http\Controllers\Api\Parent\FamilyMemberController::class, 'destroy']);
     });
 
     Route::put('update-profile', [UserController::class, 'updateProfile']);
     // Route::patch('users/{user}/notifications/toggle', [UserController::class, 'toggleNotification']);
     Route::patch('users/remote/toggle', [UserController::class, 'toggleRemote']);
     Route::get('me', [UserController::class, 'getAuthenticatedUser']);
+
+    Route::middleware(['otp.verified'])->prefix('alerts')->group(function () {
+        Route::get('current', [SchoolAlertController::class, 'current']);
+        Route::post('abduction/trigger', [SchoolAlertController::class, 'triggerAbduction']);
+        Route::post('emergency/trigger', [SchoolAlertController::class, 'triggerEmergency']);
+        Route::post('{alert}/confirm', [SchoolAlertController::class, 'confirmAbduction']);
+        Route::post('{alert}/resolve', [SchoolAlertController::class, 'resolve']);
+        Route::post('{alert}/respond', [SchoolAlertController::class, 'respond']);
+    });
 
 
     // ===================== MANAGEMENT ROUTES (PRINCIPAL + SCHOOL ADMIN ONLY) =====================
@@ -131,6 +145,7 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'active.user'])->group(function
             Route::get('teachers-list', [SchoolAdminController::class, 'getTeachersListForSchoolAdmin']);
             Route::post('update-permissions', [SchoolAdminController::class, 'updatePermissions']);
             Route::get('remove-admin/{id}', [SchoolAdminController::class, 'removeSchoolAdmin']);
+            Route::patch('institution/slogan', [InstituteController::class, 'updateSlogan']);
             Route::patch('student-reports/{id}/status', [\App\Http\Controllers\Api\StudentReportController::class, 'updateStatus']);
             Route::get('teachers/{id}/timetable', [\App\Http\Controllers\Api\Principal\PrincipalTimetableController::class, 'getTeacherTimetable']);
             Route::get('classrooms/{id}/timetable', [\App\Http\Controllers\Api\Principal\PrincipalTimetableController::class, 'getClassroomTimetable']);
@@ -162,6 +177,9 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'active.user'])->group(function
             Route::post('classrooms/{classroom}/exam-schedules', [\App\Http\Controllers\Api\Principal\AcademicDocumentController::class, 'storeExamSchedule']);
             Route::post('classrooms/{classroom}/test-schedules', [\App\Http\Controllers\Api\Principal\AcademicDocumentController::class, 'storeTestSchedule']);
             Route::post('students/{student}/transcripts', [\App\Http\Controllers\Api\Principal\AcademicDocumentController::class, 'storeTranscript']);
+            Route::patch('academic-documents/{academicDocument}', [\App\Http\Controllers\Api\Principal\AcademicDocumentController::class, 'update']);
+            Route::get('classrooms/{classroom}/academic-documents', [\App\Http\Controllers\Api\Principal\AcademicDocumentController::class, 'getClassroomAcademicDocuments']);
+            Route::get('classrooms/{classroom}/transcripts', [\App\Http\Controllers\Api\Principal\AcademicDocumentController::class, 'getClassroomTranscripts']);
 
             Route::post('send-noticeboard', [NotificationsController::class, 'sendNoticeboard']);
 
@@ -226,6 +244,7 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'active.user'])->group(function
         Route::apiResource('schools', SchoolController::class)->only(['index', 'show'])->middleware('subadmin.permission:School');
         Route::apiResource('teachers', AdminTeacherController::class)->only(['index', 'show'])->middleware('subadmin.permission:Teachers');
         Route::apiResource('students', AdminStudentController::class)->only(['index', 'show'])->middleware('subadmin.permission:Students');
+        Route::patch('schools/{id}/alert-feature', [SchoolController::class, 'toggleAlertFeature']);
     });
 
     // ===================== MANAGER ONLY =====================
@@ -258,6 +277,8 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'active.user'])->group(function
         Route::get('attendances/by-date', [\App\Http\Controllers\Api\Parent\ParentController::class, 'getAttendanceByDate']);
         Route::post('attendances/{attendance}/reason', [\App\Http\Controllers\Api\Parent\ParentController::class, 'updateAttendanceReason']);
         Route::get('grades', [\App\Http\Controllers\Api\Parent\ParentController::class, 'getGrades']);
+        Route::get('alerts/current', [SchoolAlertController::class, 'current']);
+        Route::post('alerts/{alert}/respond', [SchoolAlertController::class, 'respond']);
         Route::get('results', [\App\Http\Controllers\Api\Parent\ParentResultController::class, 'index']);
         Route::get('results/{submission}/download/{student}', [\App\Http\Controllers\Api\Parent\ParentResultController::class, 'download']);
         Route::get('student-promotions', [ParentStudentPromotionController::class, 'index']);
