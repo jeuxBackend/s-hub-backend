@@ -19,6 +19,7 @@ class UserResource extends JsonResource
             'role' => $role->value,
             'role_label' => $role->name,
             'address' => $this->address,
+            'dob' => $this->dob?->toDateString(),
             'longitude' => $this->longitude,
             'latitude' => $this->latitude,
             'country' => $this->country,
@@ -51,11 +52,7 @@ class UserResource extends JsonResource
                 'position' => $this->position,
                 'permissions' => $this->permissions ?? [],
                 'remote' => $this->remote_teaching,
-
-                'institution' => $this->when(
-                    $this->relationLoaded('creator') && $this->creator?->relationLoaded('institution'),
-                    fn() => new InstitutionResource($this->creator->institution)
-                ),
+                'institution' => $this->whenLoaded('institution', fn() => new InstitutionResource($this->institution)),
             ],
 
             UserRole::Teacher => [
@@ -63,6 +60,7 @@ class UserResource extends JsonResource
                 'position' => $this->position,
                 'permissions' => $this->permissions ?? [],
                 'remote' => $this->remote_teaching,
+                'institution' => $this->whenLoaded('institution', fn() => new InstitutionResource($this->institution)),
             ],
 
             UserRole::Parent => [
@@ -71,6 +69,7 @@ class UserResource extends JsonResource
                 'guardian_relation' => $this->guardian_relation,
                 'guardian_phone_number' => $this->guardian_phone_number,
                 'alternative_guardian_phone_number' => $this->alternative_guardian_phone_number,
+                'institution' => $this->whenLoaded('institution', fn() => new InstitutionResource($this->institution)),
                 'family_members' => $this->whenLoaded('familyMembers', function () {
                     return FamilyMemberResource::collection($this->familyMembers);
                 }),

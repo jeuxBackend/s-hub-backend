@@ -35,6 +35,7 @@ class User extends Authenticatable
         'staff_number',
 
         'address',
+        'dob',
         'latitude',
         'longitude',
 
@@ -87,6 +88,7 @@ class User extends Authenticatable
             'permissions' => 'json',
             'role' => UserRole::class,
             'guardian_type' => GuardianType::class,
+            'dob' => 'date',
         ];
     }
 
@@ -171,6 +173,11 @@ class User extends Authenticatable
     public function assignments()
     {
         return $this->hasMany(Assignment::class, 'teacher_id');
+    }
+
+    public function timetableEntries()
+    {
+        return $this->hasMany(TimetableEntry::class, 'teacher_id');
     }
 
     public function publishedFinalResults()

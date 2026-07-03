@@ -16,8 +16,8 @@ class UpdateClassroomAction
 
         if (isset($data['subjects'])) {
             $existingSubjectIds = collect($data['subjects'])->pluck('id')->filter()->toArray();
-            
-            // Delete subjects that are not in the new list
+
+            // Treat the incoming payload as the complete classroom subject list.
             $classroom->subjects()->whereNotIn('id', $existingSubjectIds)->delete();
 
             foreach ($data['subjects'] as $subjectData) {
@@ -26,6 +26,7 @@ class UpdateClassroomAction
                     $classroom->subjects()->where('id', $subjectData['id'])->update([
                         'name' => $subjectData['name'],
                         'teacher_id' => $subjectData['teacher_id'] ?? null,
+                        'lectures_per_week' => $subjectData['lectures_per_week'] ?? 1,
                         'start_time' => $subjectData['start_time'] ?? null,
                         'end_time' => $subjectData['end_time'] ?? null,
                     ]);
@@ -35,6 +36,7 @@ class UpdateClassroomAction
                         'name' => $subjectData['name'],
                         'institution_id' => $classroom->institution_id,
                         'teacher_id' => $subjectData['teacher_id'] ?? null,
+                        'lectures_per_week' => $subjectData['lectures_per_week'] ?? 1,
                         'start_time' => $subjectData['start_time'] ?? null,
                         'end_time' => $subjectData['end_time'] ?? null,
                     ]);

@@ -144,20 +144,21 @@ class TeacherClassroomController extends Controller
         try {
             $teacherId = auth()->id();
 
-            $subjects = \App\Models\Subject::where('teacher_id', $teacherId)
-                ->with(['classroom' => function ($q) {
-                    $q->select('id', 'name', 'code')->withCount('students');
-                }])
-                ->whereNotNull('start_time')
-                ->whereNotNull('end_time')
-                ->get()
-                ->sortBy(function ($subject) {
-                    return strtotime($subject->start_time);
-                })
-                ->values();
+            $entries = \App\Models\TimetableEntry::query()
+                ->where('teacher_id', $teacherId)
+                ->with([
+                    'subject',
+                    'teacher',
+                    'classroom' => function ($q) {
+                        $q->select('id', 'name', 'code')->withCount('students');
+                    },
+                ])
+                ->orderBy('weekday')
+                ->orderBy('start_time')
+                ->get();
 
             return $this->successResponse(
-                \App\Http\Resources\SubjectResource::collection($subjects),
+                \App\Http\Resources\TimetableEntryResource::collection($entries),
                 'Teacher timetable retrieved successfully.'
             );
         } catch (Throwable $e) {

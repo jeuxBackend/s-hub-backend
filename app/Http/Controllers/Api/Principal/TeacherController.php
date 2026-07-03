@@ -35,6 +35,8 @@ class TeacherController extends Controller
             'profile_picture' => 'nullable|image|max:2048',
             'position' => 'nullable|string|max:255',
             'staff_number' => 'nullable|string|max:255',
+            'address' => 'nullable|string',
+            'dob' => 'nullable|date',
         ]);
 
         try {
@@ -73,6 +75,8 @@ class TeacherController extends Controller
             'profile_picture' => 'nullable|image|max:2048',
             'position' => 'nullable|string|max:255',
             'staff_number' => 'nullable',
+            'address' => 'nullable|string',
+            'dob' => 'nullable|date',
         ]);
 
         try {

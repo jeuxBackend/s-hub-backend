@@ -4,8 +4,8 @@ namespace App\Http\Controllers\Api\Principal;
 
 use App\Http\Controllers\Controller;
 use App\Models\TeacherAttendance;
+use App\Models\TimetableEntry;
 use App\Models\User;
-use App\Models\Subject;
 use App\Enums\AttendanceStatus;
 use Illuminate\Http\Request;
 use App\Http\Resources\TeacherAttendanceResource;
@@ -172,23 +172,41 @@ class TeacherAttendanceController extends Controller
                 );
             }
 
-            // Get all teachers who have classes during this time range
-            $busyTeachers = Subject::where('institution_id', $institutionId)
-                ->whereIn('teacher_id', $allTeachers->pluck('id'))
-                ->whereNotNull('start_time')
-                ->whereNotNull('end_time')
-                ->get()
-                ->filter(function ($subject) use ($startTime, $endTime) {
-                    $subjectStart = Carbon::parse($subject->start_time);
-                    $subjectEnd = Carbon::parse($subject->end_time);
+            $weekday = Carbon::now($principal->timezone ?? config('app.timezone', 'UTC'))->isoWeekday();
 
-                    // Check if there's any overlap between the subject time and requested time range
-                    // Two time ranges overlap if one starts before the other ends
-                    return !($endTime->lessThanOrEqualTo($subjectStart) || $startTime->greaterThanOrEqualTo($subjectEnd));
+            $busyTeachers = TimetableEntry::query()
+                ->where('institution_id', $institutionId)
+                ->whereIn('teacher_id', $allTeachers->pluck('id'))
+                ->where('weekday', $weekday)
+                ->get()
+                ->filter(function (TimetableEntry $entry) use ($startTime, $endTime) {
+                    $entryStart = Carbon::parse($entry->start_time);
+                    $entryEnd = Carbon::parse($entry->end_time);
+
+                    return !($endTime->lessThanOrEqualTo($entryStart) || $startTime->greaterThanOrEqualTo($entryEnd));
                 })
                 ->pluck('teacher_id')
                 ->unique()
                 ->toArray();
+
+            $proxyBusyTeachers = \App\Models\Subject::query()
+                ->where('institution_id', $institutionId)
+                ->whereIn('proxy_teacher_id', $allTeachers->pluck('id'))
+                ->where('is_proxy', true)
+                ->whereNotNull('proxy_start_time')
+                ->whereNotNull('proxy_end_time')
+                ->get()
+                ->filter(function ($subject) use ($startTime, $endTime) {
+                    $proxyStart = Carbon::parse($subject->proxy_start_time);
+                    $proxyEnd = Carbon::parse($subject->proxy_end_time);
+
+                    return !($endTime->lessThanOrEqualTo($proxyStart) || $startTime->greaterThanOrEqualTo($proxyEnd));
+                })
+                ->pluck('proxy_teacher_id')
+                ->unique()
+                ->toArray();
+
+            $busyTeachers = array_unique(array_merge($busyTeachers, $proxyBusyTeachers));
 
             // Filter free teachers
             $freeTeachers = $allTeachers->filter(function ($teacher) use ($busyTeachers) {

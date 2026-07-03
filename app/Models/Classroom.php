@@ -66,4 +66,9 @@ class Classroom extends Model
     {
         return $this->hasMany(Assignment::class);
     }
+
+    public function timetableEntries()
+    {
+        return $this->hasMany(TimetableEntry::class);
+    }
 }

@@ -57,6 +57,8 @@ class SchoolController extends Controller
             'phone_number' => 'sometimes|string|unique:institutions,phone_number,' . $id,
             'physical_address' => 'nullable|string',
             'alert_feature_enabled' => 'sometimes|boolean',
+            'allowed_alert_types' => 'nullable|array',
+            'allowed_alert_types.*' => 'in:abduction,emergency',
         ]);
 
         $school = $this->updateSchoolAction->handle($data, $id);
@@ -67,11 +69,14 @@ class SchoolController extends Controller
     {
         $data = $request->validate([
             'alert_feature_enabled' => 'required|boolean',
+            'allowed_alert_types' => 'nullable|array',
+            'allowed_alert_types.*' => 'in:abduction,emergency',
         ]);
 
         $school = Institution::findOrFail($id);
         $school->update([
             'alert_feature_enabled' => $data['alert_feature_enabled'],
+            'allowed_alert_types' => $data['allowed_alert_types'] ?? $school->allowed_alert_types ?? ['abduction', 'emergency'],
         ]);
 
         return $this->successResponse($school, 'School alert feature updated successfully');

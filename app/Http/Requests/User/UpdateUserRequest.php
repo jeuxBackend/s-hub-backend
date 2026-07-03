@@ -32,6 +32,7 @@ class UpdateUserRequest extends FormRequest
             'device_id' => ['nullable', 'string', 'max:255'],
             'fcm_token' => ['nullable', 'string'],
             'address' => ['nullable', 'string'],
+            'dob' => ['nullable', 'date'],
             'alternative_email' => ['nullable', 'email'],
             'alternative_phone_number' => ['nullable', 'string'],
             'profile_picture' => ['nullable', 'file', 'image', 'max:2048'],

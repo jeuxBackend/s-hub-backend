@@ -8,6 +8,7 @@ use App\Actions\Teacher\NotifyFreeTeachersAction;
 use App\Models\Subject;
 use App\Models\NotificationLog;
 use App\Models\User;
+use App\Support\TimetableEntryResolver;
 use Illuminate\Http\Request;
 use Throwable;
 use Carbon\Carbon;
@@ -21,6 +22,7 @@ class FreePeriodTeacherController extends Controller
     public function notifyTeacher(
         Request $request,
         FindFreeTeachersAction $findFreeAction,
+        TimetableEntryResolver $resolver,
         // NotifyFreeTeachersAction $notifyAction
     ) {
         $request->validate([
@@ -56,9 +58,14 @@ class FreePeriodTeacherController extends Controller
                 return $this->errorResponse('Lecture not found in your institution.', 404);
             }
 
-            if (!$lecture->start_time || !$lecture->end_time) {
+            $teacherTimezone = $lecture->teacher?->timezone ?? config('app.timezone', 'UTC');
+            $entry = $resolver->resolveForToday($lecture, $teacherTimezone);
+
+            if (!$entry) {
                 return $this->errorResponse('Lecture does not have a scheduled time.', 400);
             }
+
+            [$entryStart, $entryEnd] = $resolver->buildDateTimeRange($entry, Carbon::now($teacherTimezone), $teacherTimezone);
 
             // Verify teacher exists and belongs to the same institution
             $teacher = User::where('id', $request->teacher_id)
@@ -81,9 +88,9 @@ class FreePeriodTeacherController extends Controller
             }
 
             // Convert time strings to proper datetime format for today
-            $today = \Carbon\Carbon::today()->format('Y-m-d');
-            $proxyStartTime = \Carbon\Carbon::parse($lecture->start_time);
-            $proxyEndTime = \Carbon\Carbon::parse($lecture->end_time);
+            $today = $entryStart->toDateString();
+            $proxyStartTime = $entryStart->copy();
+            $proxyEndTime = $entryEnd->copy();
             $attendanceRequestKey = NotificationLog::attendanceRequestKey(
                 (int) $lecture->id,
                 $today,
@@ -97,13 +104,13 @@ class FreePeriodTeacherController extends Controller
             $lecture->update([
                 'is_proxy' => true,
                 'proxy_teacher_id' => $teacher->id,
-                'proxy_start_time' => $proxyStartTime ? $today . ' ' . $proxyStartTime->format('H:i:s') : null,
-                'proxy_end_time' => $proxyEndTime ? $today . ' ' . $proxyEndTime->format('H:i:s') : null,
+                'proxy_start_time' => $proxyStartTime?->format('Y-m-d H:i:s'),
+                'proxy_end_time' => $proxyEndTime?->format('Y-m-d H:i:s'),
             ]);
 
             // Create in-app notification for the proxy teacher
             $notificationTitle = 'Proxy Class Assignment';
-            $notificationMessage = $request->message ?? "You have been assigned as a proxy teacher for {$lecture->name} from {$lecture->start_time} to {$lecture->end_time}.";
+            $notificationMessage = $request->message ?? "You have been assigned as a proxy teacher for {$lecture->name} from {$entryStart->format('g:i a')} to {$entryEnd->format('g:i a')}.";
             $proxyNotification = \App\Models\NotificationLog::create([
                 'user_id' => $teacher->id,
                 'type' => 'proxy_class_assignment',
@@ -116,8 +123,8 @@ class FreePeriodTeacherController extends Controller
                     'subject_name' => $lecture->name,
                     'classroom_id' => (string) $lecture->classroom_id,
                     'classroom_name' => $lecture->classroom?->name ?? 'N/A',
-                    'start_time' => Carbon::parse($lecture->start_time)->format('g:i a'),
-                    'end_time' => Carbon::parse($lecture->end_time)->format('g:i a'),
+                    'start_time' => $entryStart->format('g:i a'),
+                    'end_time' => $entryEnd->format('g:i a'),
                     'proxy_start_time' => $proxyStartTime ? $proxyStartTime->format('g:i A') : null,
                     'proxy_end_time' => $proxyEndTime ? $proxyEndTime->format('g:i A') : null,
                     'original_teacher_id' => (string) $lecture->teacher_id,
@@ -221,7 +228,8 @@ class FreePeriodTeacherController extends Controller
     public function notifyFreeTeachers(
         Request $request,
         FindFreeTeachersAction $findFreeAction,
-        NotifyFreeTeachersAction $notifyAction
+        NotifyFreeTeachersAction $notifyAction,
+        TimetableEntryResolver $resolver
     ) {
         $request->validate([
             'lecture_id' => 'required|exists:subjects,id',
@@ -241,7 +249,7 @@ class FreePeriodTeacherController extends Controller
                 return $this->errorResponse('Lecture not found in your institution.', 404);
             }
 
-            if (!$lecture->start_time || !$lecture->end_time) {
+            if (!$resolver->resolveForToday($lecture, $lecture->teacher?->timezone ?? config('app.timezone', 'UTC'))) {
                 return $this->errorResponse('Lecture does not have a scheduled time.', 400);
             }
 

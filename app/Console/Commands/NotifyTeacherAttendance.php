@@ -3,12 +3,13 @@
 namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
-use App\Models\Subject;
 use App\Models\NotificationLog;
+use App\Models\TimetableEntry;
 use App\Events\NewNotificationEvent;
 use App\Services\FirebaseNotificationService;
 use App\Enums\UserRole;
 use Carbon\Carbon;
+use App\Support\TimetableEntryResolver;
 
 class NotifyTeacherAttendance extends Command
 {
@@ -16,32 +17,33 @@ class NotifyTeacherAttendance extends Command
 
     protected $description = 'Notify teachers when it is time to mark attendance for their scheduled classes.';
 
-    public function handle(FirebaseNotificationService $firebaseNotificationService)
+    public function handle(FirebaseNotificationService $firebaseNotificationService, TimetableEntryResolver $resolver)
     {
         \Log::info("IS API HIT OR NOT ?");
         $now = Carbon::now();
 
         \Log::info("Cron checking teacher attendance at " . $now->format('H:i:s'));
 
-        $subjects = Subject::whereNotNull('start_time')
-            ->with('teacher', 'classroom')
+        $entries = TimetableEntry::query()
+            ->with(['subject', 'teacher', 'classroom'])
             ->get();
 
-        \Log::info("Found " . $subjects->count() . " subjects with start_time");
+        \Log::info("Found " . $entries->count() . " timetable entries");
 
         $notifiedCount = 0;
         $skippedCount = 0;
 
-        foreach ($subjects as $subject) {
+        foreach ($entries as $entry) {
 
-            if (!$subject->teacher) {
-                \Log::debug("Subject {$subject->id} has no teacher assigned, skipping");
+            if (!$entry->teacher || !$entry->subject) {
+                \Log::debug("Timetable entry {$entry->id} is missing a teacher or subject, skipping");
                 $skippedCount++;
                 continue;
             }
 
-            $teacher = $subject->teacher;
-            $teacherId = $teacher->id ?? $subject->teacher_id;
+            $teacher = $entry->teacher;
+            $subject = $entry->subject;
+            $teacherId = $teacher->id ?? $entry->teacher_id;
 
             if (empty($teacherId)) {
                 \Log::warning("Subject {$subject->id} has no teacher ID, skipping");
@@ -54,9 +56,14 @@ class NotifyTeacherAttendance extends Command
             $nowTeacher = Carbon::now($teacherTimezone);
 
             try {
-                $start = Carbon::parse($subject->start_time);
+                if ((int) $entry->weekday !== $nowTeacher->isoWeekday()) {
+                    $skippedCount++;
+                    continue;
+                }
+
+                [$start, $end] = $resolver->buildDateTimeRange($entry, $nowTeacher, $teacherTimezone);
             } catch (\Exception $e) {
-                \Log::error("Invalid start_time for subject {$subject->id}: " . $e->getMessage());
+                \Log::error("Invalid timetable entry {$entry->id}: " . $e->getMessage());
                 $skippedCount++;
                 continue;
             }
@@ -84,8 +91,8 @@ class NotifyTeacherAttendance extends Command
             }
 
             $title = 'Time for Class!';
-            $message = "It is time for your class ({$subject->name}) in {$subject->classroom?->name}. Please mark your attendance.";
-            $attendanceRequestDate = $now->toDateString();
+            $message = "It is time for your class ({$subject->name}) in {$entry->classroom?->name}. Please mark your attendance.";
+            $attendanceRequestDate = $nowTeacher->toDateString();
             $attendanceRequestKey = NotificationLog::attendanceRequestKey(
                 (int) $subject->id,
                 $attendanceRequestDate,
@@ -109,9 +116,11 @@ class NotifyTeacherAttendance extends Command
                     'meta' => [
                         'subject_id' => $subject->id,
                         'subject_name' => $subject->name,
-                        'classroom_id' => $subject->classroom_id,
-                        'classroom_name' => $subject->classroom?->name ?? 'N/A',
-                        'start_time' => Carbon::parse($subject->start_time)->format('g:i a'),
+                        'classroom_id' => $entry->classroom_id,
+                        'classroom_name' => $entry->classroom?->name ?? 'N/A',
+                        'start_time' => $start->format('g:i a'),
+                        'end_time' => $end->format('g:i a'),
+                        'weekday' => $entry->weekday,
                         'attendance_request_key' => $attendanceRequestKey,
                         'timezone' => $teacherTimezone,
                     ],
@@ -140,8 +149,9 @@ class NotifyTeacherAttendance extends Command
                             'type' => 'teacher_attendance_reminder',
                             'subject_id' => (string) $subject->id,
                             'subject_name' => $subject->name,
-                            'classroom_name' => $subject->classroom?->name ?? 'N/A',
-                            'start_time' => Carbon::parse($subject->start_time)->format('g:i a'),
+                            'classroom_name' => $entry->classroom?->name ?? 'N/A',
+                            'start_time' => $start->format('g:i a'),
+                            'end_time' => $end->format('g:i a'),
                         ]
                     );
 

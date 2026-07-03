@@ -311,6 +311,49 @@ class ClassroomController extends Controller
         }
     }
 
+    public function getClassroomsWithSubjectsAndTeachers()
+    {
+        try {
+            $institutionId = auth()->user()->institution_id;
+
+            $classrooms = Classroom::query()
+                ->where('institution_id', $institutionId)
+                ->with([
+                    'subjects' => function ($query) {
+                        $query->select(['id', 'name', 'classroom_id', 'teacher_id'])
+                            ->with([
+                                'teacher:id,first_name,sur_name',
+                            ])
+                            ->orderBy('name');
+                    },
+                ])
+                ->orderBy('name')
+                ->get()
+                ->map(function (Classroom $classroom) {
+                    return [
+                        'id' => $classroom->id,
+                        'name' => $classroom->name,
+                        'code' => $classroom->code,
+                        'subjects' => $classroom->subjects->map(function ($subject) {
+                            return [
+                                'id' => $subject->id,
+                                'name' => $subject->name,
+                                'teacher_id' => $subject->teacher_id,
+                                'teacher_name' => $subject->teacher?->full_name,
+                            ];
+                        })->values(),
+                    ];
+                })->values();
+
+            return $this->successResponse(
+                $classrooms,
+                'Classrooms with subjects and teacher names retrieved successfully'
+            );
+        } catch (Throwable $e) {
+            return $this->exceptionResponse($e);
+        }
+    }
+
     public function getAverageAttendance($id)
     {
         try {

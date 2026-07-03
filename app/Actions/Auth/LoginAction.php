@@ -5,6 +5,7 @@ namespace App\Actions\Auth;
 use App\Http\Resources\FamilyMemberResource;
 use App\Models\User;
 use App\Models\FamilyMember;
+use App\Models\SchoolAlert;
 use App\Enums\UserRole;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -38,6 +39,7 @@ class LoginAction
 
         $token = $user->createToken('auth_token')->plainTextToken;
         $this->loadMinimalRelations($user);
+        $this->attachInstitutionAlertCount($user);
 
         // Get unread notification count
         $unreadNotificationCount = \App\Models\NotificationLog::where('user_id', $user->id)
@@ -111,12 +113,8 @@ class LoginAction
     {
         $relations = [];
 
-        if ($user->role === UserRole::Principal) {
+        if (in_array($user->role, [UserRole::Principal, UserRole::Teacher, UserRole::SchoolAdmin, UserRole::Parent], true)) {
             $relations[] = 'institution';
-        }
-
-        if ($user->role === UserRole::SchoolAdmin) {
-            $relations[] = 'creator.institution';
         }
 
         if ($user->role === UserRole::Parent) {
@@ -125,5 +123,33 @@ class LoginAction
         }
 
         $user->load($relations);
+    }
+
+    private function attachInstitutionAlertCount(User $user): void
+    {
+        if (!in_array($user->role, [UserRole::Principal, UserRole::SchoolAdmin, UserRole::Teacher, UserRole::Parent], true)) {
+            return;
+        }
+
+        if (!$user->relationLoaded('institution') || !$user->institution) {
+            return;
+        }
+
+        $user->institution->setAttribute(
+            'active_alerts_count',
+            SchoolAlert::where('institution_id', $user->institution_id)
+                ->where('status', 'active')
+                ->count()
+        );
+
+        if (in_array($user->role, [UserRole::Teacher, UserRole::SchoolAdmin], true)) {
+            $user->institution->setAttribute(
+                'potential_abduction_alerts_count',
+                SchoolAlert::where('institution_id', $user->institution_id)
+                    ->where('type', 'abduction')
+                    ->where('status', 'potential')
+                    ->count()
+            );
+        }
     }
 }

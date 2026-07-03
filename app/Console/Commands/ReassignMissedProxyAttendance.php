@@ -225,8 +225,8 @@ class ReassignMissedProxyAttendance extends Command
                     'subject_name' => $subject->name,
                     'classroom_id' => (string) $subject->classroom_id,
                     'classroom_name' => $subject->classroom?->name ?? 'N/A',
-                    'start_time' => Carbon::parse($subject->start_time)->format('g:i a'),
-                    'end_time' => Carbon::parse($subject->end_time)->format('g:i a'),
+                    'start_time' => $this->displayTime($subject->proxy_start_time ?? $subject->start_time),
+                    'end_time' => $this->displayTime($subject->proxy_end_time ?? $subject->end_time),
                     'proxy_start_time' => $proxyStartTime->format('g:i a'),
                     'proxy_end_time' => $proxyEndTime->format('g:i a'),
                     'original_teacher_id' => (string) $subject->teacher_id,
@@ -338,11 +338,11 @@ class ReassignMissedProxyAttendance extends Command
                 'previous_proxy_teacher_name' => $currentProxyTeacher->full_name,
                 'new_proxy_teacher_id' => (string) $nextProxyTeacher->id,
                 'new_proxy_teacher_name' => $nextProxyTeacher->full_name,
-                'start_time' => Carbon::parse($subject->start_time)->format('g:i a'),
-                'end_time' => Carbon::parse($subject->end_time)->format('g:i a'),
+                'start_time' => $this->displayTime($subject->proxy_start_time ?? $subject->start_time),
+                'end_time' => $this->displayTime($subject->proxy_end_time ?? $subject->end_time),
                 'attendance_request_key' => $attendanceRequestKey,
             ],
-            'sent_at' => now(),
+            'sent_at' => now($principal->timezone ?? config('app.timezone', 'UTC')),
         ]);
 
         if ($principal->notifications_enabled && $principal->fcm_token) {
@@ -411,11 +411,11 @@ class ReassignMissedProxyAttendance extends Command
                 'classroom_name' => $subject->classroom?->name ?? 'N/A',
                 'proxy_teacher_id' => (string) $subject->proxy_teacher_id,
                 'proxy_teacher_name' => $currentProxyTeacher->full_name,
-                'start_time' => Carbon::parse($subject->start_time)->format('g:i a'),
-                'end_time' => Carbon::parse($subject->end_time)->format('g:i a'),
+                'start_time' => $this->displayTime($subject->proxy_start_time ?? $subject->start_time),
+                'end_time' => $this->displayTime($subject->proxy_end_time ?? $subject->end_time),
                 'attendance_request_key' => $attendanceRequestKey,
             ],
-            'sent_at' => now(),
+            'sent_at' => now($principal->timezone ?? config('app.timezone', 'UTC')),
         ]);
 
         if ($principal->notifications_enabled && $principal->fcm_token) {
@@ -483,11 +483,11 @@ class ReassignMissedProxyAttendance extends Command
                 'classroom_name' => $subject->classroom?->name ?? 'N/A',
                 'proxy_teacher_id' => (string) $subject->proxy_teacher_id,
                 'proxy_teacher_name' => $currentProxyTeacher->full_name,
-                'start_time' => Carbon::parse($subject->start_time)->format('g:i a'),
-                'end_time' => Carbon::parse($subject->end_time)->format('g:i a'),
+                'start_time' => $this->displayTime($subject->proxy_start_time ?? $subject->start_time),
+                'end_time' => $this->displayTime($subject->proxy_end_time ?? $subject->end_time),
                 'attendance_request_key' => $attendanceRequestKey,
             ],
-            'sent_at' => now(),
+            'sent_at' => now($principal->timezone ?? config('app.timezone', 'UTC')),
         ]);
 
         if ($principal->notifications_enabled && $principal->fcm_token) {
@@ -505,5 +505,14 @@ class ReassignMissedProxyAttendance extends Command
         }
 
         \Log::warning("Proxy session expired for subject {$subject->id}; principal notified.");
+    }
+
+    private function displayTime(?string $time): ?string
+    {
+        if (!$time) {
+            return null;
+        }
+
+        return Carbon::parse($time)->format('g:i a');
     }
 }

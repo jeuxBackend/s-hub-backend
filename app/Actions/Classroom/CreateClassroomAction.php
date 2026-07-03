@@ -25,6 +25,7 @@ class CreateClassroomAction
                         'name' => $subjectData['name'],
                         'institution_id' => $creator->institution->id,
                         'teacher_id' => $subjectData['teacher_id'] ?? null,
+                        'lectures_per_week' => $subjectData['lectures_per_week'] ?? 1,
                         'start_time' => $subjectData['start_time'] ?? null,
                         'end_time' => $subjectData['end_time'] ?? null,
                     ]);

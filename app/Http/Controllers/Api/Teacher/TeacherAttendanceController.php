@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\TeacherAttendance;
 use App\Models\Subject;
 use App\Models\NotificationLog;
+use App\Support\TimetableEntryResolver;
 use Carbon\Carbon;
 use Throwable;
 
@@ -15,7 +16,7 @@ class TeacherAttendanceController extends Controller
     /**
      * Mark teacher attendance
      */
-    public function markAttendance(Request $request)
+    public function markAttendance(Request $request, TimetableEntryResolver $resolver)
     {
         $request->validate([
             'subject_id' => 'required|exists:subjects,id',
@@ -34,27 +35,15 @@ class TeacherAttendanceController extends Controller
                 return $this->errorResponse('Subject not found or you are not assigned to this subject.', 404);
             }
 
-            if (!$subject->start_time || !$subject->end_time) {
+            $teacherTimezone = $teacher->timezone ?? 'UTC';
+            $now = Carbon::now($teacherTimezone);
+            $entry = $resolver->resolveForToday($subject, $teacherTimezone);
+
+            if (!$entry) {
                 return $this->errorResponse('This subject does not have a scheduled time in the timetable.', 400);
             }
 
-            // Check if current time is within subject time (with some buffer, e.g. 30 mins before or after)
-            $teacherTimezone = $teacher->timezone ?? 'UTC';
-            $now = Carbon::now($teacherTimezone);
-
-            // Determine format of stored time strings (HH:MM or HH:MM:SS)
-            $timeFormat = strlen($subject->start_time) > 5 ? 'H:i:s' : 'H:i';
-
-            // Parse start and end times in teacher's timezone and set today's date
-            $startTime = Carbon::createFromFormat($timeFormat, $subject->start_time, $teacherTimezone)
-                ->setDate($now->year, $now->month, $now->day);
-            $endTime = Carbon::createFromFormat($timeFormat, $subject->end_time, $teacherTimezone)
-                ->setDate($now->year, $now->month, $now->day);
-
-            // Handle overnight classes where end is earlier than start
-            if ($endTime->lessThan($startTime)) {
-                $endTime->addDay();
-            }
+            [$startTime, $endTime] = $resolver->buildDateTimeRange($entry, $now, $teacherTimezone);
 
             $bufferMinutes = 30;
             if ($now->lessThan($startTime->copy()->subMinutes($bufferMinutes)) || $now->greaterThan($endTime->copy()->addMinutes($bufferMinutes))) {

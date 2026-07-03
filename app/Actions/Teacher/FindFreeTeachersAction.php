@@ -3,8 +3,10 @@
 namespace App\Actions\Teacher;
 
 use App\Models\Subject;
+use App\Models\TimetableEntry;
 use App\Models\User;
 use Carbon\Carbon;
+use App\Support\TimetableEntryResolver;
 
 class FindFreeTeachersAction
 {
@@ -17,21 +19,26 @@ class FindFreeTeachersAction
      */
     public function handle(int $lectureId, int $institutionId): array
     {
-        // Get the lecture to check its time
         $lecture = Subject::where('id', $lectureId)
             ->where('institution_id', $institutionId)
-            ->select('id', 'start_time', 'end_time', 'teacher_id')
+            ->with('teacher')
             ->first();
 
-        if (!$lecture || !$lecture->start_time || !$lecture->end_time) {
+        if (!$lecture) {
             return [];
         }
 
-        // Parse the lecture times
-        $lectureStart = Carbon::parse($lecture->start_time);
-        $lectureEnd = Carbon::parse($lecture->end_time);
+        $teacherTimezone = $lecture->teacher?->timezone ?? config('app.timezone', 'UTC');
+        $resolver = app(TimetableEntryResolver::class);
+        $entry = $resolver->resolveForToday($lecture, $teacherTimezone);
 
-        // Get all teachers in the institution (including school admins)
+        if (!$entry) {
+            return [];
+        }
+
+        [$lectureStart, $lectureEnd] = $resolver->buildDateTimeRange($entry, Carbon::now($teacherTimezone), $teacherTimezone);
+        $weekday = (int) $entry->weekday;
+
         $allTeachers = User::where('institution_id', $institutionId)
             ->whereIn('role', ['teacher', 'school-admin'])
             ->pluck('id')
@@ -41,35 +48,31 @@ class FindFreeTeachersAction
             return [];
         }
 
-        // Get teachers who have classes during this time range
-        $busyTeachers = Subject::where('institution_id', $institutionId)
+        $busyTeachers = TimetableEntry::query()
+            ->where('institution_id', $institutionId)
             ->whereIn('teacher_id', $allTeachers)
-            ->whereNotNull('start_time')
-            ->whereNotNull('end_time')
-            ->where('id', '!=', $lectureId) // Exclude the current lecture itself
+            ->where('weekday', $weekday)
+            ->where('subject_id', '!=', $lectureId)
             ->get()
-            ->filter(function ($subject) use ($lectureStart, $lectureEnd) {
-                $subjectStart = Carbon::parse($subject->start_time);
-                $subjectEnd = Carbon::parse($subject->end_time);
-
-                // Check if there's any overlap between the subject time and lecture time
-                // Two time ranges overlap if one starts before the other ends
+            ->filter(function (TimetableEntry $subjectEntry) use ($lectureStart, $lectureEnd, $resolver, $teacherTimezone) {
+                [$subjectStart, $subjectEnd] = $resolver->buildDateTimeRange($subjectEntry, Carbon::now($teacherTimezone), $teacherTimezone);
                 return !($lectureEnd->lessThanOrEqualTo($subjectStart) || $lectureStart->greaterThanOrEqualTo($subjectEnd));
             })
             ->pluck('teacher_id')
             ->unique()
             ->toArray();
 
-        // Also get teachers who have active proxy assignments during this time
         $proxyBusyTeachers = Subject::where('institution_id', $institutionId)
             ->whereIn('proxy_teacher_id', $allTeachers)
             ->where('is_proxy', true)
             ->whereNotNull('proxy_start_time')
             ->whereNotNull('proxy_end_time')
+            ->with(['teacher'])
             ->get()
             ->filter(function ($subject) use ($lectureStart, $lectureEnd) {
-                $proxyStart = Carbon::parse($subject->proxy_start_time);
-                $proxyEnd = Carbon::parse($subject->proxy_end_time);
+                $proxyTz = $subject->teacher?->timezone ?? config('app.timezone', 'UTC');
+                $proxyStart = Carbon::parse($subject->proxy_start_time, $proxyTz);
+                $proxyEnd = Carbon::parse($subject->proxy_end_time, $proxyTz);
 
                 // Check if there's any overlap between the proxy time and lecture time
                 return !($lectureEnd->lessThanOrEqualTo($proxyStart) || $lectureStart->greaterThanOrEqualTo($proxyEnd));
@@ -78,12 +81,7 @@ class FindFreeTeachersAction
             ->unique()
             ->toArray();
 
-        // Combine busy teachers (regular classes + proxy assignments)
         $allBusyTeachers = array_unique(array_merge($busyTeachers, $proxyBusyTeachers));
-
-        // Filter free teachers
-        $freeTeachers = array_values(array_diff($allTeachers, $allBusyTeachers));
-
-        return $freeTeachers;
+        return array_values(array_diff($allTeachers, $allBusyTeachers));
     }
 }

@@ -3,14 +3,15 @@
 namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
-use App\Models\Subject;
 use App\Models\TeacherAttendance;
 use App\Models\NotificationLog;
+use App\Models\TimetableEntry;
 use App\Models\User;
 use App\Enums\AttendanceStatus;
 use App\Events\NewNotificationEvent;
 use App\Services\FirebaseNotificationService;
 use Carbon\Carbon;
+use App\Support\TimetableEntryResolver;
 
 class NotifyPrincipalLateTeacher extends Command
 {
@@ -31,22 +32,23 @@ class NotifyPrincipalLateTeacher extends Command
     /**
      * Execute the console command.
      */
-    public function handle(FirebaseNotificationService $firebaseNotificationService)
+    public function handle(FirebaseNotificationService $firebaseNotificationService, TimetableEntryResolver $resolver)
     {
         // Use teacher's timezone for timing
         \Log::info('Cron checking for absent teachers (>= 3 mins late)');
 
-        // Get all subjects with start_time
-        $subjects = Subject::whereNotNull('start_time')
-            ->with(['teacher', 'classroom', 'institution.principal'])
+        $entries = TimetableEntry::query()
+            ->with(['subject.teacher', 'subject.classroom', 'subject.institution.principal'])
             ->get();
 
         $notifiedCount = 0;
         $skippedCount = 0;
 
-        foreach ($subjects as $subject) {
-            if (!$subject->teacher || !$subject->institution || !$subject->institution->principal) {
-                \Log::debug("Subject {$subject->id} missing teacher, institution, or principal, skipping");
+        foreach ($entries as $entry) {
+            $subject = $entry->subject;
+
+            if (!$subject || !$subject->teacher || !$subject->institution || !$subject->institution->principal) {
+                \Log::debug("Timetable entry {$entry->id} is missing teacher, institution, or principal, skipping");
                 $skippedCount++;
                 continue;
             }
@@ -56,9 +58,12 @@ class NotifyPrincipalLateTeacher extends Command
             $nowTeacher = Carbon::now($teacherTimezone);
 
             try {
-                // Parse start_time as a time in the teacher's timezone and set today's date
-                $classStartTime = Carbon::parse($subject->start_time, $teacherTimezone);
-                $classStartTime->setDate($nowTeacher->year, $nowTeacher->month, $nowTeacher->day);
+                if ((int) $entry->weekday !== $nowTeacher->isoWeekday()) {
+                    $skippedCount++;
+                    continue;
+                }
+
+                [$classStartTime, $classEndTime] = $resolver->buildDateTimeRange($entry, $nowTeacher, $teacherTimezone);
 
                 // Check if class started 3 or more minutes ago
                 $latenessThreshold = $nowTeacher->copy()->subMinutes(3);
@@ -117,11 +122,7 @@ class NotifyPrincipalLateTeacher extends Command
                                 'classroom_id' => (string) $subject->classroom_id,
                                 'classroom_name' => $subject->classroom ? $subject->classroom->name : 'N/A',
                                 'start_time' => $classStartTime->format('g:i a'),
-                                'end_time' => (function () use ($subject, $teacherTimezone) {
-                                    $end = Carbon::parse($subject->end_time);
-                                    $end->setTimezone($teacherTimezone);
-                                    return $end->format('g:i a');
-                                })(),
+                                'end_time' => $classEndTime->format('g:i a'),
                                 'is_incharge' => $isInCharge ? 'Yes' : 'No',
                                 'attendance_request_key' => $attendanceRequestKey,
                                 'timezone' => $teacherTimezone,
@@ -153,8 +154,8 @@ class NotifyPrincipalLateTeacher extends Command
                                 'subject_name' => $subject->name,
                                 'classroom_id' => (string) $subject->classroom_id,
                                 'classroom_name' => $subject->classroom ? $subject->classroom->name : 'N/A',
-                                'start_time' => Carbon::parse($subject->start_time)->format('g:i a'),
-                                'end_time' => Carbon::parse($subject->end_time)->format('g:i a'),
+                                'start_time' => $classStartTime->format('g:i a'),
+                                'end_time' => $classEndTime->format('g:i a'),
                                 'attendance_status' => AttendanceStatus::Absent->value,
                                 'attendance_request_key' => $attendanceRequestKey,
                                 'timezone' => $teacherTimezone,

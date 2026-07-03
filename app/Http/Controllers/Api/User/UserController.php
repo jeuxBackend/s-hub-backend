@@ -18,6 +18,7 @@ use App\Http\Requests\User\ChangePasswordRequest;
 use App\Actions\User\ChangePasswordAction;
 use App\Actions\User\UpdateContactAction;
 use App\Http\Requests\User\UpdateContactRequest;
+use App\Models\SchoolAlert;
 
 
 class UserController extends Controller
@@ -80,12 +81,31 @@ class UserController extends Controller
             }
             
             // Load relationships based on user role similar to login action
-            if ($user->role === \App\Enums\UserRole::Principal) {
+            if (in_array($user->role, [\App\Enums\UserRole::Principal, \App\Enums\UserRole::Teacher, \App\Enums\UserRole::SchoolAdmin, \App\Enums\UserRole::Parent], true)) {
                 $user->load(['institution']);
-            } elseif ($user->role === \App\Enums\UserRole::SchoolAdmin) {
-                $user->load(['creator.institution']);
-            } elseif ($user->role === \App\Enums\UserRole::Parent) {
+            }
+
+            if ($user->role === \App\Enums\UserRole::Parent) {
                 $user->load(['guardianStudents', 'familyMembers']);
+            }
+
+            if (in_array($user->role, [\App\Enums\UserRole::Principal, \App\Enums\UserRole::SchoolAdmin, \App\Enums\UserRole::Teacher, \App\Enums\UserRole::Parent], true) && $user->relationLoaded('institution') && $user->institution) {
+                $user->institution->setAttribute(
+                    'active_alerts_count',
+                    SchoolAlert::where('institution_id', $user->institution_id)
+                        ->where('status', 'active')
+                        ->count()
+                );
+
+                if (in_array($user->role, [\App\Enums\UserRole::Teacher, \App\Enums\UserRole::SchoolAdmin], true)) {
+                    $user->institution->setAttribute(
+                        'potential_abduction_alerts_count',
+                        SchoolAlert::where('institution_id', $user->institution_id)
+                            ->where('type', 'abduction')
+                            ->where('status', 'potential')
+                            ->count()
+                    );
+                }
             }
             
             // Get unread notification count
@@ -107,8 +127,12 @@ class UserController extends Controller
     public function updateProfile(UpdateUserRequest $request, UpdateUserAction $updateUser)
     {
         try {
-
             $data = $request->validated();
+
+            if ($request->hasFile('profile_picture')) {
+                $data['profile_picture'] = $this->handleUserFileUpload($request, 'profile_picture', 'profile_pictures');
+            }
+
             $updated = $updateUser->handle(auth()->user()->id, $data, auth()->user());
             return $this->successResponse(
                 [

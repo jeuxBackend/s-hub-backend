@@ -21,8 +21,9 @@ class UpdateClassroomRequest extends FormRequest
             'subjects.*.id' => ['nullable', 'exists:subjects,id'],
             'subjects.*.name' => ['required_with:subjects', 'string', 'max:100'],
             'subjects.*.teacher_id' => ['nullable', 'exists:users,id'],
-            'subjects.*.start_time' => ['nullable', 'string'],
-            'subjects.*.end_time' => ['nullable', 'string'],
+            'subjects.*.lectures_per_week' => ['nullable', 'integer', 'min:1', 'max:7'],
+            'subjects.*.start_time' => ['nullable'],
+            'subjects.*.end_time' => ['nullable'],
         ];
     }
 }

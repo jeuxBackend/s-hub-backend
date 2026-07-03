@@ -15,6 +15,8 @@ class StoreSubjectAction
             'code'           => $data['code'] ?? null,
             'classroom_id'   => $data['classroom_id'],
             'institution_id' =>  auth()->user()->institution->id, // ⚠️ make sure this field exists
+            'teacher_id'     => $data['teacher_id'] ?? null,
+            'lectures_per_week' => $data['lectures_per_week'] ?? 1,
         ]);
     }
 }

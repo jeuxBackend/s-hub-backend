@@ -17,6 +17,8 @@ class StoreSubjectRequest extends FormRequest
             'name'         => ['required', 'string', 'max:100'],
             'code'         => ['nullable', 'string', 'max:50','unique:subjects,code'],
             'classroom_id' => ['required', 'exists:classrooms,id'],
+            'teacher_id'   => ['nullable', 'exists:users,id'],
+            'lectures_per_week' => ['nullable', 'integer', 'min:1', 'max:7'],
         ];
     }
 }

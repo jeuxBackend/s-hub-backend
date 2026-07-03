@@ -30,6 +30,7 @@ class Institution extends Model
         'email_verified',
         'phone_verified',
         'alert_feature_enabled',
+        'allowed_alert_types',
         'subjects',
         'latitude',
         'longitude',
@@ -39,6 +40,7 @@ class Institution extends Model
         'email_verified' => 'boolean',
         'phone_verified' => 'boolean',
         'alert_feature_enabled' => 'boolean',
+        'allowed_alert_types' => 'array',
         'subjects' => 'array',
     ];
 

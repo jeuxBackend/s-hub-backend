@@ -102,6 +102,8 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'active.user'])->group(function
         Route::get('teacher/classrooms/{classroom}', [TeacherClassroomController::class, 'show']);
         Route::get('teacher/timetable', [TeacherClassroomController::class, 'timetable']);
         Route::get('teacher/academic-documents', [\App\Http\Controllers\Api\Teacher\AcademicDocumentController::class, 'index']);
+        Route::put('teacher/profile', [UserController::class, 'updateProfile']);
+        Route::post('teacher/profile', [UserController::class, 'updateProfile']);
         Route::post('teacher/attendance/mark', [TeacherAttendanceController::class, 'markAttendance']);
         Route::post('teacher/proxy-attendance/mark', [FreePeriodTeacherController::class, 'markProxyAttendance']);
 
@@ -128,6 +130,7 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'active.user'])->group(function
 
     Route::middleware(['otp.verified'])->prefix('alerts')->group(function () {
         Route::get('current', [SchoolAlertController::class, 'current']);
+        Route::get('responses', [SchoolAlertController::class, 'responses']);
         Route::post('abduction/trigger', [SchoolAlertController::class, 'triggerAbduction']);
         Route::post('emergency/trigger', [SchoolAlertController::class, 'triggerEmergency']);
         Route::post('{alert}/confirm', [SchoolAlertController::class, 'confirmAbduction']);
@@ -147,6 +150,7 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'active.user'])->group(function
             Route::get('remove-admin/{id}', [SchoolAdminController::class, 'removeSchoolAdmin']);
             Route::patch('institution/slogan', [InstituteController::class, 'updateSlogan']);
             Route::patch('student-reports/{id}/status', [\App\Http\Controllers\Api\StudentReportController::class, 'updateStatus']);
+            Route::get('school-timetable', [\App\Http\Controllers\Api\Principal\PrincipalTimetableController::class, 'getSchoolTimetable']);
             Route::get('teachers/{id}/timetable', [\App\Http\Controllers\Api\Principal\PrincipalTimetableController::class, 'getTeacherTimetable']);
             Route::get('classrooms/{id}/timetable', [\App\Http\Controllers\Api\Principal\PrincipalTimetableController::class, 'getClassroomTimetable']);
             Route::post('final-results-submissions', [\App\Http\Controllers\Api\Principal\FinalResultSubmissionController::class, 'store']);
@@ -180,10 +184,13 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'active.user'])->group(function
             Route::patch('academic-documents/{academicDocument}', [\App\Http\Controllers\Api\Principal\AcademicDocumentController::class, 'update']);
             Route::get('classrooms/{classroom}/academic-documents', [\App\Http\Controllers\Api\Principal\AcademicDocumentController::class, 'getClassroomAcademicDocuments']);
             Route::get('classrooms/{classroom}/transcripts', [\App\Http\Controllers\Api\Principal\AcademicDocumentController::class, 'getClassroomTranscripts']);
+            Route::post('rota/preview', [\App\Http\Controllers\Api\Principal\RotaController::class, 'preview']);
+            Route::post('rota/apply', [\App\Http\Controllers\Api\Principal\RotaController::class, 'apply']);
 
             Route::post('send-noticeboard', [NotificationsController::class, 'sendNoticeboard']);
 
             Route::get('classrooms-list', [ClassroomController::class, 'getClassRoomsList']);
+            Route::get('classrooms-with-subjects', [ClassroomController::class, 'getClassroomsWithSubjectsAndTeachers']);
 
             Route::post('classroom-teachers/allocate', [ClassroomTeacherController::class, 'allocate']);
             Route::post('classroom-teachers/unallocate', [ClassroomTeacherController::class, 'unallocate']);
@@ -216,6 +223,7 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'active.user'])->group(function
         });
 
         Route::get('dashboard-stats', [PrincipalDashboardController::class, 'stats']);
+        Route::get('principal/dashboard/academic-analytics', [PrincipalDashboardController::class, 'academicAnalytics']);
         // Route::get('settings', [SettingController::class, 'show']);
     });
     Route::post('get-noticeboard', [NotificationsController::class, 'getUserNotifications']);
@@ -278,6 +286,7 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'active.user'])->group(function
         Route::post('attendances/{attendance}/reason', [\App\Http\Controllers\Api\Parent\ParentController::class, 'updateAttendanceReason']);
         Route::get('grades', [\App\Http\Controllers\Api\Parent\ParentController::class, 'getGrades']);
         Route::get('alerts/current', [SchoolAlertController::class, 'current']);
+        Route::get('alerts/responses', [SchoolAlertController::class, 'parentResponses']);
         Route::post('alerts/{alert}/respond', [SchoolAlertController::class, 'respond']);
         Route::get('results', [\App\Http\Controllers\Api\Parent\ParentResultController::class, 'index']);
         Route::get('results/{submission}/download/{student}', [\App\Http\Controllers\Api\Parent\ParentResultController::class, 'download']);

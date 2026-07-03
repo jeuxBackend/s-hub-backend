@@ -17,6 +17,8 @@ class UpdateSubjectRequest extends FormRequest
             'name'         => ['sometimes', 'string', 'max:100'],
             'code'         => ['nullable', 'string', 'max:50'],
             'classroom_id' => ['sometimes', 'exists:classrooms,id'],
+            'teacher_id'   => ['nullable', 'exists:users,id'],
+            'lectures_per_week' => ['nullable', 'integer', 'min:1', 'max:7'],
         ];
     }
 }

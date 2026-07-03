@@ -13,7 +13,9 @@ class ListSubjectsAction
         $institutionId = $requester->institution->id;
 
 
-        $query = Subject::query()->where('institution_id', $institutionId);
+        $query = Subject::query()
+            ->where('institution_id', $institutionId)
+            ->with(['teacher', 'classroom']);
 
         if (!empty($filters['classroom_id'])) {
             $query->where('classroom_id', $filters['classroom_id']);

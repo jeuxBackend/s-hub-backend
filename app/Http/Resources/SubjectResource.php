@@ -17,6 +17,7 @@ class SubjectResource extends JsonResource
         return [
             'id'           => $this->id ?? "",
             'name'         => $this->name,
+            'lectures_per_week' => (int) ($this->lectures_per_week ?? 1),
             // 'code'         => $this->code,
             // Safely load classroom only if it's available
             'classroom'    => $this->whenLoaded('classroom', function () {

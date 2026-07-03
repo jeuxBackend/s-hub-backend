@@ -12,6 +12,7 @@ class Subject extends Model
         'classroom_id',
         'institution_id',
         'teacher_id',
+        'lectures_per_week',
         'start_time',
         'end_time',
         'is_proxy',
@@ -46,5 +47,10 @@ class Subject extends Model
     public function assignments()
     {
         return $this->hasMany(Assignment::class);
+    }
+
+    public function timetableEntries()
+    {
+        return $this->hasMany(TimetableEntry::class);
     }
 }

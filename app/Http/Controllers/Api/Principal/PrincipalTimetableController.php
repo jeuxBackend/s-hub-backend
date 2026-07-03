@@ -3,15 +3,48 @@
 namespace App\Http\Controllers\Api\Principal;
 
 use App\Http\Controllers\Controller;
-use App\Models\Subject;
+use App\Models\TimetableEntry;
 use App\Models\User;
 use App\Models\Classroom;
-use App\Http\Resources\SubjectResource;
-use Illuminate\Http\Request;
+use App\Http\Resources\TimetableEntryResource;
+use App\Support\TimetableEntryResolver;
 use Throwable;
 
 class PrincipalTimetableController extends Controller
 {
+    /**
+     * Get grouped timetable for the whole institution.
+     */
+    public function getSchoolTimetable(TimetableEntryResolver $resolver)
+    {
+        try {
+            $institutionId = auth()->user()->institution_id;
+
+            $entries = TimetableEntry::query()
+                ->where('institution_id', $institutionId)
+                ->with([
+                    'subject',
+                    'teacher',
+                    'classroom' => function ($query) {
+                        $query->select('id', 'name', 'code');
+                    },
+                ])
+                ->orderBy('weekday')
+                ->orderBy('start_time')
+                ->orderBy('classroom_id')
+                ->get();
+
+            $resource = TimetableEntryResource::collection($entries);
+
+            return $this->successResponse(
+                $this->groupEntries($resource->resolve(), $resolver),
+                'School timetable retrieved successfully.'
+            );
+        } catch (Throwable $e) {
+            return $this->exceptionResponse($e);
+        }
+    }
+
     /**
      * Get timetable for a specific teacher.
      */
@@ -30,22 +63,21 @@ class PrincipalTimetableController extends Controller
                 return $this->errorResponse('Teacher not found in your institution.', 404);
             }
 
-            $subjects = Subject::where('teacher_id', $teacher->id)
+            $entries = TimetableEntry::query()
+                ->where('teacher_id', $teacher->id)
                 ->with([
+                    'subject',
+                    'teacher',
                     'classroom' => function ($q) {
                         $q->select('id', 'name', 'code')->withCount('students');
-                    }
+                    },
                 ])
-                ->whereNotNull('start_time')
-                ->whereNotNull('end_time')
-                ->get()
-                ->sortBy(function ($subject) {
-                    return strtotime($subject->start_time);
-                })
-                ->values();
+                ->orderBy('weekday')
+                ->orderBy('start_time')
+                ->get();
 
             return $this->successResponse(
-                SubjectResource::collection($subjects),
+                TimetableEntryResource::collection($entries),
                 'Teacher timetable retrieved successfully.'
             );
         } catch (Throwable $e) {
@@ -70,30 +102,34 @@ class PrincipalTimetableController extends Controller
                 return $this->errorResponse('Classroom not found in your institution.', 404);
             }
 
-            $subjects = Subject::where('classroom_id', $classroom->id)
-                ->with(['teacher'])
-                ->whereNotNull('start_time')
-                ->whereNotNull('end_time')
-                ->get()
-                ->sortBy(function ($subject) {
-                    return strtotime($subject->start_time);
-                })
-                ->values();
-
-            // Append total_students to classroom manually for resource
-            $classroom->total_students = $classroom->students()->count();
-
-            // Set the classroom explicitly to prevent N+1 and reuse the data
-            $subjects->each(function ($subject) use ($classroom) {
-                $subject->setRelation('classroom', $classroom);
-            });
+            $entries = TimetableEntry::query()
+                ->where('classroom_id', $classroom->id)
+                ->with(['subject', 'teacher', 'classroom'])
+                ->orderBy('weekday')
+                ->orderBy('start_time')
+                ->get();
 
             return $this->successResponse(
-                SubjectResource::collection($subjects),
+                TimetableEntryResource::collection($entries),
                 'Classroom timetable retrieved successfully.'
             );
         } catch (Throwable $e) {
             return $this->exceptionResponse($e);
         }
+    }
+
+    private function groupEntries(array $entries, TimetableEntryResolver $resolver): array
+    {
+        return collect($entries)
+            ->groupBy('weekday')
+            ->map(function ($dayEntries, $weekday) use ($resolver) {
+                return [
+                    'weekday' => (int) $weekday,
+                    'weekday_name' => $resolver->weekdayName((int) $weekday),
+                    'entries' => array_values($dayEntries->all()),
+                ];
+            })
+            ->values()
+            ->all();
     }
 }

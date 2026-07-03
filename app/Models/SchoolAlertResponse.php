@@ -10,9 +10,12 @@ class SchoolAlertResponse extends Model
         'school_alert_id',
         'institution_id',
         'user_id',
+        'parent_user_id',
+        'school_user_id',
         'student_id',
         'source_role',
-        'response_type',
+        'parent_response_type',
+        'school_response_type',
         'note',
         'meta',
         'responded_at',
@@ -36,6 +39,16 @@ class SchoolAlertResponse extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function parentUser()
+    {
+        return $this->belongsTo(User::class, 'parent_user_id');
+    }
+
+    public function schoolUser()
+    {
+        return $this->belongsTo(User::class, 'school_user_id');
     }
 
     public function student()
