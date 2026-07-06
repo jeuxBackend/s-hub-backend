@@ -6,9 +6,13 @@ use App\Actions\Rota\GenerateRotaAction;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Rota\ManageRotaRequest;
 use App\Http\Resources\TimetableEntryResource;
+use App\Models\NotificationLog;
 use App\Models\TimetableEntry;
+use App\Models\User;
+use App\Services\FirebaseNotificationService;
 use App\Support\TimetableEntryResolver;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use Throwable;
@@ -41,8 +45,12 @@ class RotaController extends Controller
         }
     }
 
-    public function apply(ManageRotaRequest $request, GenerateRotaAction $generateRota, TimetableEntryResolver $resolver)
-    {
+    public function apply(
+        ManageRotaRequest $request,
+        GenerateRotaAction $generateRota,
+        TimetableEntryResolver $resolver,
+        FirebaseNotificationService $firebaseNotificationService
+    ) {
         try {
             $institutionId = auth()->user()->institution_id;
             $payload = $request->validated();
@@ -82,6 +90,8 @@ class RotaController extends Controller
                 ->orderBy('start_time')
                 ->get();
 
+            $this->notifyTeachersAboutUpdatedRota($entries, $firebaseNotificationService);
+
             $resource = TimetableEntryResource::collection($entries);
 
             return $this->successResponse(
@@ -111,6 +121,56 @@ class RotaController extends Controller
             })
             ->values()
             ->all();
+    }
+
+    private function notifyTeachersAboutUpdatedRota(Collection $entries, FirebaseNotificationService $firebaseNotificationService): void
+    {
+        $teacherEntries = $entries
+            ->filter(fn (TimetableEntry $entry) => !empty($entry->teacher_id))
+            ->groupBy('teacher_id');
+
+        foreach ($teacherEntries as $items) {
+            $teacher = $items->first()?->teacher;
+
+            if (!$teacher instanceof User) {
+                continue;
+            }
+
+            $subjects = $items->pluck('subject.name')->filter()->unique()->values();
+            $classrooms = $items->pluck('classroom.name')->filter()->unique()->values();
+
+            $title = 'Timetable Updated';
+            $message = 'Your subject timetable has been updated. Please view your class subjects timetable.';
+
+            $log = NotificationLog::create([
+                'user_id' => $teacher->id,
+                'type' => 'timetable_updated',
+                'title' => $title,
+                'message' => $message,
+                'is_read' => false,
+                'meta' => [
+                    'teacher_id' => $teacher->id,
+                    'subject_ids' => $items->pluck('subject_id')->unique()->values()->all(),
+                    'subject_names' => $subjects->all(),
+                    'classroom_ids' => $items->pluck('classroom_id')->unique()->values()->all(),
+                    'classroom_names' => $classrooms->all(),
+                    'entries_count' => $items->count(),
+                ],
+            ]);
+
+            if ($teacher->notifications_enabled && $teacher->fcm_token) {
+                $firebaseNotificationService->sendToToken(
+                    $teacher->fcm_token,
+                    $title,
+                    $message,
+                    [
+                        'type' => 'timetable_updated',
+                        'notification_id' => (string) $log->id,
+                        'teacher_id' => (string) $teacher->id,
+                    ]
+                );
+            }
+        }
     }
 
     private function rotaValidationErrorResponse(ValidationException $e)
