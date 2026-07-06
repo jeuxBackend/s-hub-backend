@@ -11,15 +11,9 @@ class ListTeachersAction
     {
         $requester = auth()->user();
 
-        // Only allow principal to access this
-        // if ($requester->role !== 'principal') {
-        //     return User::query()->whereRaw('1 = 0')->paginate($request->get('per_page', 10));
-        // }
-
         $query = User::query()
             ->whereIn('role', ['teacher', 'school-admin'])
-            ->where('institution_id', $requester->institution_id)
-            ->whereNotNull('password');
+            ->where('institution_id', $requester->institution_id);
 
         return $query
             ->when($request->filled('name'), function ($q) use ($request) {
@@ -28,17 +22,17 @@ class ListTeachersAction
                         ->orWhere('sur_name', 'like', '%' . $request->name . '%');
                 });
             })
-            ->when(
-                $request->filled('phone'),
-                fn($q) =>
-                $q->where('phone_number', 'like', '%' . $request->phone . '%')
-            )
-            ->when(
-                $request->filled('email'),
-                fn($q) =>
-                $q->where('email', 'like', '%' . $request->email . '%')
-            )
+            ->when($request->filled('phone'), function ($q) use ($request) {
+                $q->where('phone_number', 'like', '%' . $request->phone . '%');
+            })
+            ->when($request->filled('email'), function ($q) use ($request) {
+                $q->where('email', 'like', '%' . $request->email . '%');
+            })
             ->latest()
-            ->paginate($request->get('per_page', 10));
+            ->paginate($request->get('per_page', 10))
+            ->through(function ($user) {
+                $user->is_approved = $user->password !== null;
+                return $user;
+            });
     }
 }
