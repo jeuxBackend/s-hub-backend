@@ -61,6 +61,7 @@ class UserResource extends JsonResource
                 'permissions' => $this->permissions ?? [],
                 'remote' => $this->remote_teaching,
                 'institution' => $this->whenLoaded('institution', fn() => new InstitutionResource($this->institution)),
+                'is_approved' => (bool) ($this->password !== null),
             ],
 
             UserRole::Parent => [
@@ -71,15 +72,15 @@ class UserResource extends JsonResource
                 'alternative_guardian_phone_number' => $this->alternative_guardian_phone_number,
                 'institution' => $this->whenLoaded('institution', fn() => new InstitutionResource($this->institution)),
                 'family_members' => $this->whenLoaded('familyMembers', function () {
-                    return FamilyMemberResource::collection($this->familyMembers);
-                }),
+                        return FamilyMemberResource::collection($this->familyMembers);
+                    }),
                 'children' => $this->whenLoaded('guardianStudents', function () {
-                    return $this->guardianStudents->map(function ($student) {
-                        $latestInvoice = $student->relationLoaded('studentInvoices')
+                        return $this->guardianStudents->map(function ($student) {
+                            $latestInvoice = $student->relationLoaded('studentInvoices')
                             ? $student->studentInvoices->sortByDesc('id')->first()
                             : null;
 
-                        return [
+                            return [
                             'id' => $student->id,
                             'first_name' => $student->first_name,
                             'sur_name' => $student->sur_name,
@@ -100,9 +101,9 @@ class UserResource extends JsonResource
                             'tuition_status' => $latestInvoice?->status,
                             'total_paid' => $student->relationLoaded('studentInvoices') ? $student->studentInvoices->sum('paid_amount') : 0,
                             'total_due' => $latestInvoice?->due_amount ?? 0,
-                        ];
-                    });
-                }),
+                            ];
+                        });
+                    }),
             ],
 
             default => [],
