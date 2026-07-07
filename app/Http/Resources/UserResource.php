@@ -33,6 +33,7 @@ class UserResource extends JsonResource
             'notifications_enabled' => (bool) $this->notifications_enabled,
             'status' => $this->status,
             'fcm_token' => $this->fcm_token,
+            'is_approved' => (bool) ($this->password !== null),
         ];
 
         $roleFields = match ($role) {
@@ -61,7 +62,6 @@ class UserResource extends JsonResource
                 'permissions' => $this->permissions ?? [],
                 'remote' => $this->remote_teaching,
                 'institution' => $this->whenLoaded('institution', fn() => new InstitutionResource($this->institution)),
-                'is_approved' => (bool) ($this->password !== null),
             ],
 
             UserRole::Parent => [
