@@ -361,22 +361,26 @@ class SchoolAlertService
             ? ['teacher', 'school-admin', 'principal']
             : ['teacher', 'school-admin', 'principal', 'parent'];
 
-        $recipients = User::query()
-            ->where('institution_id', $alert->institution_id)
-            ->whereIn('role', $targetRoles)
-            ->when($state === 'potential' && $alert->type === 'abduction', function ($query) use ($alert) {
-                $query->where('id', '!=', $alert->created_by);
-            })
-            ->get();
+        $requiresConfirmation = $state === 'potential';
+        $alertTypeLabel = ucfirst($alert->type);
 
-        $title = $state === 'potential' && $alert->type === 'abduction'
-            ? 'Confirm Abduction Alert'
-            : ($state === 'potential'
-                ? 'Potential Abduction Alert'
-                : ($alert->type === 'emergency' ? 'Emergency Alert' : 'Abduction Alert Activated'));
+        $recipients = $this->filterRecipientsForAlert(
+            User::query()
+                ->where('institution_id', $alert->institution_id)
+                ->whereIn('role', $targetRoles)
+                ->when($requiresConfirmation, function ($query) use ($alert) {
+                    $query->where('id', '!=', $alert->created_by);
+                })
+                ->get(),
+            $alert
+        );
 
-        $message = $state === 'potential' && $alert->type === 'abduction'
-            ? 'A potential abduction alert requires confirmation from another teacher, school-admin, or principal.'
+        $title = $requiresConfirmation
+            ? "Confirm {$alertTypeLabel} Alert"
+            : ($alert->type === 'emergency' ? 'Emergency Alert' : 'Abduction Alert Activated');
+
+        $message = $requiresConfirmation
+            ? "A potential {$alert->type} alert requires confirmation from another teacher, school-admin, or principal."
             : ($alert->message ?: $title);
 
         foreach ($recipients as $recipient) {
@@ -416,9 +420,9 @@ class SchoolAlertService
                         'alert_type' => $alert->type,
                         'alert_status' => $alert->status,
                         'state' => $state,
-                        'action' => $state === 'potential' && $alert->type === 'abduction' ? 'confirm_abduction' : $state,
-                        'requires_confirmation' => $state === 'potential' && $alert->type === 'abduction',
-                        'exclude_user_id' => $state === 'potential' && $alert->type === 'abduction' ? $alert->created_by : null,
+                        'action' => $requiresConfirmation ? 'confirm_alert' : $state,
+                        'requires_confirmation' => $requiresConfirmation,
+                        'exclude_user_id' => $requiresConfirmation ? $alert->created_by : null,
                         'ring' => true,
                         'ring_duration_seconds' => 180,
                     ]
@@ -435,10 +439,13 @@ class SchoolAlertService
 
     protected function dispatchAlertResolutionNotification(SchoolAlert $alert, User|Admin $actor): void
     {
-        $recipients = User::query()
-            ->where('institution_id', $alert->institution_id)
-            ->whereIn('role', ['teacher', 'school-admin', 'principal', 'parent'])
-            ->get();
+        $recipients = $this->filterRecipientsForAlert(
+            User::query()
+                ->where('institution_id', $alert->institution_id)
+                ->whereIn('role', ['teacher', 'school-admin', 'principal', 'parent'])
+                ->get(),
+            $alert
+        );
 
         $resolverName = $actor->full_name
             ?? trim(($actor->first_name ?? '') . ' ' . ($actor->sure_name ?? ''));
@@ -487,6 +494,28 @@ class SchoolAlertService
                 ]);
             }
         }
+    }
+
+    protected function filterRecipientsForAlert(Collection $recipients, SchoolAlert $alert): Collection
+    {
+        return $recipients
+            ->filter(fn (User $recipient) => $this->shouldReceiveAlertNotification($recipient, $alert))
+            ->values();
+    }
+
+    protected function shouldReceiveAlertNotification(User $recipient, SchoolAlert $alert): bool
+    {
+        $role = $recipient->role?->value ?? $recipient->role;
+
+        if ($role !== 'parent') {
+            return true;
+        }
+
+        if ($alert->type !== 'emergency') {
+            return true;
+        }
+
+        return (bool) ($recipient->allow_alert ?? true);
     }
 
     protected function createResolutionNotificationLog(User $recipient, SchoolAlert $alert, User|Admin $actor, string $title, string $message): ?NotificationLog

@@ -3,9 +3,12 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Builder;
 
 class SchoolAlert extends Model
 {
+    public const ACTIVE_COUNT_WINDOW_MINUTES = 30;
+
     protected $fillable = [
         'institution_id',
         'created_by',
@@ -50,5 +53,10 @@ class SchoolAlert extends Model
     public function responses()
     {
         return $this->hasMany(SchoolAlertResponse::class);
+    }
+
+    public function scopeWithinActiveCountWindow(Builder $query): Builder
+    {
+        return $query->where('created_at', '>=', now()->subMinutes(self::ACTIVE_COUNT_WINDOW_MINUTES));
     }
 }

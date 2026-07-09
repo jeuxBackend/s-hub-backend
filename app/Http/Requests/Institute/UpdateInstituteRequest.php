@@ -24,22 +24,22 @@ class UpdateInstituteRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name'              => 'sometimes|string|max:255',
-            'slogan'            => 'nullable|string|max:255',
-            'academic_year'     => 'nullable|string|max:255',
-            'examination_system'=> 'nullable|string|max:255',
-            'physical_address'  => 'nullable|string|max:500',
-            'email'             => 'nullable|email|max:255',
-            'alternate_email'   => 'nullable|email|max:255',
-            'phone_number'      => 'nullable|string|max:20',
-            'alternate_phone'   => 'nullable|string|max:20',
-            'telephone'         => 'nullable|string|max:20',
-            'subjects'          => 'nullable|array',
-            'subjects.*'        => 'string|max:100',
-            'logo'              => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
-            'email_verified'    => 'nullable|boolean',
-            'phone_verified'    => 'nullable|boolean',
-            'category_id'       => 'nullable|exists:categories,id',
+            'name' => 'sometimes|string|max:255',
+            'slogan' => 'nullable|string|max:255',
+            'academic_year' => 'nullable|string|max:255',
+            'examination_system' => 'nullable|string|max:255',
+            'physical_address' => 'nullable|string|max:500',
+            'email' => 'nullable|email|max:255',
+            'alternate_email' => 'nullable|email|max:255',
+            'phone_number' => 'nullable|string|max:20',
+            'alternate_phone' => 'nullable|string|max:20',
+            'telephone' => 'nullable|string|max:20',
+            'subjects' => 'nullable|array',
+            'subjects.*' => 'string|max:100',
+            'logo' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
+            'email_verified' => 'nullable|boolean',
+            'phone_verified' => 'nullable|boolean',
+            'category_id' => 'nullable|exists:categories,id',
         ];
     }
 }

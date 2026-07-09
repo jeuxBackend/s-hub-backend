@@ -25,11 +25,19 @@ class GetUserAction
         if (in_array($user->role, [UserRole::Principal, UserRole::SchoolAdmin, UserRole::Teacher, UserRole::Parent], true) && $user->institution_id && $user->institution) {
             $institutionId = $user->institution_id;
 
+            $activeAlertsQuery = SchoolAlert::where('institution_id', $user->institution_id);
+
+            if ($user->role === UserRole::Principal) {
+                $activeAlertsQuery->where('status', '!=', 'resolved');
+            } else {
+                $activeAlertsQuery
+                    ->where('status', 'active')
+                    ->withinActiveCountWindow();
+            }
+
             $user->institution->setAttribute(
                 'active_alerts_count',
-                SchoolAlert::where('institution_id', $user->institution_id)
-                    ->where('status', 'active')
-                    ->count()
+                $activeAlertsQuery->count()
             );
 
             if (in_array($user->role, [UserRole::Teacher, UserRole::SchoolAdmin], true)) {

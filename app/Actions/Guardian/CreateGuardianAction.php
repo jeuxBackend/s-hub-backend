@@ -17,6 +17,7 @@ class CreateGuardianAction
         $data['longitude'] = $data['longitude'] ?? null;
         $data['latitude'] = $data['latitude'] ?? null;
         $data['address'] = $data['address'] ?? null;
+        $data['allow_alert'] = $data['allow_alert'] ?? true;
 
         if (isset($data['profile_picture']) && $data['profile_picture'] instanceof \Illuminate\Http\UploadedFile) {
             $data['profile_picture'] = $data['profile_picture']->store('profile_pictures', 'public');

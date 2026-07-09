@@ -17,6 +17,7 @@ class TeacherAttendance extends Model
         'status',
         'type',
         'is_remote',
+        'message',
     ];
 
     public function teacher()

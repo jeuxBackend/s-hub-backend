@@ -22,6 +22,7 @@ class TeacherAttendanceController extends Controller
             'subject_id' => 'required|exists:subjects,id',
             'latitude' => 'nullable|numeric',
             'longitude' => 'nullable|numeric',
+            'message' => 'nullable|string|max:1000',
         ]);
 
         try {
@@ -64,7 +65,6 @@ class TeacherAttendanceController extends Controller
                     return $this->errorResponse('Latitude and longitude are required to mark attendance.', 400);
                 }
 
-                // Must check location
                 $institution = $subject->institution;
                 if (!$institution || !$institution->latitude || !$institution->longitude) {
                     return $this->errorResponse('Institution location is not set. Please contact admin.', 400);
@@ -77,7 +77,6 @@ class TeacherAttendanceController extends Controller
                     $institution->longitude
                 );
 
-                // Check if within 300 meters (0.3 km)
                 if ($distance > 300) {
                     return $this->errorResponse('You are too far from the institution to mark attendance. You must be within 300 meters.', 403);
                 }
@@ -109,6 +108,7 @@ class TeacherAttendanceController extends Controller
                     'status' => 'present',
                     'type' => 'regular',
                     'is_remote' => $isRemote,
+                    'message' => $request->input('message'),
                 ]);
 
                 $attendance = $existingAttendance;
@@ -121,6 +121,7 @@ class TeacherAttendanceController extends Controller
                     'status' => 'present',
                     'type' => 'regular',
                     'is_remote' => $isRemote,
+                    'message' => $request->input('message'),
                 ]);
             }
 
@@ -147,7 +148,7 @@ class TeacherAttendanceController extends Controller
      */
     private function calculateDistance($lat1, $lon1, $lat2, $lon2)
     {
-        $earthRadius = 6371000; // Radius of the earth in meters
+        $earthRadius = 6371000;
 
         $dLat = deg2rad($lat2 - $lat1);
         $dLon = deg2rad($lon2 - $lon1);
@@ -158,7 +159,7 @@ class TeacherAttendanceController extends Controller
 
         $c = 2 * atan2(sqrt($a), sqrt(1 - $a));
 
-        $distance = $earthRadius * $c; // Distance in meters
+        $distance = $earthRadius * $c;
 
         return $distance;
     }

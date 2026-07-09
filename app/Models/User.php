@@ -18,6 +18,7 @@ class User extends Authenticatable
     protected $fillable = [
         'email',
         'phone_number',
+        'emergency_number',
         'password',
         'role',
         'otp_code',
@@ -59,6 +60,7 @@ class User extends Authenticatable
 
         'status',
         'notifications_enabled',
+        'allow_alert',
         'email_verified_at',
         'remote_teaching',
         'timezone',
@@ -82,6 +84,7 @@ class User extends Authenticatable
             'remote_teaching' => 'boolean',
             'otp_verified' => 'boolean',
             'notifications_enabled' => 'boolean',
+            'allow_alert' => 'boolean',
             'email_verified_at' => 'datetime',
             'otp_code' => 'hashed',
             'password' => 'hashed',

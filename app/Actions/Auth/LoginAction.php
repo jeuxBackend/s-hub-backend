@@ -135,11 +135,19 @@ class LoginAction
             return;
         }
 
+        $activeAlertsQuery = SchoolAlert::where('institution_id', $user->institution_id);
+
+        if ($user->role === UserRole::Principal) {
+            $activeAlertsQuery->where('status', '!=', 'resolved');
+        } else {
+            $activeAlertsQuery
+                ->where('status', 'active')
+                ->withinActiveCountWindow();
+        }
+
         $user->institution->setAttribute(
             'active_alerts_count',
-            SchoolAlert::where('institution_id', $user->institution_id)
-                ->where('status', 'active')
-                ->count()
+            $activeAlertsQuery->count()
         );
 
         if (in_array($user->role, [UserRole::Teacher, UserRole::SchoolAdmin], true)) {

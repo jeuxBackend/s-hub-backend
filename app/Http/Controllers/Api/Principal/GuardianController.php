@@ -42,6 +42,7 @@ class GuardianController extends Controller
             'alternative_guardian_phone_number' => 'nullable',
             'alternative_email' => 'nullable|email|unique:users,email',
             'address' => 'nullable|string|max:255',
+            'allow_alert' => 'nullable|boolean',
         ]);
 
         try {
@@ -86,6 +87,7 @@ class GuardianController extends Controller
             'alternative_guardian_phone_number' => 'sometimes',
             'alternative_email' => 'sometimes|email|unique:users,email,' . $id,
             'address' => 'sometimes|string|max:255',
+            'allow_alert' => 'sometimes|boolean',
         ]);
 
         try {

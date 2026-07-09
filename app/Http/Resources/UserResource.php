@@ -16,6 +16,7 @@ class UserResource extends JsonResource
             'id' => $this->id,
             'email' => $this->email,
             'phone_number' => $this->phone_number,
+            'emergency_number' => $this->emergency_number,
             'role' => $role->value,
             'role_label' => $role->name,
             'address' => $this->address,
@@ -31,6 +32,7 @@ class UserResource extends JsonResource
             'profile_picture' => $this->profile_picture,
             'created_by' => $this->creator?->full_name,
             'notifications_enabled' => (bool) $this->notifications_enabled,
+            'allow_alert' => (bool) ($this->allow_alert ?? true),
             'status' => $this->status,
             'fcm_token' => $this->fcm_token,
             'is_approved' => (bool) ($this->password !== null),
@@ -54,6 +56,7 @@ class UserResource extends JsonResource
                 'permissions' => $this->permissions ?? [],
                 'remote' => $this->remote_teaching,
                 'institution' => $this->whenLoaded('institution', fn() => new InstitutionResource($this->institution)),
+                // 'emergency_number' => $this->emergency_number,
             ],
 
             UserRole::Teacher => [
@@ -62,6 +65,7 @@ class UserResource extends JsonResource
                 'permissions' => $this->permissions ?? [],
                 'remote' => $this->remote_teaching,
                 'institution' => $this->whenLoaded('institution', fn() => new InstitutionResource($this->institution)),
+                // 'emergency_number' => $this->emergency_number,
             ],
 
             UserRole::Parent => [

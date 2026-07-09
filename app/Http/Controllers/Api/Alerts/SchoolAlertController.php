@@ -116,14 +116,14 @@ class SchoolAlertController extends Controller
         }
     }
 
-    public function confirmAbduction(SchoolAlert $alert, SchoolAlertService $service)
+    public function confirmAlert(SchoolAlert $alert, SchoolAlertService $service)
     {
         try {
-            $this->authorizeRole(['teacher', 'school-admin']);
+            $this->authorizeRole(['teacher', 'school-admin', 'principal']);
 
-            $updated = $service->confirmAbduction($alert, auth()->user());
+            $updated = $service->confirmAlert($alert, auth()->user());
 
-            return $this->successResponse($updated, 'Abduction alert confirmed successfully.');
+            return $this->successResponse($updated, ucfirst($alert->type) . ' alert confirmed successfully.');
         } catch (Throwable $e) {
             return $this->exceptionResponse($e);
         }
@@ -132,7 +132,7 @@ class SchoolAlertController extends Controller
     public function triggerEmergency(Request $request, SchoolAlertService $service)
     {
         try {
-            $this->authorizeRole(['principal', 'admin', 'sub_admin']);
+            $this->authorizeRole(['teacher', 'school-admin', 'principal', 'admin', 'sub_admin']);
 
             $data = $request->validate([
                 'institution_id' => 'nullable|exists:institutions,id',

@@ -8,6 +8,7 @@ use App\Actions\User\UpdateUserAction;
 use App\Actions\User\GetUserAction;
 use App\Actions\User\ListUsersAction;
 use App\Actions\User\DeleteAccountAction;
+use App\Actions\User\ToggleAllowAlertAction;
 use App\Actions\User\ToggleNotificationAction;
 use App\Http\Requests\User\UpdateUserRequest;
 use App\Http\Requests\User\FilterUserRequest;
@@ -90,11 +91,19 @@ class UserController extends Controller
             }
 
             if (in_array($user->role, [\App\Enums\UserRole::Principal, \App\Enums\UserRole::SchoolAdmin, \App\Enums\UserRole::Teacher, \App\Enums\UserRole::Parent], true) && $user->relationLoaded('institution') && $user->institution) {
+                $activeAlertsQuery = SchoolAlert::where('institution_id', $user->institution_id);
+
+                if ($user->role === \App\Enums\UserRole::Principal) {
+                    $activeAlertsQuery->where('status', '!=', 'resolved');
+                } else {
+                    $activeAlertsQuery
+                        ->where('status', 'active')
+                        ->withinActiveCountWindow();
+                }
+
                 $user->institution->setAttribute(
                     'active_alerts_count',
-                    SchoolAlert::where('institution_id', $user->institution_id)
-                        ->where('status', 'active')
-                        ->count()
+                    $activeAlertsQuery->count()
                 );
 
                 if (in_array($user->role, [\App\Enums\UserRole::Teacher, \App\Enums\UserRole::SchoolAdmin], true)) {
@@ -161,11 +170,25 @@ class UserController extends Controller
     public function toggleNotification(User $user, ToggleNotificationAction $toggleNotification)
     {
         try {
-            $updated = $toggleNotification->handle($user, auth()->user());
+            $updated = $toggleNotification->handle($user);
 
             return $this->successResponse(
                 ['user' => new UserResource($updated)],
                 'Notification status updated'
+            );
+        } catch (Throwable $e) {
+            return $this->exceptionResponse($e);
+        }
+    }
+
+    public function toggleAllowAlert(ToggleAllowAlertAction $toggleAllowAlert)
+    {
+        try {
+            $updated = $toggleAllowAlert->handle(auth()->user());
+
+            return $this->successResponse(
+                ['user' => new UserResource($updated)],
+                'Allow alert status updated'
             );
         } catch (Throwable $e) {
             return $this->exceptionResponse($e);

@@ -78,6 +78,8 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'active.user'])->group(function
     // ===================== OPERATIONAL ROUTES (TEACHER, PRINCIPAL, SCHOOL ADMIN) =====================
     Route::apiResource('student-reports', \App\Http\Controllers\Api\StudentReportController::class)->only(['index', 'store', 'destroy']);
 
+    Route::patch('users/allow-alert/toggle', [UserController::class, 'toggleAllowAlert']);
+
     Route::middleware(['otp.verified', 'role:principal,school-admin,teacher'])->group(function () {
         // Attendance
         Route::prefix('attendances')->group(function () {
@@ -133,7 +135,7 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'active.user'])->group(function
         Route::get('responses', [SchoolAlertController::class, 'responses']);
         Route::post('abduction/trigger', [SchoolAlertController::class, 'triggerAbduction']);
         Route::post('emergency/trigger', [SchoolAlertController::class, 'triggerEmergency']);
-        Route::post('{alert}/confirm', [SchoolAlertController::class, 'confirmAbduction']);
+        Route::post('{alert}/confirm', [SchoolAlertController::class, 'confirmAlert']);
         Route::post('{alert}/resolve', [SchoolAlertController::class, 'resolve']);
         Route::post('{alert}/respond', [SchoolAlertController::class, 'respond']);
     });
@@ -149,6 +151,7 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'active.user'])->group(function
             Route::post('update-permissions', [SchoolAdminController::class, 'updatePermissions']);
             Route::get('remove-admin/{id}', [SchoolAdminController::class, 'removeSchoolAdmin']);
             Route::patch('institution/slogan', [InstituteController::class, 'updateSlogan']);
+            Route::post('institution/slogan', [InstituteController::class, 'updateSlogan']);
             Route::patch('student-reports/{id}/status', [\App\Http\Controllers\Api\StudentReportController::class, 'updateStatus']);
             Route::get('school-timetable', [\App\Http\Controllers\Api\Principal\PrincipalTimetableController::class, 'getSchoolTimetable']);
             Route::get('teachers/{id}/timetable', [\App\Http\Controllers\Api\Principal\PrincipalTimetableController::class, 'getTeacherTimetable']);
