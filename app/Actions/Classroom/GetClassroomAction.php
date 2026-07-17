@@ -10,7 +10,7 @@ class GetClassroomAction
     {
         return Classroom::query()
             ->where('institution_id', $requester->institution->id)
-            ->with(['inCharge', 'subjects.teacher', 'teachers', 'students'])
+            ->with(['inCharge', 'subjects.classSubjectRequirement.teacher', 'classSubjectRequirements.teacher', 'teachers', 'students.guardian.authorizedPickup'])
             ->findOrFail($id);
     }
 }

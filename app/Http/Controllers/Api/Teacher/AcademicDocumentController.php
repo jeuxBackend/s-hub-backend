@@ -24,9 +24,8 @@ class AcademicDocumentController extends Controller
                 ->where('institution_id', $teacher->institution_id)
                 ->where(function ($query) use ($teacher) {
                     $query->where('in_charge_id', $teacher->id)
-                        ->orWhereHas('subjects', function ($subjectQuery) use ($teacher) {
-                            $subjectQuery->where('teacher_id', $teacher->id);
-                        })
+                        ->orWhereHas('classSubjectRequirements', fn ($requirementQuery) => $requirementQuery->where('teacher_id', $teacher->id))
+                        ->orWhereHas('timetableEntries', fn ($entryQuery) => $entryQuery->where('teacher_id', $teacher->id))
                         ->orWhereHas('teachers', function ($teacherQuery) use ($teacher) {
                             $teacherQuery->where('teacher_id', $teacher->id);
                         });

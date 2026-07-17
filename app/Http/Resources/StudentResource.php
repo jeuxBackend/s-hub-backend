@@ -77,6 +77,18 @@ class StudentResource extends JsonResource
             'attendance_status' => $this->attendance_status ?? null,
             'address' => $this->address,
             'parent' => new UserResource($this->whenLoaded('guardian')),
+            'authorized_pickup' => $this->when(
+                $this->relationLoaded('guardian'),
+                function () {
+                    if (!$this->guardian || !$this->guardian->relationLoaded('authorizedPickup')) {
+                        return null;
+                    }
+
+                    return $this->guardian->authorizedPickup
+                        ? new AuthorizedPickupResource($this->guardian->authorizedPickup)
+                        : null;
+                }
+            ),
             'classroom' => new ClassroomResource($this->whenLoaded('classroom')),
             'institution_id' => $this->institution_id,
             'created_by' => $this->created_by,

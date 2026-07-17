@@ -17,7 +17,11 @@ class ClassroomResource extends JsonResource
             'institution_id' => $this->institution?->id,
             'institution_type' => $this->institution?->category->name,
             'total_subjects' => $this->relationLoaded('subjects') ? $this->subjects->count() : 0,
-            'total_teachers' => $this->relationLoaded('subjects') ? $this->subjects->pluck('teacher_id')->filter()->unique()->count() : 0,
+            'total_teachers' => $this->relationLoaded('classSubjectRequirements')
+                ? $this->classSubjectRequirements->pluck('teacher_id')->filter()->unique()->count()
+                : ($this->relationLoaded('subjects')
+                    ? $this->subjects->pluck('classSubjectRequirement.teacher_id')->filter()->unique()->count()
+                    : 0),
             'in_charge' => new UserResource($this->whenLoaded('inCharge')),
             'subjects' => SubjectResource::collection($this->whenLoaded('subjects')),
             'teachers' => UserResource::collection($this->whenLoaded('teachers')) ?? [],

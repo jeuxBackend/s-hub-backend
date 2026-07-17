@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\TeacherAttendance;
 use App\Models\Subject;
 use App\Models\NotificationLog;
+use App\Models\TimetableEntry;
 use App\Support\TimetableEntryResolver;
 use Carbon\Carbon;
 use Throwable;
@@ -28,20 +29,26 @@ class TeacherAttendanceController extends Controller
         try {
             $teacher = auth()->user();
             $subject = Subject::where('id', $request->subject_id)
-                ->where('teacher_id', $teacher->id)
                 ->with('institution')
+                ->where('institution_id', $teacher->institution_id)
                 ->first();
 
             if (!$subject) {
-                return $this->errorResponse('Subject not found or you are not assigned to this subject.', 404);
+                return $this->errorResponse('Subject not found in your institution.', 404);
             }
 
             $teacherTimezone = $teacher->timezone ?? 'UTC';
             $now = Carbon::now($teacherTimezone);
-            $entry = $resolver->resolveForToday($subject, $teacherTimezone);
+            $entry = TimetableEntry::query()
+                ->where('institution_id', $teacher->institution_id)
+                ->where('subject_id', $subject->id)
+                ->where('teacher_id', $teacher->id)
+                ->where('weekday', $now->isoWeekday())
+                ->orderBy('start_time')
+                ->first();
 
             if (!$entry) {
-                return $this->errorResponse('This subject does not have a scheduled time in the timetable.', 400);
+                return $this->errorResponse('This subject is not assigned to you in today\'s timetable.', 400);
             }
 
             [$startTime, $endTime] = $resolver->buildDateTimeRange($entry, $now, $teacherTimezone);

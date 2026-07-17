@@ -38,7 +38,7 @@ class NotifyPrincipalLateTeacher extends Command
         \Log::info('Cron checking for absent teachers (>= 3 mins late)');
 
         $entries = TimetableEntry::query()
-            ->with(['subject.teacher', 'subject.classroom', 'subject.institution.principal'])
+            ->with(['subject', 'teacher', 'classroom', 'institution.principal'])
             ->get();
 
         $notifiedCount = 0;
@@ -47,13 +47,13 @@ class NotifyPrincipalLateTeacher extends Command
         foreach ($entries as $entry) {
             $subject = $entry->subject;
 
-            if (!$subject || !$subject->teacher || !$subject->institution || !$subject->institution->principal) {
+            if (!$subject || !$entry->teacher || !$entry->institution || !$entry->institution->principal) {
                 \Log::debug("Timetable entry {$entry->id} is missing teacher, institution, or principal, skipping");
                 $skippedCount++;
                 continue;
             }
 
-            $teacher = $subject->teacher;
+            $teacher = $entry->teacher;
             $teacherTimezone = $teacher->timezone ?? 'UTC';
             $nowTeacher = Carbon::now($teacherTimezone);
 
@@ -77,37 +77,37 @@ class NotifyPrincipalLateTeacher extends Command
                 \Log::info("Subject {$subject->id} started at {$classStartTime->format('H:i:s')}, checking attendance...");
 
                 // Check if attendance is marked for today
-                $attendance = TeacherAttendance::where('teacher_id', $subject->teacher_id)
+                $attendance = TeacherAttendance::where('teacher_id', $entry->teacher_id)
                     ->where('subject_id', $subject->id)
                     ->whereDate('date', $nowTeacher->toDateString())
                     ->first();
 
                 if (!$attendance) {
-                    \Log::info("No attendance found for teacher {$subject->teacher_id}, subject {$subject->id}, marking as absent");
+                    \Log::info("No attendance found for teacher {$entry->teacher_id}, subject {$subject->id}, marking as absent");
 
                     // Auto‑mark attendance as absent
                     $attendance = \App\Models\TeacherAttendance::create([
-                        'teacher_id' => $subject->teacher_id,
+                        'teacher_id' => $entry->teacher_id,
                         'subject_id' => $subject->id,
-                        'institution_id' => $subject->institution_id,
+                        'institution_id' => $entry->institution_id,
                         'date' => $nowTeacher->toDateString(),
                         'status' => \App\Enums\AttendanceStatus::Absent->value,
                     ]);
 
                     // Teacher is absent (more than 3 minutes late) – notify principal
-                    $principal = $subject->institution->principal;
-                    $isInCharge = $subject->classroom && $subject->classroom->in_charge_id == $subject->teacher_id;
+                    $principal = $entry->institution->principal;
+                    $isInCharge = $entry->classroom && $entry->classroom->in_charge_id == $entry->teacher_id;
                     $attendanceRequestKey = NotificationLog::attendanceRequestKey(
                         (int) $subject->id,
                         $nowTeacher->toDateString(),
-                        (int) $subject->teacher_id
+                        (int) $entry->teacher_id
                     );
                     // Expire any prior teacher_absent_alert notifications for this request key
                     \App\Models\NotificationLog::expireAttendanceRequest($attendanceRequestKey);
 
                     if ($principal) {
                         $title = 'Teacher Absent';
-                        $message = "Teacher {$subject->teacher->full_name} has not marked attendance for the class ({$subject->name}) scheduled at {$classStartTime->format('g:i a')}.";
+                        $message = "Teacher {$teacher->full_name} has not marked attendance for the class ({$subject->name}) scheduled at {$classStartTime->format('g:i a')}.";
                         $this->storeAndSendNotification(
                             recipient: $principal,
                             type: 'teacher_absent_alert',
@@ -115,12 +115,12 @@ class NotifyPrincipalLateTeacher extends Command
                             message: $message,
                             meta: [
                                 'recipient_role' => 'principal',
-                                'teacher_id' => (string) $subject->teacher_id,
-                                'teacher_name' => $subject->teacher->full_name,
+                                'teacher_id' => (string) $entry->teacher_id,
+                                'teacher_name' => $teacher->full_name,
                                 'subject_id' => (string) $subject->id,
                                 'subject_name' => $subject->name,
-                                'classroom_id' => (string) $subject->classroom_id,
-                                'classroom_name' => $subject->classroom ? $subject->classroom->name : 'N/A',
+                                'classroom_id' => (string) $entry->classroom_id,
+                                'classroom_name' => $entry->classroom ? $entry->classroom->name : 'N/A',
                                 'start_time' => $classStartTime->format('g:i a'),
                                 'end_time' => $classEndTime->format('g:i a'),
                                 'is_incharge' => $isInCharge ? 'Yes' : 'No',
@@ -132,13 +132,12 @@ class NotifyPrincipalLateTeacher extends Command
                             firebaseNotificationService: $firebaseNotificationService
                         );
 
-                        \Log::info("Broadcasted absent teacher notification to principal {$principal->id} about teacher {$subject->teacher_id} for subject {$subject->id}.");
-                        $this->info("Notified principal {$principal->id} about absent teacher {$subject->teacher_id} for subject {$subject->id}.");
+                        \Log::info("Broadcasted absent teacher notification to principal {$principal->id} about teacher {$entry->teacher_id} for subject {$subject->id}.");
+                        $this->info("Notified principal {$principal->id} about absent teacher {$entry->teacher_id} for subject {$subject->id}.");
 
                         $notifiedCount++;
                     }
 
-                    $teacher = $subject->teacher;
                     if ($teacher instanceof User) {
                         $teacherTitle = 'Attendance Marked Absent';
                         $teacherMessage = "Your attendance was automatically marked absent for {$subject->name} because you were more than 3 minutes late.";
@@ -152,8 +151,8 @@ class NotifyPrincipalLateTeacher extends Command
                                 'recipient_role' => 'teacher',
                                 'subject_id' => (string) $subject->id,
                                 'subject_name' => $subject->name,
-                                'classroom_id' => (string) $subject->classroom_id,
-                                'classroom_name' => $subject->classroom ? $subject->classroom->name : 'N/A',
+                                'classroom_id' => (string) $entry->classroom_id,
+                                'classroom_name' => $entry->classroom ? $entry->classroom->name : 'N/A',
                                 'start_time' => $classStartTime->format('g:i a'),
                                 'end_time' => $classEndTime->format('g:i a'),
                                 'attendance_status' => AttendanceStatus::Absent->value,
@@ -168,7 +167,7 @@ class NotifyPrincipalLateTeacher extends Command
                         $notifiedCount++;
                     }
                 } else {
-                    \Log::debug("Attendance already exists for teacher {$subject->teacher_id}, subject {$subject->id}");
+                    \Log::debug("Attendance already exists for teacher {$entry->teacher_id}, subject {$subject->id}");
                     $skippedCount++;
                 }
             } catch (\Exception $e) {

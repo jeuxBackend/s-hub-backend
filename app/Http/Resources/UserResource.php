@@ -55,6 +55,10 @@ class UserResource extends JsonResource
                 'position' => $this->position,
                 'permissions' => $this->permissions ?? [],
                 'remote' => $this->remote_teaching,
+                'timetable_availability' => $this->when(
+                    array_key_exists('timetable_availability', $this->resource->getAttributes()),
+                    $this->timetable_availability
+                ),
                 'institution' => $this->whenLoaded('institution', fn() => new InstitutionResource($this->institution)),
                 // 'emergency_number' => $this->emergency_number,
             ],
@@ -64,6 +68,10 @@ class UserResource extends JsonResource
                 'position' => $this->position,
                 'permissions' => $this->permissions ?? [],
                 'remote' => $this->remote_teaching,
+                'timetable_availability' => $this->when(
+                    array_key_exists('timetable_availability', $this->resource->getAttributes()),
+                    $this->timetable_availability
+                ),
                 'institution' => $this->whenLoaded('institution', fn() => new InstitutionResource($this->institution)),
                 // 'emergency_number' => $this->emergency_number,
             ],

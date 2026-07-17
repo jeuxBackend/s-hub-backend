@@ -135,14 +135,14 @@ class NotifyTeacherAttendance extends Command
 
                 // Send Firebase push notification if the teacher has FCM token, notifications enabled, and has the correct role
                 if (
-                    $subject->teacher &&
-                    $subject->teacher->fcm_token &&
-                    $subject->teacher->notifications_enabled &&
-                    ($subject->teacher->isRole(UserRole::Teacher) || $subject->teacher->isRole(UserRole::SchoolAdmin))
+                    $teacher &&
+                    $teacher->fcm_token &&
+                    $teacher->notifications_enabled &&
+                    ($teacher->isRole(UserRole::Teacher) || $teacher->isRole(UserRole::SchoolAdmin))
                 ) {
 
                     $sent = $firebaseNotificationService->sendToToken(
-                        $subject->teacher->fcm_token,
+                        $teacher->fcm_token,
                         $title,
                         $message,
                         [
@@ -161,7 +161,7 @@ class NotifyTeacherAttendance extends Command
                         \Log::warning("FCM notification failed to send to teacher {$teacherId} for subject {$subject->id}");
                     }
                 } else {
-                    $roleInfo = $subject->teacher ? $subject->teacher->role->value : 'null';
+                    $roleInfo = $teacher ? $teacher->role->value : 'null';
                     \Log::info("Skipped FCM for teacher {$teacherId} (role: {$roleInfo}) because token is missing, notifications disabled, or role is not teacher/school-admin");
                 }
 

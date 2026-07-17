@@ -23,6 +23,6 @@ class GetSubjectAction
         // }
 
         // Find the subject by ID and return it
-        return Subject::with(['teacher', 'classroom'])->findOrFail($id);
+        return Subject::with(['classSubjectRequirement.teacher', 'classroom'])->findOrFail($id);
     }
 }

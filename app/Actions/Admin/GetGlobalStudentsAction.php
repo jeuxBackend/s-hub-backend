@@ -8,7 +8,7 @@ class GetGlobalStudentsAction
 {
     public function handle(array $data = [])
     {
-        $query = Student::with(['institution', 'classroom', 'guardian']);
+        $query = Student::with(['institution', 'classroom', 'guardian', 'guardian.authorizedPickup']);
 
         if (!empty($data['name'])) {
             $query->where(function($q) use ($data) {

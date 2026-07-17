@@ -11,6 +11,7 @@ class GetStudentWithInvoicesAction
     {
         $student = Student::with([
             'guardian',
+            'guardian.authorizedPickup',
             'studentInvoices',
             'feeRecords',
             'classroom',

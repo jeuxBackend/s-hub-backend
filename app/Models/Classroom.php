@@ -56,6 +56,11 @@ class Classroom extends Model
         return $this->hasMany(AcademicDocument::class);
     }
 
+    public function subjectDocuments()
+    {
+        return $this->hasMany(SubjectDocument::class);
+    }
+
     public function finalResultSubmissions()
     {
         return $this->hasMany(FinalResultSubmission::class);
@@ -70,5 +75,10 @@ class Classroom extends Model
     public function timetableEntries()
     {
         return $this->hasMany(TimetableEntry::class);
+    }
+
+    public function classSubjectRequirements()
+    {
+        return $this->hasMany(ClassSubjectRequirement::class);
     }
 }

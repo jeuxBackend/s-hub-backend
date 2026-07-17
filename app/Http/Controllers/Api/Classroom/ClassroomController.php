@@ -247,7 +247,7 @@ class ClassroomController extends Controller
 
             $classrooms = Classroom::where('institution_id', $institutionId)
                 ->withCount('students')
-                ->with(['inCharge', 'subjects'])
+                ->with(['inCharge', 'subjects', 'classSubjectRequirements'])
                 ->get()
                 ->map(function ($classroom) {
                     // Average Performance (Percentage)
@@ -285,7 +285,7 @@ class ClassroomController extends Controller
                     $classroom->owing_tuition = array_sum($latestDueAmounts);
 
                     $totalSubjects = $classroom->subjects->count();
-                    $uniqueTeachersCount = $classroom->subjects->pluck('teacher_id')->filter()->unique()->count();
+                    $uniqueTeachersCount = $classroom->classSubjectRequirements->pluck('teacher_id')->filter()->unique()->count();
 
                     return [
                         'id' => $classroom->id,
@@ -320,9 +320,9 @@ class ClassroomController extends Controller
                 ->where('institution_id', $institutionId)
                 ->with([
                     'subjects' => function ($query) {
-                        $query->select(['id', 'name', 'classroom_id', 'teacher_id'])
+                        $query->select(['id', 'name', 'classroom_id'])
                             ->with([
-                                'teacher:id,first_name,sur_name',
+                                'classSubjectRequirement.teacher:id,first_name,sur_name',
                             ])
                             ->orderBy('name');
                     },
@@ -335,11 +335,14 @@ class ClassroomController extends Controller
                         'name' => $classroom->name,
                         'code' => $classroom->code,
                         'subjects' => $classroom->subjects->map(function ($subject) {
+                            $requirement = $subject->classSubjectRequirement;
+                            $teacher = $requirement?->teacher;
+
                             return [
                                 'id' => $subject->id,
                                 'name' => $subject->name,
-                                'teacher_id' => $subject->teacher_id,
-                                'teacher_name' => $subject->teacher?->full_name,
+                                'teacher_id' => $requirement?->teacher_id,
+                                'teacher_name' => $teacher?->full_name,
                             ];
                         })->values(),
                     ];

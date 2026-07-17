@@ -20,7 +20,7 @@ class GenerateRotaAction
         $subjects = Subject::query()
             ->where('institution_id', $institutionId)
             ->whereIn('id', $subjectIds)
-            ->with(['teacher', 'classroom', 'institution'])
+            ->with(['classSubjectRequirement.teacher', 'classroom', 'institution'])
             ->get();
 
         if ($subjects->count() !== $subjectIds->count()) {
@@ -44,12 +44,15 @@ class GenerateRotaAction
 
         $this->validateSubjects($subjects, $workingDays->count());
 
-        $teacherFrequency = $subjects->groupBy('teacher_id')->map->count();
+        $teacherFrequency = $subjects->groupBy(fn (Subject $subject) => $subject->classSubjectRequirement?->teacher_id)->map->count();
         $classroomFrequency = $subjects->groupBy('classroom_id')->map->count();
 
         $sortedSubjects = $subjects->sort(function (Subject $a, Subject $b) use ($teacherFrequency, $classroomFrequency) {
-            return ($b->lectures_per_week <=> $a->lectures_per_week)
-                ?: (($teacherFrequency[$b->teacher_id] ?? 0) <=> ($teacherFrequency[$a->teacher_id] ?? 0))
+            $aRequirement = $a->classSubjectRequirement;
+            $bRequirement = $b->classSubjectRequirement;
+
+            return (($bRequirement?->lessons_per_week ?? 1) <=> ($aRequirement?->lessons_per_week ?? 1))
+                ?: (($teacherFrequency[$bRequirement?->teacher_id] ?? 0) <=> ($teacherFrequency[$aRequirement?->teacher_id] ?? 0))
                 ?: (($classroomFrequency[$b->classroom_id] ?? 0) <=> ($classroomFrequency[$a->classroom_id] ?? 0))
                 ?: ($a->id <=> $b->id);
         })->values();
@@ -73,8 +76,11 @@ class GenerateRotaAction
         $unscheduledSubjects = [];
 
         foreach ($sortedSubjects as $subject) {
+            $requirement = $subject->classSubjectRequirement;
+            $teacherId = (int) $requirement?->teacher_id;
+            $teacher = $requirement?->teacher;
             $scheduledForSubject = 0;
-            $requiredLectures = (int) $subject->lectures_per_week;
+            $requiredLectures = (int) ($requirement?->lessons_per_week ?? 1);
 
             foreach (range(1, $requiredLectures) as $occurrence) {
                 $placed = false;
@@ -85,7 +91,7 @@ class GenerateRotaAction
                 foreach ($availableDays as $weekday) {
                     foreach ($slotMap[$weekday] as $slot) {
                         if (
-                            $this->hasOverlap($teacherOccupied, (int) $subject->teacher_id, $weekday, $slot['start_time'], $slot['end_time']) ||
+                            $this->hasOverlap($teacherOccupied, $teacherId, $weekday, $slot['start_time'], $slot['end_time']) ||
                             $this->hasOverlap($classroomOccupied, (int) $subject->classroom_id, $weekday, $slot['start_time'], $slot['end_time'])
                         ) {
                             continue;
@@ -95,17 +101,17 @@ class GenerateRotaAction
                             'institution_id' => $institutionId,
                             'subject_id' => $subject->id,
                             'classroom_id' => $subject->classroom_id,
-                            'teacher_id' => $subject->teacher_id,
+                            'teacher_id' => $teacherId,
                             'weekday' => $weekday,
                             'start_time' => $slot['start_time'],
                             'end_time' => $slot['end_time'],
                             'subject_name' => $subject->name,
-                            'teacher_name' => $subject->teacher?->full_name,
+                            'teacher_name' => $teacher?->full_name,
                             'classroom_name' => $subject->classroom?->name,
-                            'lectures_per_week' => (int) $subject->lectures_per_week,
+                            'lectures_per_week' => $requiredLectures,
                         ]);
 
-                        $this->occupySlot($teacherOccupied, (int) $subject->teacher_id, $weekday, $slot['start_time'], $slot['end_time']);
+                        $this->occupySlot($teacherOccupied, $teacherId, $weekday, $slot['start_time'], $slot['end_time']);
                         $this->occupySlot($classroomOccupied, (int) $subject->classroom_id, $weekday, $slot['start_time'], $slot['end_time']);
                         $subjectOccupied[$subject->id][$weekday] = true;
 
@@ -119,8 +125,8 @@ class GenerateRotaAction
                     $unscheduledSubjects[] = [
                         'subject_id' => $subject->id,
                         'subject_name' => $subject->name,
-                        'teacher_id' => $subject->teacher_id,
-                        'teacher_name' => $subject->teacher?->full_name,
+                        'teacher_id' => $teacherId,
+                        'teacher_name' => $teacher?->full_name,
                         'classroom_id' => $subject->classroom_id,
                         'classroom_name' => $subject->classroom?->name,
                         'required_lectures_per_week' => $requiredLectures,
@@ -184,7 +190,9 @@ class GenerateRotaAction
         $messages = [];
 
         foreach ($subjects as $subject) {
-            if (!$subject->teacher_id) {
+            $requirement = $subject->classSubjectRequirement;
+
+            if (!$requirement?->teacher_id) {
                 $messages['subject_ids'][] = "Subject {$subject->name} does not have a teacher assigned.";
             }
 
@@ -192,7 +200,7 @@ class GenerateRotaAction
                 $messages['subject_ids'][] = "Subject {$subject->name} does not have a classroom assigned.";
             }
 
-            $lecturesPerWeek = (int) ($subject->lectures_per_week ?? 1);
+            $lecturesPerWeek = (int) ($requirement?->lessons_per_week ?? 1);
             if ($lecturesPerWeek < 1) {
                 $messages['subject_ids'][] = "Subject {$subject->name} must have at least one lecture per week.";
             }

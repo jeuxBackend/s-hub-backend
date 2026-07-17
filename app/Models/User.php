@@ -170,6 +170,11 @@ class User extends Authenticatable
         return $this->hasMany(FamilyMember::class, 'parent_id');
     }
 
+    public function authorizedPickup()
+    {
+        return $this->hasOne(AuthorizedPickup::class, 'parent_id');
+    }
+
     /**
      * Relationship for assignments created by the teacher.
      */
@@ -183,9 +188,24 @@ class User extends Authenticatable
         return $this->hasMany(TimetableEntry::class, 'teacher_id');
     }
 
+    public function teacherAvailabilities()
+    {
+        return $this->hasMany(TeacherAvailability::class, 'teacher_id');
+    }
+
+    public function classSubjectRequirements()
+    {
+        return $this->hasMany(ClassSubjectRequirement::class, 'teacher_id');
+    }
+
     public function publishedFinalResults()
     {
         return $this->hasMany(FinalResultSubmission::class, 'published_by');
+    }
+
+    public function subjectDocuments()
+    {
+        return $this->hasMany(SubjectDocument::class, 'teacher_id');
     }
 
     /*

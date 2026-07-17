@@ -104,6 +104,12 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'active.user'])->group(function
         Route::get('teacher/classrooms/{classroom}', [TeacherClassroomController::class, 'show']);
         Route::get('teacher/timetable', [TeacherClassroomController::class, 'timetable']);
         Route::get('teacher/academic-documents', [\App\Http\Controllers\Api\Teacher\AcademicDocumentController::class, 'index']);
+        Route::get('teacher/subject-documents/allowed-combinations', [\App\Http\Controllers\Api\Teacher\SubjectDocumentController::class, 'allowedAssignments']);
+        Route::get('teacher/subject-documents', [\App\Http\Controllers\Api\Teacher\SubjectDocumentController::class, 'index']);
+        Route::post('teacher/subject-documents', [\App\Http\Controllers\Api\Teacher\SubjectDocumentController::class, 'store']);
+        Route::patch('teacher/subject-documents/{subjectDocument}', [\App\Http\Controllers\Api\Teacher\SubjectDocumentController::class, 'update']);
+        Route::delete('teacher/subject-documents/{subjectDocument}', [\App\Http\Controllers\Api\Teacher\SubjectDocumentController::class, 'destroy']);
+        Route::get('teacher/subject-documents/{subjectDocument}/download', [\App\Http\Controllers\Api\Teacher\SubjectDocumentController::class, 'download'])->name('teacher.subject-documents.download');
         Route::put('teacher/profile', [UserController::class, 'updateProfile']);
         Route::post('teacher/profile', [UserController::class, 'updateProfile']);
         Route::post('teacher/attendance/mark', [TeacherAttendanceController::class, 'markAttendance']);
@@ -119,10 +125,16 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'active.user'])->group(function
         Route::get('assignments/{assignment}', [\App\Http\Controllers\Api\Assignment\ParentAssignmentController::class, 'show']);
         Route::get('students/{student}/assignments', [\App\Http\Controllers\Api\Assignment\ParentAssignmentController::class, 'assignmentsForChild']);
         Route::get('academic-documents', [\App\Http\Controllers\Api\Parent\AcademicDocumentController::class, 'index']);
+        Route::get('subject-documents', [\App\Http\Controllers\Api\Parent\SubjectDocumentController::class, 'index']);
+        Route::get('subject-documents/{subjectDocument}/download', [\App\Http\Controllers\Api\Parent\SubjectDocumentController::class, 'download'])->name('parent.subject-documents.download');
         Route::get('family-members', [\App\Http\Controllers\Api\Parent\FamilyMemberController::class, 'index']);
         Route::post('family-members', [\App\Http\Controllers\Api\Parent\FamilyMemberController::class, 'store']);
         Route::post('family-members/{familyMember}', [\App\Http\Controllers\Api\Parent\FamilyMemberController::class, 'update']);
         Route::delete('family-members/{familyMember}', [\App\Http\Controllers\Api\Parent\FamilyMemberController::class, 'destroy']);
+        Route::get('authorized-pickup', [\App\Http\Controllers\Api\Parent\AuthorizedPickupController::class, 'index']);
+        Route::post('authorized-pickup', [\App\Http\Controllers\Api\Parent\AuthorizedPickupController::class, 'store']);
+        Route::patch('authorized-pickup/{authorizedPickup}', [\App\Http\Controllers\Api\Parent\AuthorizedPickupController::class, 'update']);
+        Route::delete('authorized-pickup/{authorizedPickup}', [\App\Http\Controllers\Api\Parent\AuthorizedPickupController::class, 'destroy']);
     });
 
     Route::put('update-profile', [UserController::class, 'updateProfile']);
@@ -153,9 +165,28 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'active.user'])->group(function
             Route::patch('institution/slogan', [InstituteController::class, 'updateSlogan']);
             Route::post('institution/slogan', [InstituteController::class, 'updateSlogan']);
             Route::patch('student-reports/{id}/status', [\App\Http\Controllers\Api\StudentReportController::class, 'updateStatus']);
+            Route::get('timetable/config', [\App\Http\Controllers\Api\Principal\TimetableConfigController::class, 'showCurrent']);
+            Route::put('timetable/config', [\App\Http\Controllers\Api\Principal\TimetableConfigController::class, 'upsertConfig']);
+            Route::get('timetable/teacher-availabilities', [\App\Http\Controllers\Api\Principal\TimetableConfigController::class, 'indexTeacherAvailabilities']);
+            Route::get('timetable/class-subject-requirements', [\App\Http\Controllers\Api\Principal\TimetableConfigController::class, 'indexClassSubjectRequirements']);
+            Route::post('timetable/teacher-availabilities', [\App\Http\Controllers\Api\Principal\TimetableConfigController::class, 'bulkUpsertTeacherAvailabilities']);
+            Route::patch('timetable/teacher-availabilities/{id}', [\App\Http\Controllers\Api\Principal\TimetableConfigController::class, 'updateTeacherAvailability']);
+            Route::delete('timetable/teacher-availabilities/{id}', [\App\Http\Controllers\Api\Principal\TimetableConfigController::class, 'destroyTeacherAvailability']);
+            Route::post('timetable/class-subject-requirements', [\App\Http\Controllers\Api\Principal\TimetableConfigController::class, 'bulkUpsertClassSubjectRequirements']);
+            Route::patch('timetable/class-subject-requirements/{id}', [\App\Http\Controllers\Api\Principal\TimetableConfigController::class, 'updateClassSubjectRequirement']);
+            Route::delete('timetable/class-subject-requirements/{id}', [\App\Http\Controllers\Api\Principal\TimetableConfigController::class, 'destroyClassSubjectRequirement']);
+            Route::post('timetable/generate-preview', [\App\Http\Controllers\Api\Principal\TimetableGenerationController::class, 'preview']);
+            Route::post('timetable/apply', [\App\Http\Controllers\Api\Principal\TimetableGenerationController::class, 'apply']);
+            Route::post('timetable/entries', [\App\Http\Controllers\Api\Principal\TimetableGenerationController::class, 'storeEntry']);
+            Route::patch('timetable/entries/lock', [\App\Http\Controllers\Api\Principal\TimetableGenerationController::class, 'bulkLockEntries']);
+            Route::patch('timetable/entries/bulk-move', [\App\Http\Controllers\Api\Principal\TimetableGenerationController::class, 'bulkMoveEntries']);
+            Route::post('timetable/entries/swap', [\App\Http\Controllers\Api\Principal\TimetableGenerationController::class, 'swapEntries']);
+            Route::patch('timetable/entries/{id}', [\App\Http\Controllers\Api\Principal\TimetableGenerationController::class, 'updateEntry']);
+            Route::delete('timetable/entries/{id}', [\App\Http\Controllers\Api\Principal\TimetableGenerationController::class, 'destroyEntry']);
             Route::get('school-timetable', [\App\Http\Controllers\Api\Principal\PrincipalTimetableController::class, 'getSchoolTimetable']);
             Route::get('teachers/{id}/timetable', [\App\Http\Controllers\Api\Principal\PrincipalTimetableController::class, 'getTeacherTimetable']);
             Route::get('classrooms/{id}/timetable', [\App\Http\Controllers\Api\Principal\PrincipalTimetableController::class, 'getClassroomTimetable']);
+            Route::get('subjects/{id}/timetable', [\App\Http\Controllers\Api\Principal\PrincipalTimetableController::class, 'getSubjectTimetable']);
             Route::post('final-results-submissions', [\App\Http\Controllers\Api\Principal\FinalResultSubmissionController::class, 'store']);
 
             // Add new endpoints for classroom statistics
@@ -185,6 +216,8 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'active.user'])->group(function
             Route::post('classrooms/{classroom}/test-schedules', [\App\Http\Controllers\Api\Principal\AcademicDocumentController::class, 'storeTestSchedule']);
             Route::post('students/{student}/transcripts', [\App\Http\Controllers\Api\Principal\AcademicDocumentController::class, 'storeTranscript']);
             Route::patch('academic-documents/{academicDocument}', [\App\Http\Controllers\Api\Principal\AcademicDocumentController::class, 'update']);
+            Route::get('subject-documents', [\App\Http\Controllers\Api\Principal\SubjectDocumentController::class, 'index']);
+            Route::get('subject-documents/{subjectDocument}/download', [\App\Http\Controllers\Api\Principal\SubjectDocumentController::class, 'download'])->name('principal.subject-documents.download');
             Route::get('classrooms/{classroom}/academic-documents', [\App\Http\Controllers\Api\Principal\AcademicDocumentController::class, 'getClassroomAcademicDocuments']);
             Route::get('classrooms/{classroom}/transcripts', [\App\Http\Controllers\Api\Principal\AcademicDocumentController::class, 'getClassroomTranscripts']);
             Route::post('rota/preview', [\App\Http\Controllers\Api\Principal\RotaController::class, 'preview']);

@@ -15,6 +15,7 @@ use App\Models\Classroom;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
+use App\Support\TeacherSubjectAssignmentResolver;
 
 class AssignmentController extends Controller
 {
@@ -99,14 +100,11 @@ class AssignmentController extends Controller
             return $this->errorResponse('Invalid classroom or subject', 400);
         }
 
-        // Check if the authenticated teacher is assigned to teach this specific subject in this classroom
-        // This checks if the subject exists in the classroom and is assigned to the current teacher
-        $subjectInClassroom = Subject::where('id', $subject->id)
-            ->where('classroom_id', $classroom->id)
-            ->where('teacher_id', auth()->id())
-            ->first();
+        $teacher = auth()->user();
+        $canManageSubject = app(TeacherSubjectAssignmentResolver::class)
+            ->teacherCanManage($teacher, $classroom->id, $subject->id);
 
-        if (!$subjectInClassroom) {
+        if (!$canManageSubject) {
             // Also check if teacher is assigned to the classroom in general (through classroom_teachers pivot)
             $isTeaching = $classroom->teachers()
                 ->where('teacher_id', auth()->id())

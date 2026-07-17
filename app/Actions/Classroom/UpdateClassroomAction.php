@@ -3,6 +3,7 @@
 namespace App\Actions\Classroom;
 
 use App\Models\Classroom;
+use App\Support\ClassSubjectRequirementSyncer;
 
 class UpdateClassroomAction
 {
@@ -25,25 +26,22 @@ class UpdateClassroomAction
                     // Update existing subject
                     $classroom->subjects()->where('id', $subjectData['id'])->update([
                         'name' => $subjectData['name'],
-                        'teacher_id' => $subjectData['teacher_id'] ?? null,
-                        'lectures_per_week' => $subjectData['lectures_per_week'] ?? 1,
-                        'start_time' => $subjectData['start_time'] ?? null,
-                        'end_time' => $subjectData['end_time'] ?? null,
                     ]);
+                    $subject = $classroom->subjects()->find($subjectData['id']);
                 } else {
                     // Create new subject
-                    $classroom->subjects()->create([
+                    $subject = $classroom->subjects()->create([
                         'name' => $subjectData['name'],
                         'institution_id' => $classroom->institution_id,
-                        'teacher_id' => $subjectData['teacher_id'] ?? null,
-                        'lectures_per_week' => $subjectData['lectures_per_week'] ?? 1,
-                        'start_time' => $subjectData['start_time'] ?? null,
-                        'end_time' => $subjectData['end_time'] ?? null,
                     ]);
+                }
+
+                if ($subject) {
+                    app(ClassSubjectRequirementSyncer::class)->syncFromSubjectPayload($subject, $subjectData);
                 }
             }
         }
 
-        return $classroom->refresh();
+        return $classroom->refresh()->load(['subjects.classSubjectRequirement.teacher']);
     }
 }

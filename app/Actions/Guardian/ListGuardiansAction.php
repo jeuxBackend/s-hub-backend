@@ -16,22 +16,26 @@ class ListGuardiansAction
             ->where('institution_id', $requester->institution_id)
             ->when(
                 in_array($requester->role?->value ?? null, ['principal', 'school-admin'], true),
-                fn ($query) => $query->whereNotNull('password')
+                fn($query) => $query->whereNotNull('password')
             )
             ->with([
                 'guardianStudents.classroom',
                 'guardianStudents.studentInvoices',
             ])
-            ->when($request->filled('name'), function ($q) use ($request) {
+            ->when($request->filled('guardian_name'), function ($q) use ($request) {
                 $q->where(function ($sub) use ($request) {
-                    $sub->where('first_name', 'like', '%' . $request->name . '%')
-                        ->orWhere('sur_name', 'like', '%' . $request->name . '%');
+                    $sub->where('first_name', 'like', '%' . $request->guardian_name . '%')
+                        ->orWhere('sur_name', 'like', '%' . $request->guardian_name . '%');
                 });
             })
-            ->when($request->filled('phone'), fn ($q) =>
+            ->when(
+                $request->filled('phone'),
+                fn($q) =>
                 $q->where('phone_number', 'like', '%' . $request->phone . '%')
             )
-            ->when($request->filled('email'), fn ($q) =>
+            ->when(
+                $request->filled('email'),
+                fn($q) =>
                 $q->where('email', 'like', '%' . $request->email . '%')
             )
             ->latest()

@@ -40,6 +40,12 @@ class StudentWithInvoicesResource extends JsonResource
                 'profile_picture' => $this->guardian?->profile_picture,
                 'role' => $this->guardian?->role->value,
             ],
+            'authorized_pickup' => $this->when(
+                $this->relationLoaded('guardian') && $this->guardian?->relationLoaded('authorizedPickup'),
+                fn () => $this->guardian->authorizedPickup
+                    ? new AuthorizedPickupResource($this->guardian->authorizedPickup)
+                    : null
+            ),
 
             // Student Invoices
             'invoices' => $this->studentInvoices->map(function ($invoice) {

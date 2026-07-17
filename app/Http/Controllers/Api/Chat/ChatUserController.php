@@ -55,10 +55,15 @@ class ChatUserController extends Controller
             ->pluck('classroom_id')
             ->unique();
 
-        // Teachers assigned to those classrooms (via subjects or classroom_teachers)
-        $teacherIds = \App\Models\Subject::whereIn('classroom_id', $classroomIds)
+        // Teachers assigned to those classrooms through rota requirements, timetable, or classroom_teachers.
+        $teacherIds = \App\Models\ClassSubjectRequirement::whereIn('classroom_id', $classroomIds)
+            ->where('is_active', true)
             ->whereNotNull('teacher_id')
             ->pluck('teacher_id')
+            ->merge(
+                \App\Models\TimetableEntry::whereIn('classroom_id', $classroomIds)
+                    ->pluck('teacher_id')
+            )
             ->merge(
                 \App\Models\ClassroomTeacher::whereIn('classroom_id', $classroomIds)
                     ->pluck('teacher_id')
@@ -82,7 +87,12 @@ class ChatUserController extends Controller
         $classroomIds = \App\Models\ClassroomTeacher::where('teacher_id', $teacher->id)
             ->pluck('classroom_id')
             ->merge(
-                \App\Models\Subject::where('teacher_id', $teacher->id)
+                \App\Models\ClassSubjectRequirement::where('teacher_id', $teacher->id)
+                    ->where('is_active', true)
+                    ->pluck('classroom_id')
+            )
+            ->merge(
+                \App\Models\TimetableEntry::where('teacher_id', $teacher->id)
                     ->pluck('classroom_id')
             )
             ->unique();

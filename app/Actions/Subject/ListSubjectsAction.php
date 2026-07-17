@@ -15,7 +15,7 @@ class ListSubjectsAction
 
         $query = Subject::query()
             ->where('institution_id', $institutionId)
-            ->with(['teacher', 'classroom']);
+            ->with(['classSubjectRequirement.teacher', 'classroom']);
 
         if (!empty($filters['classroom_id'])) {
             $query->where('classroom_id', $filters['classroom_id']);

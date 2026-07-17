@@ -4,6 +4,7 @@ namespace App\Actions\Classroom;
 
 use App\Models\Classroom;
 use App\Models\User;
+use App\Support\ClassSubjectRequirementSyncer;
 
 use Illuminate\Support\Facades\DB;
 
@@ -21,14 +22,12 @@ class CreateClassroomAction
 
             if (!empty($data['subjects'])) {
                 foreach ($data['subjects'] as $subjectData) {
-                    $classroom->subjects()->create([
+                    $subject = $classroom->subjects()->create([
                         'name' => $subjectData['name'],
                         'institution_id' => $creator->institution->id,
-                        'teacher_id' => $subjectData['teacher_id'] ?? null,
-                        'lectures_per_week' => $subjectData['lectures_per_week'] ?? 1,
-                        'start_time' => $subjectData['start_time'] ?? null,
-                        'end_time' => $subjectData['end_time'] ?? null,
                     ]);
+
+                    app(ClassSubjectRequirementSyncer::class)->syncFromSubjectPayload($subject, $subjectData);
                 }
             }
 

@@ -85,7 +85,14 @@ class TeacherAttendanceController extends Controller
 
             //if only 15 minutes left in end_time then is_expire check should be true
             $is_expire = false;
-            $endTime = Carbon::createFromFormat('g:i A', strtoupper($request->end_time));
+            $endTime = $this->parseRequestTime($request->end_time);
+
+            if (!$endTime) {
+                return $this->errorResponse(
+                    'Invalid time format. Use "10:00 AM" or "10:00" format.',
+                    422
+                );
+            }
 
             // Check if current time is within 15 minutes of end time (or past it)
             $minutesRemaining = Carbon::now()->diffInMinutes($endTime, false);
@@ -116,26 +123,10 @@ class TeacherAttendanceController extends Controller
             $institutionId = $principal->institution_id;
 
             // Parse the provided times (supports both 12-hour with AM/PM and 24-hour format)
-            try {
-                $startTime = Carbon::createFromFormat('g:i A', strtoupper($request->start_time));
-                if (!$startTime) {
-                    // Try 24-hour format as fallback
-                    $startTime = Carbon::createFromFormat('H:i', $request->start_time);
-                }
+            $startTime = $this->parseRequestTime($request->start_time);
+            $endTime = $this->parseRequestTime($request->end_time);
 
-                $endTime = Carbon::createFromFormat('g:i A', strtoupper($request->end_time));
-                if (!$endTime) {
-                    // Try 24-hour format as fallback
-                    $endTime = Carbon::createFromFormat('H:i', $request->end_time);
-                }
-
-                if (!$startTime || !$endTime) {
-                    return $this->errorResponse(
-                        'Invalid time format. Use "10:00 AM" or "10:00" format.',
-                        422
-                    );
-                }
-            } catch (\Exception $e) {
+            if (!$startTime || !$endTime) {
                 return $this->errorResponse(
                     'Invalid time format. Use "10:00 AM" or "10:00" format.',
                     422
@@ -240,5 +231,18 @@ class TeacherAttendanceController extends Controller
         } catch (Throwable $e) {
             return $this->exceptionResponse($e);
         }
+    }
+
+    private function parseRequestTime(string $time): ?Carbon
+    {
+        foreach (['g:i A', 'h:i A', 'H:i', 'H:i:s'] as $format) {
+            try {
+                return Carbon::createFromFormat($format, strtoupper($time));
+            } catch (\Exception) {
+                continue;
+            }
+        }
+
+        return null;
     }
 }

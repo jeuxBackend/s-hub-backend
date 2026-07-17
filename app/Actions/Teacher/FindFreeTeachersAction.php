@@ -21,14 +21,13 @@ class FindFreeTeachersAction
     {
         $lecture = Subject::where('id', $lectureId)
             ->where('institution_id', $institutionId)
-            ->with('teacher')
             ->first();
 
         if (!$lecture) {
             return [];
         }
 
-        $teacherTimezone = $lecture->teacher?->timezone ?? config('app.timezone', 'UTC');
+        $teacherTimezone = config('app.timezone', 'UTC');
         $resolver = app(TimetableEntryResolver::class);
         $entry = $resolver->resolveForToday($lecture, $teacherTimezone);
 
@@ -36,6 +35,8 @@ class FindFreeTeachersAction
             return [];
         }
 
+        $entry->loadMissing('teacher');
+        $teacherTimezone = $entry->teacher?->timezone ?? config('app.timezone', 'UTC');
         [$lectureStart, $lectureEnd] = $resolver->buildDateTimeRange($entry, Carbon::now($teacherTimezone), $teacherTimezone);
         $weekday = (int) $entry->weekday;
 
@@ -67,12 +68,10 @@ class FindFreeTeachersAction
             ->where('is_proxy', true)
             ->whereNotNull('proxy_start_time')
             ->whereNotNull('proxy_end_time')
-            ->with(['teacher'])
             ->get()
             ->filter(function ($subject) use ($lectureStart, $lectureEnd) {
-                $proxyTz = $subject->teacher?->timezone ?? config('app.timezone', 'UTC');
-                $proxyStart = Carbon::parse($subject->proxy_start_time, $proxyTz);
-                $proxyEnd = Carbon::parse($subject->proxy_end_time, $proxyTz);
+                $proxyStart = Carbon::parse($subject->proxy_start_time);
+                $proxyEnd = Carbon::parse($subject->proxy_end_time);
 
                 // Check if there's any overlap between the proxy time and lecture time
                 return !($lectureEnd->lessThanOrEqualTo($proxyStart) || $lectureStart->greaterThanOrEqualTo($proxyEnd));
@@ -81,7 +80,7 @@ class FindFreeTeachersAction
             ->unique()
             ->toArray();
 
-        $allBusyTeachers = array_unique(array_merge($busyTeachers, $proxyBusyTeachers));
+        $allBusyTeachers = array_unique(array_merge($busyTeachers, $proxyBusyTeachers, [(int) $entry->teacher_id]));
         return array_values(array_diff($allTeachers, $allBusyTeachers));
     }
 }

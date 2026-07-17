@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use App\Actions\Teacher\FindFreeTeachersAction;
 use App\Models\NotificationLog;
 use App\Models\Subject;
+use App\Models\TimetableEntry;
 use App\Models\User;
 use App\Services\FirebaseNotificationService;
 use Carbon\Carbon;
@@ -32,7 +33,7 @@ class ReassignMissedProxyAttendance extends Command
             ->whereNotNull('proxy_teacher_id')
             ->whereNotNull('proxy_start_time')
             ->whereNotNull('proxy_end_time')
-            ->with(['teacher', 'classroom', 'institution.principal'])
+            ->with(['classroom', 'institution.principal'])
             ->get();
 
         $processed = 0;
@@ -44,14 +45,36 @@ class ReassignMissedProxyAttendance extends Command
         foreach ($subjects as $subject) {
             $processed++;
 
-            if (!$subject->institution || !$subject->teacher) {
-                \Log::debug("Proxy subject {$subject->id} missing teacher or institution, skipping");
+            if (!$subject->institution) {
+                \Log::debug("Proxy subject {$subject->id} missing institution, skipping");
+                $skipped++;
+                continue;
+            }
+
+            $assignmentNotification = NotificationLog::query()
+                ->where('type', 'proxy_class_assignment')
+                ->whereJsonContains('meta->subject_id', (string) $subject->id)
+                ->whereJsonContains('meta->proxy_teacher_id', (string) $subject->proxy_teacher_id)
+                ->latest()
+                ->first();
+            $timetableEntryId = $assignmentNotification?->meta['timetable_entry_id'] ?? null;
+            $timetableEntry = $timetableEntryId
+                ? TimetableEntry::query()
+                    ->where('institution_id', $subject->institution_id)
+                    ->where('subject_id', $subject->id)
+                    ->find($timetableEntryId)
+                : null;
+            $originalTeacherId = (int) ($assignmentNotification?->meta['original_teacher_id'] ?? $timetableEntry?->teacher_id ?? 0);
+            $originalTeacher = $originalTeacherId ? User::find($originalTeacherId) : null;
+
+            if (!$originalTeacher) {
+                \Log::debug("Proxy subject {$subject->id} missing original teacher assignment, skipping");
                 $skipped++;
                 continue;
             }
 
             // Resolve the timezone for this subject (teacher > proxy teacher > app default)
-            $teacherTimezone = $subject->teacher->timezone
+            $teacherTimezone = $originalTeacher->timezone
                 ?? ($subject->proxy_teacher_id ? User::find($subject->proxy_teacher_id)->timezone : null)
                 ?? config('app.timezone', 'UTC');
 
@@ -79,18 +102,18 @@ class ReassignMissedProxyAttendance extends Command
             $originalTeacherAttendanceCompleted = NotificationLog::attendanceRequestCompleted(
                 (int) $subject->id,
                 $today,
-                (int) $subject->teacher_id
+                $originalTeacherId
             );
 
             // Retrieve original teacher's attendance record to see if they are absent
             $originalTeacherAttendance = \App\Models\TeacherAttendance::where('subject_id', (int) $subject->id)
                 ->whereDate('date', $today)
-                ->where('teacher_id', (int) $subject->teacher_id)
+                ->where('teacher_id', $originalTeacherId)
                 ->first();
 
             if ($originalTeacherAttendance && $originalTeacherAttendance->status === 'absent') {
                 // Original teacher is already absent; we will reassign proxy without marking absent again
-                \Log::info("Original teacher {$subject->teacher_id} is absent for subject {$subject->id}; proxy reassignment will proceed.");
+                \Log::info("Original teacher {$originalTeacherId} is absent for subject {$subject->id}; proxy reassignment will proceed.");
             } elseif ($originalTeacherAttendanceCompleted) {
                 // Original teacher already completed attendance (present), clear proxy state
                 $this->clearProxyState($subject);
@@ -138,7 +161,7 @@ class ReassignMissedProxyAttendance extends Command
                 $candidateTeacherIds,
                 [
                     $currentProxyTeacherId,
-                    (int) $subject->teacher_id,
+                    $originalTeacherId,
                 ]
             ));
 
@@ -225,12 +248,13 @@ class ReassignMissedProxyAttendance extends Command
                     'subject_name' => $subject->name,
                     'classroom_id' => (string) $subject->classroom_id,
                     'classroom_name' => $subject->classroom?->name ?? 'N/A',
-                    'start_time' => $this->displayTime($subject->proxy_start_time ?? $subject->start_time),
-                    'end_time' => $this->displayTime($subject->proxy_end_time ?? $subject->end_time),
+                    'start_time' => $this->displayTime($subject->proxy_start_time ?? $timetableEntry?->start_time),
+                    'end_time' => $this->displayTime($subject->proxy_end_time ?? $timetableEntry?->end_time),
                     'proxy_start_time' => $proxyStartTime->format('g:i a'),
                     'proxy_end_time' => $proxyEndTime->format('g:i a'),
-                    'original_teacher_id' => (string) $subject->teacher_id,
-                    'original_teacher_name' => $subject->teacher->full_name,
+                    'original_teacher_id' => (string) $originalTeacherId,
+                    'original_teacher_name' => $originalTeacher->full_name,
+                    'timetable_entry_id' => $timetableEntry ? (string) $timetableEntry->id : null,
                     'previous_proxy_teacher_id' => (string) $currentProxyTeacherId,
                     'previous_proxy_teacher_name' => $currentProxyTeacher->full_name,
                     'attendance_request_key' => $attendanceRequestKey,
@@ -260,6 +284,8 @@ class ReassignMissedProxyAttendance extends Command
                 $subject,
                 $currentProxyTeacher,
                 $nextProxyTeacher,
+                $originalTeacher,
+                $timetableEntry,
                 $firebaseNotificationService,
                 $now
             );
@@ -289,6 +315,8 @@ class ReassignMissedProxyAttendance extends Command
         Subject $subject,
         User $currentProxyTeacher,
         User $nextProxyTeacher,
+        User $originalTeacher,
+        ?TimetableEntry $timetableEntry,
         FirebaseNotificationService $firebaseNotificationService,
         Carbon $now
     ): void {
@@ -332,14 +360,15 @@ class ReassignMissedProxyAttendance extends Command
                 'subject_name' => $subject->name,
                 'classroom_id' => (string) $subject->classroom_id,
                 'classroom_name' => $subject->classroom?->name ?? 'N/A',
-                'original_teacher_id' => (string) $subject->teacher_id,
-                'original_teacher_name' => $subject->teacher->full_name,
+                'original_teacher_id' => (string) $originalTeacher->id,
+                'original_teacher_name' => $originalTeacher->full_name,
+                'timetable_entry_id' => $timetableEntry ? (string) $timetableEntry->id : null,
                 'previous_proxy_teacher_id' => (string) $currentProxyTeacher->id,
                 'previous_proxy_teacher_name' => $currentProxyTeacher->full_name,
                 'new_proxy_teacher_id' => (string) $nextProxyTeacher->id,
                 'new_proxy_teacher_name' => $nextProxyTeacher->full_name,
-                'start_time' => $this->displayTime($subject->proxy_start_time ?? $subject->start_time),
-                'end_time' => $this->displayTime($subject->proxy_end_time ?? $subject->end_time),
+                'start_time' => $this->displayTime($subject->proxy_start_time ?? $timetableEntry?->start_time),
+                'end_time' => $this->displayTime($subject->proxy_end_time ?? $timetableEntry?->end_time),
                 'attendance_request_key' => $attendanceRequestKey,
             ],
             'sent_at' => now($principal->timezone ?? config('app.timezone', 'UTC')),
@@ -411,8 +440,8 @@ class ReassignMissedProxyAttendance extends Command
                 'classroom_name' => $subject->classroom?->name ?? 'N/A',
                 'proxy_teacher_id' => (string) $subject->proxy_teacher_id,
                 'proxy_teacher_name' => $currentProxyTeacher->full_name,
-                'start_time' => $this->displayTime($subject->proxy_start_time ?? $subject->start_time),
-                'end_time' => $this->displayTime($subject->proxy_end_time ?? $subject->end_time),
+                'start_time' => $this->displayTime($subject->proxy_start_time),
+                'end_time' => $this->displayTime($subject->proxy_end_time),
                 'attendance_request_key' => $attendanceRequestKey,
             ],
             'sent_at' => now($principal->timezone ?? config('app.timezone', 'UTC')),
@@ -483,8 +512,8 @@ class ReassignMissedProxyAttendance extends Command
                 'classroom_name' => $subject->classroom?->name ?? 'N/A',
                 'proxy_teacher_id' => (string) $subject->proxy_teacher_id,
                 'proxy_teacher_name' => $currentProxyTeacher->full_name,
-                'start_time' => $this->displayTime($subject->proxy_start_time ?? $subject->start_time),
-                'end_time' => $this->displayTime($subject->proxy_end_time ?? $subject->end_time),
+                'start_time' => $this->displayTime($subject->proxy_start_time),
+                'end_time' => $this->displayTime($subject->proxy_end_time),
                 'attendance_request_key' => $attendanceRequestKey,
             ],
             'sent_at' => now($principal->timezone ?? config('app.timezone', 'UTC')),

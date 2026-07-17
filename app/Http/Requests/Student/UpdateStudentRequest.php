@@ -18,7 +18,7 @@ class UpdateStudentRequest extends FormRequest
             'first_name'                 => ['sometimes', 'string'],
             'sur_name'                   => ['sometimes', 'string'],
             'profile_picture'            => ['nullable', 'image'],
-            'student_phone_number'       => ['nullable', 'string'],
+            'student_phone_number'       => ['sometimes', 'nullable', 'string'],
             'term'                       => ['nullable', 'string'], // You may use enum validation here
             'classroom_id'               => ['nullable', 'exists:classrooms,id'],
             // 'gender'                     => ['nullable', 'string'], // Enum: GenderType

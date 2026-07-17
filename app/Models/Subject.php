@@ -53,4 +53,19 @@ class Subject extends Model
     {
         return $this->hasMany(TimetableEntry::class);
     }
+
+    public function classSubjectRequirement()
+    {
+        return $this->hasOne(ClassSubjectRequirement::class);
+    }
+
+    public function effectiveTeacher()
+    {
+        return $this->classSubjectRequirement?->teacher;
+    }
+
+    public function subjectDocuments()
+    {
+        return $this->hasMany(SubjectDocument::class);
+    }
 }

@@ -19,7 +19,7 @@ class GetAttendanceByDateAction
         // If classroom_id is provided, we want to return ALL students in that classroom
         // with their attendance status (if marked) or a blank/unmarked state if not.
         if (!empty($filters['classroom_id'])) {
-            $studentsQuery = Student::with('guardian')
+            $studentsQuery = Student::with(['guardian', 'guardian.authorizedPickup'])
                 ->where('classroom_id', $filters['classroom_id'])
                 ->where('status', true);
 
@@ -33,7 +33,7 @@ class GetAttendanceByDateAction
             }
 
             // Fetch marked attendance for these students on this date
-            $attendancesQuery = StudentAttendance::with(['student.guardian', 'subject', 'recordedBy'])
+            $attendancesQuery = StudentAttendance::with(['student.guardian', 'student.guardian.authorizedPickup', 'subject', 'recordedBy'])
                 ->whereIn('student_id', $students->pluck('id'))
                 ->whereDate('date', $date);
 
@@ -77,7 +77,7 @@ class GetAttendanceByDateAction
         }
 
         // Default query logic when classroom_id is not specified
-        $query = StudentAttendance::with(['student.guardian', 'subject', 'recordedBy'])
+        $query = StudentAttendance::with(['student.guardian', 'student.guardian.authorizedPickup', 'subject', 'recordedBy'])
             ->whereDate('date', $date);
 
         if (!empty($filters['subject_id'])) {

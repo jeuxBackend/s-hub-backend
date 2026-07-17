@@ -232,7 +232,7 @@ class ParentController extends Controller
             $parentId = auth()->id();
 
             $children = Student::where('guardian_id', $parentId)
-                ->with(['classroom.inCharge', 'classroom.subjects.teacher'])
+                ->with(['classroom.inCharge', 'classroom.subjects.classSubjectRequirement.teacher'])
                 ->get()
                 ->map(function ($student) {
                     // Child's Average Performance (Percentage)

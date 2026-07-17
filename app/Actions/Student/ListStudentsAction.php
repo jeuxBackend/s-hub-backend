@@ -16,6 +16,7 @@ class ListStudentsAction
         'classroom',
         'classroom.subjects',
         'guardian',
+        'guardian.authorizedPickup',
         'studentInvoices',
         'studentGrades',
         'attendanceRecords',

@@ -58,13 +58,17 @@ class FreePeriodTeacherController extends Controller
                 return $this->errorResponse('Lecture not found in your institution.', 404);
             }
 
-            $teacherTimezone = $lecture->teacher?->timezone ?? config('app.timezone', 'UTC');
+            $teacherTimezone = config('app.timezone', 'UTC');
             $entry = $resolver->resolveForToday($lecture, $teacherTimezone);
 
             if (!$entry) {
                 return $this->errorResponse('Lecture does not have a scheduled time.', 400);
             }
 
+            $entry->loadMissing('teacher');
+            $originalTeacher = $entry->teacher;
+            $originalTeacherId = (int) $entry->teacher_id;
+            $teacherTimezone = $originalTeacher?->timezone ?? config('app.timezone', 'UTC');
             [$entryStart, $entryEnd] = $resolver->buildDateTimeRange($entry, Carbon::now($teacherTimezone), $teacherTimezone);
 
             // Verify teacher exists and belongs to the same institution
@@ -94,10 +98,10 @@ class FreePeriodTeacherController extends Controller
             $attendanceRequestKey = NotificationLog::attendanceRequestKey(
                 (int) $lecture->id,
                 $today,
-                (int) $lecture->teacher_id
+                $originalTeacherId
             );
 
-            if (NotificationLog::attendanceRequestCompleted((int) $lecture->id, $today, (int) $lecture->teacher_id)) {
+            if (NotificationLog::attendanceRequestCompleted((int) $lecture->id, $today, $originalTeacherId)) {
                 return $this->errorResponse('Attendance has already been completed for this lecture.', 409);
             }
 
@@ -127,8 +131,9 @@ class FreePeriodTeacherController extends Controller
                     'end_time' => $entryEnd->format('g:i a'),
                     'proxy_start_time' => $proxyStartTime ? $proxyStartTime->format('g:i A') : null,
                     'proxy_end_time' => $proxyEndTime ? $proxyEndTime->format('g:i A') : null,
-                    'original_teacher_id' => (string) $lecture->teacher_id,
-                    'original_teacher_name' => $lecture->teacher?->full_name ?? 'N/A',
+                    'original_teacher_id' => (string) $originalTeacherId,
+                    'original_teacher_name' => $originalTeacher?->full_name ?? 'N/A',
+                    'timetable_entry_id' => (string) $entry->id,
                     'attendance_request_key' => $attendanceRequestKey,
                 ],
                 'sent_at' => now(),
@@ -343,11 +348,30 @@ class FreePeriodTeacherController extends Controller
                 ->where('user_id', $proxyTeacher->id)
                 ->first();
 
+            $timetableEntryId = $notification?->meta['timetable_entry_id'] ?? null;
+            $timetableEntry = $timetableEntryId
+                ? \App\Models\TimetableEntry::query()
+                    ->where('institution_id', $institutionId)
+                    ->where('subject_id', $subject->id)
+                    ->find($timetableEntryId)
+                : null;
+            $actualTeacherId = (int) ($notification?->meta['original_teacher_id'] ?? $timetableEntry?->teacher_id ?? 0);
+
+            if (!$actualTeacherId) {
+                return $this->errorResponse('Actual teacher could not be resolved from the proxy timetable assignment.', 422);
+            }
+
+            $actualTeacher = User::find($actualTeacherId);
+
+            if (!$actualTeacher) {
+                return $this->errorResponse('Actual teacher not found.', 404);
+            }
+
             $attendanceRequestKey = $notification?->attendance_request_key
                 ?? NotificationLog::attendanceRequestKey(
                     (int) $subject->id,
                     $date,
-                    (int) $subject->teacher_id
+                    $actualTeacherId
                 );
 
             if ($notification && empty($notification->attendance_request_key)) {
@@ -418,7 +442,6 @@ class FreePeriodTeacherController extends Controller
 
             if ($existingProxyAttendance) {
                 // Return the existing record instead of error
-                $actualTeacher = User::find($subject->teacher_id);
                 $actualTeacherAttendance = \App\Models\TeacherAttendance::where('teacher_id', $actualTeacher->id)
                     ->where('subject_id', $subject->id)
                     ->whereDate('date', $date)
@@ -467,13 +490,6 @@ class FreePeriodTeacherController extends Controller
                     ],
                     'Proxy attendance was already marked for this subject on ' . $date
                 );
-            }
-
-            // Get the actual teacher
-            $actualTeacher = User::find($subject->teacher_id);
-
-            if (!$actualTeacher) {
-                return $this->errorResponse('Actual teacher not found.', 404);
             }
 
             // Check if actual teacher's attendance already exists

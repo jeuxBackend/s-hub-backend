@@ -3,7 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo; // ✅ required
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use App\Models\User;
 use App\Models\Category;
 use App\Models\Admin;
@@ -64,5 +64,20 @@ class Institution extends Model
     public function category(): BelongsTo
     {
         return $this->belongsTo(Category::class);
+    }
+
+    public function timetableConfigs()
+    {
+        return $this->hasMany(SchoolTimetableConfig::class);
+    }
+
+    public function teacherAvailabilities()
+    {
+        return $this->hasMany(TeacherAvailability::class);
+    }
+
+    public function classSubjectRequirements()
+    {
+        return $this->hasMany(ClassSubjectRequirement::class);
     }
 }
