@@ -68,6 +68,12 @@ class NotifyTeacherAttendance extends Command
                 continue;
             }
 
+            if ($this->wasEntryCreatedAfterClassStartToday($entry, $start, $teacherTimezone)) {
+                \Log::info("Timetable entry {$entry->id} was created after its scheduled start time today, skipping attendance reminder.");
+                $skippedCount++;
+                continue;
+            }
+
             // Trigger only in the same minute in teacher's local time
             if ($start->format('H:i') !== $nowTeacher->format('H:i')) {
                 \Log::debug("Subject {$subject->id} start time ({$start->format('H:i')}) does not match teacher's current time ({$nowTeacher->format('H:i')}), skipping");
@@ -179,5 +185,17 @@ class NotifyTeacherAttendance extends Command
         $this->info("Completed. Notified: {$notifiedCount}, Skipped: {$skippedCount}");
 
         return Command::SUCCESS;
+    }
+
+    private function wasEntryCreatedAfterClassStartToday(TimetableEntry $entry, Carbon $classStartTime, string $timezone): bool
+    {
+        if (!$entry->created_at) {
+            return false;
+        }
+
+        $entryCreatedAt = $entry->created_at->copy()->timezone($timezone);
+
+        return $entryCreatedAt->isSameDay($classStartTime)
+            && $entryCreatedAt->greaterThan($classStartTime);
     }
 }

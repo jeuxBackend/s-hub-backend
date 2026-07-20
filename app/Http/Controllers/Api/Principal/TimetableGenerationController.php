@@ -17,6 +17,7 @@ use App\Models\TimetableEntry;
 use App\Models\User;
 use App\Services\FirebaseNotificationService;
 use App\Support\TimetableEntryResolver;
+use Carbon\Carbon;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -144,7 +145,12 @@ class TimetableGenerationController extends Controller
                 'classroom_id' => $data['classroom_id'],
                 'teacher_id' => $data['teacher_id'],
                 'weekday' => $data['weekday'],
-                'period_number' => $data['period_number'],
+                'period_number' => $data['period_number'] ?? $this->resolvePeriodNumber(
+                    $config,
+                    (int) $data['weekday'],
+                    $data['start_time'] . ':00',
+                    $data['end_time'] . ':00'
+                ),
                 'start_time' => $data['start_time'] . ':00',
                 'end_time' => $data['end_time'] . ':00',
                 'entry_type' => $data['entry_type'] ?? 'lesson',
@@ -604,6 +610,77 @@ class TimetableGenerationController extends Controller
         }
 
         return true;
+    }
+
+    private function resolvePeriodNumber(SchoolTimetableConfig $config, int $weekday, string $startTime, string $endTime): int
+    {
+        $slots = $this->buildConfigSlotsForWeekday($config, $weekday);
+        $startTime = $this->normalizeTime($startTime);
+        $endTime = $this->normalizeTime($endTime);
+
+        foreach ($slots as $slot) {
+            if ($slot['start_time'] === $startTime && $slot['end_time'] === $endTime) {
+                return (int) $slot['period_number'];
+            }
+        }
+
+        $previousSlots = collect($slots)
+            ->filter(fn (array $slot) => $slot['start_time'] < $startTime)
+            ->count();
+
+        return max(1, $previousSlots + 1);
+    }
+
+    private function buildConfigSlotsForWeekday(SchoolTimetableConfig $config, int $weekday): array
+    {
+        $workingDay = $config->workingDays->first(fn ($day) => (int) $day->weekday === $weekday && $day->is_open);
+
+        if (!$workingDay) {
+            return [];
+        }
+
+        $start = Carbon::createFromFormat('H:i:s', $this->normalizeTime($config->school_start_time));
+        $end = Carbon::createFromFormat('H:i:s', $this->normalizeTime($config->school_end_time));
+        $duration = (int) $config->lesson_duration_minutes;
+        $cursor = $start->copy();
+        $periodNumber = 1;
+        $slots = [];
+        $dayBreaks = $config->breakPeriods
+            ->filter(fn ($break) => $break->weekday === null || (int) $break->weekday === $weekday)
+            ->sortBy('start_time')
+            ->values();
+
+        while ($cursor->copy()->addMinutes($duration)->lessThanOrEqualTo($end)) {
+            $slotStart = $cursor->copy();
+            $slotEnd = $cursor->copy()->addMinutes($duration);
+            $blockingBreak = $dayBreaks->first(function ($break) use ($slotStart, $slotEnd) {
+                $breakStart = Carbon::createFromFormat('H:i:s', $this->normalizeTime($break->start_time));
+                $breakEnd = Carbon::createFromFormat('H:i:s', $this->normalizeTime($break->end_time));
+
+                return !($slotEnd->lessThanOrEqualTo($breakStart) || $slotStart->greaterThanOrEqualTo($breakEnd));
+            });
+
+            if ($blockingBreak) {
+                $cursor = Carbon::createFromFormat('H:i:s', $this->normalizeTime($blockingBreak->end_time));
+                continue;
+            }
+
+            $slots[] = [
+                'period_number' => $periodNumber,
+                'start_time' => $slotStart->format('H:i:s'),
+                'end_time' => $slotEnd->format('H:i:s'),
+            ];
+
+            $periodNumber++;
+            $cursor = $slotEnd;
+        }
+
+        return $slots;
+    }
+
+    private function normalizeTime(string $time): string
+    {
+        return strlen($time) === 5 ? $time . ':00' : $time;
     }
 
     private function notifyTeachersAboutUpdatedTimetable(Collection $entries, FirebaseNotificationService $firebaseNotificationService, SchoolTimetableConfig $config): void

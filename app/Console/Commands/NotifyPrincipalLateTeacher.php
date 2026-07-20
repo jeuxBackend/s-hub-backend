@@ -65,6 +65,12 @@ class NotifyPrincipalLateTeacher extends Command
 
                 [$classStartTime, $classEndTime] = $resolver->buildDateTimeRange($entry, $nowTeacher, $teacherTimezone);
 
+                if ($this->wasEntryCreatedAfterClassStartToday($entry, $classStartTime, $teacherTimezone)) {
+                    \Log::info("Timetable entry {$entry->id} was created after its scheduled start time today, skipping absent auto-mark.");
+                    $skippedCount++;
+                    continue;
+                }
+
                 // Check if class started 3 or more minutes ago
                 $latenessThreshold = $nowTeacher->copy()->subMinutes(3);
 
@@ -178,6 +184,18 @@ class NotifyPrincipalLateTeacher extends Command
 
         \Log::info("Absent teacher check completed. Notified: {$notifiedCount}, Skipped: {$skippedCount}");
         $this->info("Completed. Notified: {$notifiedCount}, Skipped: {$skippedCount}");
+    }
+
+    private function wasEntryCreatedAfterClassStartToday(TimetableEntry $entry, Carbon $classStartTime, string $timezone): bool
+    {
+        if (!$entry->created_at) {
+            return false;
+        }
+
+        $entryCreatedAt = $entry->created_at->copy()->timezone($timezone);
+
+        return $entryCreatedAt->isSameDay($classStartTime)
+            && $entryCreatedAt->greaterThan($classStartTime);
     }
 
     private function storeAndSendNotification(
