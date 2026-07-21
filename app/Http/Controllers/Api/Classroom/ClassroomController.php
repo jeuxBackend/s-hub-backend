@@ -19,8 +19,10 @@ use App\Models\StudentAttendance;
 use App\Models\StudentGrade;
 use App\Models\StudentInvoice;
 use App\Models\StudentPerformance;
+use App\Models\User;
 use App\Enums\AttendanceStatus;
 use Illuminate\Http\Resources\Json\ResourceCollection;
+use Illuminate\Http\Request;
 use Throwable;
 
 class ClassroomController extends Controller
@@ -219,6 +221,49 @@ class ClassroomController extends Controller
             return $this->successResponse(
                 new ClassroomResource($updated),
                 'Classroom updated successfully'
+            );
+        } catch (Throwable $e) {
+            return $this->exceptionResponse($e);
+        }
+    }
+
+    public function assignInCharge(Request $request)
+    {
+        try {
+            $data = $request->validate([
+                'class_id' => ['required', 'integer', 'exists:classrooms,id'],
+                'teacher_id' => ['required', 'integer', 'exists:users,id'],
+            ]);
+
+            $institutionId = auth()->user()->institution_id;
+
+            $classroom = Classroom::query()
+                ->where('institution_id', $institutionId)
+                ->find($data['class_id']);
+
+            if (!$classroom) {
+                return $this->errorResponse('Classroom not found in your institution.', 404);
+            }
+
+            $teacher = User::query()
+                ->where('institution_id', $institutionId)
+                ->where('id', $data['teacher_id'])
+                ->whereIn('role', ['teacher', 'school-admin'])
+                ->first();
+
+            if (!$teacher) {
+                return $this->errorResponse('Teacher not found in your institution.', 404);
+            }
+
+            $classroom->update([
+                'in_charge_id' => $teacher->id,
+            ]);
+
+            $classroom->load(['inCharge', 'subjects.classSubjectRequirement.teacher', 'classSubjectRequirements']);
+
+            return $this->successResponse(
+                new ClassroomResource($classroom),
+                'Class in-charge assigned successfully.'
             );
         } catch (Throwable $e) {
             return $this->exceptionResponse($e);

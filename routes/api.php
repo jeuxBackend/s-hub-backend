@@ -206,6 +206,7 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'active.user'])->group(function
             Route::apiResource('teachers', TeacherController::class)->middleware('schooladmin.permission:Teachers');
             Route::apiResource('parents', GuardianController::class)->middleware('schooladmin.permission:Parents');
             Route::get('classrooms/no-fee-students', [ClassroomController::class, 'indexWithoutFeeStudents']);
+            Route::post('classrooms/in-charge', [ClassroomController::class, 'assignInCharge']);
             Route::get('classrooms/{id}/subject-performance', [ClassroomController::class, 'subjectPerformance']);
             Route::get('classrooms/{id}/performance-stats', [ClassroomController::class, 'performanceStats']);
             Route::apiResource('classrooms', ClassroomController::class);
