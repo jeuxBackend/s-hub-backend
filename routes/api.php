@@ -203,6 +203,7 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'active.user'])->group(function
             Route::get('students/{id}/with-invoices', [StudentController::class, 'showWithInvoices'])->middleware('schooladmin.permission:Students');
             Route::get('students/{id}/year-marks', [StudentController::class, 'yearMarks'])->middleware('schooladmin.permission:Students');
             Route::apiResource('students', StudentController::class)->middleware('schooladmin.permission:Students');
+            Route::get('teachers/teaching-assignments', [TeacherController::class, 'teachingAssignments'])->middleware('schooladmin.permission:Teachers');
             Route::apiResource('teachers', TeacherController::class)->middleware('schooladmin.permission:Teachers');
             Route::apiResource('parents', GuardianController::class)->middleware('schooladmin.permission:Parents');
             Route::get('classrooms/no-fee-students', [ClassroomController::class, 'indexWithoutFeeStudents']);
