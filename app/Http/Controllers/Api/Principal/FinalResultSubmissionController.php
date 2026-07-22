@@ -46,7 +46,7 @@ class FinalResultSubmissionController extends Controller
 
             $submissions = $completedTerms
                 ->map(function (string $term) use ($classroom, $publishedAt, $user, $validated) {
-                    return FinalResultSubmission::updateOrCreate(
+                    $submission = FinalResultSubmission::updateOrCreate(
                         [
                             'institution_id' => $user->institution_id,
                             'classroom_id' => $classroom->id,
@@ -59,8 +59,11 @@ class FinalResultSubmissionController extends Controller
                             'published_by' => $user->id,
                         ]
                     );
+
+                    $submission->load(['classroom', 'publisher']);
+
+                    return $submission;
                 })
-                ->load(['classroom', 'publisher'])
                 ->map(function (FinalResultSubmission $submission) {
                     return [
                         'id' => $submission->id,
