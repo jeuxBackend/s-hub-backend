@@ -3,8 +3,12 @@
 namespace App\Http\Controllers\Api\Parent;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\TimetableEntryResource;
+use App\Models\SchoolTimetableConfig;
 use App\Models\Student;
 use App\Models\StudentAttendance;
+use App\Support\TimetableEntryResolver;
+use App\Support\TimetableViewFormatter;
 use App\Enums\AttendanceStatus;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -226,15 +230,40 @@ class ParentController extends Controller
      * GET /v1/parent/classrooms
      * Fetch children with their classrooms and individual stats
      */
-    public function getChildrenClassrooms()
+    public function getChildrenClassrooms(TimetableEntryResolver $resolver, TimetableViewFormatter $formatter)
     {
         try {
             $parentId = auth()->id();
+            $childInstitutionIds = Student::where('guardian_id', $parentId)
+                ->pluck('institution_id')
+                ->filter()
+                ->unique()
+                ->values();
+            $activeConfigIds = SchoolTimetableConfig::query()
+                ->whereIn('institution_id', $childInstitutionIds)
+                ->where('is_active', true)
+                ->pluck('id');
 
             $children = Student::where('guardian_id', $parentId)
-                ->with(['classroom.inCharge', 'classroom.subjects.classSubjectRequirement.teacher'])
+                ->with([
+                    'classroom.inCharge',
+                    'classroom.subjects.classSubjectRequirement.teacher',
+                    'classroom.timetableEntries' => function ($query) use ($activeConfigIds) {
+                        if ($activeConfigIds->isEmpty()) {
+                            $query->whereRaw('1 = 0');
+                            return;
+                        }
+
+                        $query
+                            ->whereIn('config_id', $activeConfigIds)
+                            ->with(['subject', 'teacher', 'classroom'])
+                            ->orderBy('weekday')
+                            ->orderBy('period_number')
+                            ->orderBy('start_time');
+                    },
+                ])
                 ->get()
-                ->map(function ($student) {
+                ->map(function ($student) use ($resolver, $formatter) {
                     // Child's Average Performance (Percentage)
                     $student->average_performance = \App\Models\StudentPerformance::where('student_id', $student->id)
                         ->selectRaw('COALESCE(AVG(CASE WHEN total_mark > 0 THEN (obtained_mark / total_mark * 100) ELSE 0 END), 0) as avg_perf')
@@ -255,6 +284,10 @@ class ParentController extends Controller
                         ->where('due_amount', '>', 0)
                         ->count();
 
+                    $timetableEntries = $student->classroom
+                        ? TimetableEntryResource::collection($student->classroom->timetableEntries)->resolve()
+                        : [];
+
                     return [
                         'student_id' => $student->id,
                         'student_name' => trim($student->first_name . ' ' . $student->sur_name),
@@ -269,6 +302,10 @@ class ParentController extends Controller
                                 'name' => $student->classroom->inCharge->full_name,
                             ] : null,
                             'subjects' => $student->classroom->subjects ? \App\Http\Resources\SubjectResource::collection($student->classroom->subjects) : [],
+                            'timetable' => [
+                                'view' => 'weekly',
+                                'grouped_entries' => $formatter->groupWeekly($timetableEntries, $resolver),
+                            ],
                         ] : null,
                         'average_performance' => round($student->average_performance, 2),
                         'average_attendance' => $student->average_attendance,
