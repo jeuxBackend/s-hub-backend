@@ -25,6 +25,7 @@ class ListGuardiansAction
             ->when($request->filled('guardian_name'), function ($q) use ($request) {
                 $q->where(function ($sub) use ($request) {
                     $sub->where('first_name', 'like', '%' . $request->guardian_name . '%')
+                        ->orWhere('last_name', 'like', '%' . $request->guardian_name . '%')
                         ->orWhere('sur_name', 'like', '%' . $request->guardian_name . '%');
                 });
             })

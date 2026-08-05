@@ -17,7 +17,7 @@ class GetAllStudentsYearMarksAction
      * yearly subject marks — only subjects belonging to the student's classroom.
      *
      * Filters:
-     *  - student_name : partial match on first_name or sur_name (case-insensitive)
+     *  - student_name : partial match on first_name, last_name or sur_name (case-insensitive)
      *  - class_id     : exact match on the linked classroom id
      *  - class_name   : partial match on the linked classroom name (legacy fallback)
      *  - per_page     : records per page (default 20, max 100)
@@ -35,6 +35,7 @@ class GetAllStudentsYearMarksAction
             $name = $filters['student_name'];
             $query->where(function ($q) use ($name) {
                 $q->where('first_name', 'like', "%{$name}%")
+                    ->orWhere('last_name', 'like', "%{$name}%")
                     ->orWhere('sur_name', 'like', "%{$name}%");
             });
         }
@@ -82,7 +83,7 @@ class GetAllStudentsYearMarksAction
             $classroomSubjects = $subjectsByClassroom->get($student->classroom_id, collect());
             $guardian = $student->guardian;
             $guardianName = $guardian?->guardian_name
-                ?? trim(($guardian?->first_name ?? '') . ' ' . ($guardian?->sur_name ?? ''));
+                ?? trim(($guardian?->first_name ?? '') . ' ' . ($guardian?->last_name ?? '') . ' ' . ($guardian?->sur_name ?? ''));
             $guardianPhone = $guardian?->guardian_phone_number
                 ?? $guardian?->phone_number;
 
@@ -104,7 +105,7 @@ class GetAllStudentsYearMarksAction
 
             return [
                 'student_id' => $student->id,
-                'full_name' => trim($student->first_name . ' ' . $student->sur_name),
+                'full_name' => $student->full_name,
                 'address' => $student->address,
                 'guardianName' => $guardianName ?: null,
                 'guardianPhone' => $guardianPhone,

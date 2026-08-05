@@ -35,6 +35,7 @@ class FamilyMemberController extends Controller
         $data = $request->validate([
             'first_name' => ['required', 'string', 'max:255'],
             'sur_name' => ['required', 'string', 'max:255'],
+            'last_name' => ['nullable', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', 'unique:family_members,email', 'unique:users,email'],
             'phone_number' => ['required', 'string', 'max:255', 'unique:family_members,phone_number', 'unique:users,phone_number'],
             'address' => ['nullable', 'string', 'max:1000'],
@@ -93,6 +94,7 @@ class FamilyMemberController extends Controller
         $data = $request->validate([
             'first_name' => ['sometimes', 'string', 'max:255'],
             'sur_name' => ['sometimes', 'string', 'max:255'],
+            'last_name' => ['nullable', 'string', 'max:255'],
             'email' => ['sometimes', 'email', 'max:255', 'unique:family_members,email,' . $familyMember->id, 'unique:users,email'],
             'phone_number' => ['sometimes', 'string', 'max:255', 'unique:family_members,phone_number,' . $familyMember->id, 'unique:users,phone_number'],
             'address' => ['nullable', 'string', 'max:1000'],

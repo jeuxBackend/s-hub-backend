@@ -56,6 +56,7 @@ class SignupAction
             'password'                      => $data['password'],
             'role'                          => $requestedRole,
             'first_name'                    => $data['first_name'] ?? null,
+            'last_name'                     => $data['last_name'] ?? null,
             'sur_name'                      => $data['sur_name'] ?? null,
             'title'                         => $data['title'] ?? null,
             'position'                      => $data['position'] ?? null,

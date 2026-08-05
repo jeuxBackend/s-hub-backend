@@ -148,7 +148,7 @@ class MarkAttendanceAction
                 ->value('name');
 
             $title = 'Low Student Attendance Alert';
-            $message = "{$student->first_name} {$student->sur_name} in {$classroomName} has low attendance of {$attendancePercentage}% (absence rate: {$absencePercentage}%). Immediate review required.";
+            $message = "{$student->first_name} {$student->last_name} {$student->sur_name} in {$classroomName} has low attendance of {$attendancePercentage}% (absence rate: {$absencePercentage}%). Immediate review required.";
             
             $notificationLog = NotificationLog::create([
                 'user_id' => $principal->id,
@@ -159,7 +159,7 @@ class MarkAttendanceAction
                 'meta' => [
                     'recipient_role' => 'principal',
                     'student_id' => (string) $student->id,
-                    'student_name' => $student->first_name . ' ' . $student->sur_name,
+                    'student_name' => $student->first_name . ' ' . $student->last_name . ' ' . $student->sur_name,
                     'classroom_id' => (string) $student->classroom_id,
                     'classroom_name' => $classroomName,
                     'attendance_percentage' => (string) $attendancePercentage,
@@ -192,7 +192,7 @@ class MarkAttendanceAction
                     $message,
                     [
                         'student_id' => (string) $student->id,
-                        'student_name' => $student->first_name . ' ' . $student->sur_name,
+                        'student_name' => $student->first_name . ' ' . $student->last_name . ' ' . $student->sur_name,
                         'classroom_name' => $classroomName,
                         'attendance_percentage' => (string) $attendancePercentage,
                         'absence_percentage' => (string) $absencePercentage,

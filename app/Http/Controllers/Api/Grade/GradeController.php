@@ -75,7 +75,7 @@ class GradeController extends Controller
             
             return [
                 'student_id' => $student->id,
-                'student_name' => trim($student->first_name . ' ' . $student->sur_name),
+                'student_name' => trim($student->first_name . ' ' . $student->last_name . ' ' . $student->sur_name),
                 'profile_picture' => $student->profile_picture,
                 'registration_number' => $student->registration_number,
                 'grades' => $allGradesArray

@@ -63,8 +63,8 @@ class StudentResource extends JsonResource
         return [
             'id' => $this->id,
             'first_name' => $this->first_name,
+            'last_name' => $this->last_name,
             'sur_name' => $this->sur_name,
-            'full_name' => trim($this->first_name . ' ' . $this->sur_name),
             'profile_picture' => $this->profile_picture,
             'student_phone_number' => $this->student_phone_number,
             'gender' => $this->gender->value ?? null,

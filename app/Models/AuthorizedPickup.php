@@ -11,10 +11,18 @@ class AuthorizedPickup extends Model
 
     protected $fillable = [
         'parent_id',
-        'name',
+        'first_name',
+        'last_name',
+        'sur_name',
+        'relationship',
         'phone_number',
         'address',
     ];
+
+    public function getFullNameAttribute(): string
+    {
+        return trim("{$this->first_name} {$this->last_name} {$this->sur_name}");
+    }
 
     public function parent()
     {

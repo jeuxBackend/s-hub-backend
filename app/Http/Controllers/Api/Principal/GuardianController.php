@@ -30,6 +30,7 @@ class GuardianController extends Controller
         $data = $request->validate([
             'first_name' => 'required|string|max:255',
             'sur_name' => 'required|string|max:255',
+            'last_name' => 'nullable|string|max:255',
             'email' => 'required|email|unique:users,email',
             'phone_number' => 'required|string|unique:users,phone_number',
             'password' => 'nullable|string|min:8',
@@ -75,6 +76,7 @@ class GuardianController extends Controller
         $data = $request->validate([
             'first_name' => 'sometimes|string|max:255',
             'sur_name' => 'sometimes|string|max:255',
+            'last_name' => 'nullable|string|max:255',
             'email' => 'sometimes|email|unique:users,email,' . $id,
             'phone_number' => 'sometimes|string|unique:users,phone_number,' . $id,
             'password' => 'sometimes|string|min:8',

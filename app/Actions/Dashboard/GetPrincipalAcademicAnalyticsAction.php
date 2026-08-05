@@ -25,7 +25,7 @@ class GetPrincipalAcademicAnalyticsAction
                 }
             })
             ->with([
-                'student:id,first_name,sur_name,registration_number,classroom_id,institution_id',
+                'student:id,first_name,last_name,sur_name,registration_number,classroom_id,institution_id',
                 'student.classroom:id,name',
                 'subject:id,name',
             ])
@@ -101,7 +101,7 @@ class GetPrincipalAcademicAnalyticsAction
                 $obtainedMarks = round((float) $studentGrades->sum('score'), 2);
                 $totalMarks = round((float) $studentGrades->sum('total'), 2);
                 $percentage = $totalMarks > 0 ? round(($obtainedMarks / $totalMarks) * 100, 2) : 0.0;
-                $studentName = trim(($student?->first_name ?? '') . ' ' . ($student?->sur_name ?? ''));
+                $studentName = trim(($student?->first_name ?? '') . ' ' . ($student?->last_name ?? '') . ' ' . ($student?->sur_name ?? ''));
 
                 return [
                     'student_id' => (int) $studentId,
@@ -152,7 +152,7 @@ class GetPrincipalAcademicAnalyticsAction
                             'subject_id' => (int) $subjectId,
                             'subject_name' => $subjectName,
                             'student_id' => (int) $studentId,
-                            'student_name' => trim(($student?->first_name ?? '') . ' ' . ($student?->sur_name ?? '')),
+                            'student_name' => trim(($student?->first_name ?? '') . ' ' . ($student?->last_name ?? '') . ' ' . ($student?->sur_name ?? '')),
                             'classroom_id' => $classroom?->id,
                             'classroom_name' => $classroom?->name,
                             'obtained_marks' => $obtainedMarks,

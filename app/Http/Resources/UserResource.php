@@ -26,8 +26,8 @@ class UserResource extends JsonResource
             'country' => $this->country,
 
             'first_name' => $this->first_name,
+            'last_name' => $this->last_name,
             'sur_name' => $this->sur_name,
-            'full_name' => trim("{$this->first_name} {$this->sur_name}"),
 
             'profile_picture' => $this->profile_picture,
             'created_by' => $this->creator?->full_name,
@@ -95,8 +95,8 @@ class UserResource extends JsonResource
                             return [
                             'id' => $student->id,
                             'first_name' => $student->first_name,
+                            'last_name' => $student->last_name,
                             'sur_name' => $student->sur_name,
-                            'full_name' => trim($student->first_name . ' ' . $student->sur_name),
                             'profile_picture' => $student->profile_picture,
                             'student_phone_number' => $student->student_phone_number,
                             'gender' => $student->gender->value ?? null,

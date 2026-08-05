@@ -44,7 +44,9 @@ class StudentFeeResource extends JsonResource
             'student'      => $this->whenLoaded('student', function () {
                 return [
                     'id' => $this->student->id,
-                    'name' => trim($this->student->first_name . ' ' . $this->student->sur_name),
+                    'first_name' => $this->student->first_name,
+                    'last_name' => $this->student->last_name,
+                    'sur_name' => $this->student->sur_name,
                     'profile_picture' => $this->student->profile_picture,
                     'registration_number' => $this->student->registration_number,
                 ];

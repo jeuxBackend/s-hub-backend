@@ -12,8 +12,8 @@ class StudentWithInvoicesResource extends JsonResource
         return [
             'id' => $this->id,
             'first_name' => $this->first_name,
+            'last_name' => $this->last_name,
             'sur_name' => $this->sur_name,
-            'full_name' => trim($this->first_name . ' ' . $this->sur_name),
             'profile_picture' => $this->profile_picture,
             'student_phone_number' => $this->student_phone_number,
             'gender' => $this->gender->value ?? null,
@@ -33,8 +33,8 @@ class StudentWithInvoicesResource extends JsonResource
             'guardian' => [
                 'id' => $this->guardian?->id,
                 'first_name' => $this->guardian?->first_name,
-                'last_name' => $this->guardian?->sur_name,
-                'full_name' => $this->guardian?->full_name,
+                'last_name' => $this->guardian?->last_name,
+                'sur_name' => $this->guardian?->sur_name,
                 'email' => $this->guardian?->email,
                 'phone_number' => $this->guardian?->phone_number,
                 'profile_picture' => $this->guardian?->profile_picture,

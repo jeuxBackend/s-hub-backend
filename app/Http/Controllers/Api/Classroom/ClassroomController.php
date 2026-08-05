@@ -367,7 +367,7 @@ class ClassroomController extends Controller
                     'subjects' => function ($query) {
                         $query->select(['id', 'name', 'classroom_id'])
                             ->with([
-                                'classSubjectRequirement.teacher:id,first_name,sur_name',
+                                'classSubjectRequirement.teacher:id,first_name,last_name,sur_name',
                             ])
                             ->orderBy('name');
                     },
@@ -452,7 +452,7 @@ class ClassroomController extends Controller
 
                 $attendanceByStudent[] = [
                     'student_id' => $student->id,
-                    'student_name' => $student->first_name . ' ' . $student->sur_name,
+                    'student_name' => trim($student->first_name . ' ' . $student->last_name . ' ' . $student->sur_name),
                     'profile_picture' => $student->profile_picture,
                     'student_registration_number' => $student->registration_number,
                     'overall_attendance' => $studentOverallAttendance,
@@ -583,7 +583,7 @@ class ClassroomController extends Controller
                 $performanceByStudent[] = [
                     'student_id' => $student->id,
                     'student_registration_number' => $student->registration_number,
-                    'student_name' => $student->first_name . ' ' . $student->sur_name,
+                    'student_name' => trim($student->first_name . ' ' . $student->last_name . ' ' . $student->sur_name),
                     'profile_picture' => $student->profile_picture,
                     'overall_performance' => $studentOverallPerformance,
                     'performance_by_subject' => $studentPerformanceData
@@ -682,7 +682,7 @@ class ClassroomController extends Controller
 
                 $tuitionByStudent[] = [
                     'student_id' => $student->id,
-                    'student_name' => $student->first_name . ' ' . $student->sur_name,
+                    'student_name' => trim($student->first_name . ' ' . $student->last_name . ' ' . $student->sur_name),
                     'profile_picture' => $student->profile_picture,
                     'student_registration_number' => $student->registration_number,
                     'paid_invoices' => $paidInvoices,

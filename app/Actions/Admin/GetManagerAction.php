@@ -11,7 +11,7 @@ class GetManagerAction
 {
     public function handle(array $data = [])
     {
-        $query = Admin::select(['id', 'first_name', 'sure_name', 'email', 'role', 'status'])
+        $query = Admin::select(['id', 'first_name', 'last_name', 'sure_name', 'email', 'role', 'status'])
             ->where('role', AdminRole::Manager)
             ->withCount([
                 'institutions as total_schools',
@@ -27,6 +27,7 @@ class GetManagerAction
         if (!empty($data['name'])) {
             $query->where(function ($q) use ($data) {
                 $q->where('first_name', 'like', '%' . $data['name'] . '%')
+                    ->orWhere('last_name', 'like', '%' . $data['name'] . '%')
                     ->orWhere('sure_name', 'like', '%' . $data['name'] . '%');
             });
         }

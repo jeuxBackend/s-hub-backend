@@ -43,8 +43,8 @@ class SchoolAlertBroadcastedEvent implements ShouldBroadcastNow
             
             $resolverName = null;
             if ($this->alert->resolvedBy) {
-                $resolverName = $this->alert->resolvedBy->full_name 
-                    ?? trim(($this->alert->resolvedBy->first_name ?? '') . ' ' . ($this->alert->resolvedBy->sure_name ?? ''));
+                $resolverName = $this->alert->resolvedBy->full_name
+                    ?? trim(($this->alert->resolvedBy->first_name ?? '') . ' ' . ($this->alert->resolvedBy->last_name ?? '') . ' ' . ($this->alert->resolvedBy->sure_name ?? ''));
             }
             
             $message = sprintf(

@@ -226,6 +226,7 @@ class PrincipalTimetableController extends Controller
                         ->orWhereHas('teacher', function ($teacherQuery) use ($search) {
                             $teacherQuery
                                 ->where('first_name', 'like', "%{$search}%")
+                                ->orWhere('last_name', 'like', "%{$search}%")
                                 ->orWhere('sur_name', 'like', "%{$search}%");
                         });
                 });

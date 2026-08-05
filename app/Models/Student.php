@@ -18,6 +18,7 @@ class Student extends Model
         'profile_picture',
         'first_name',
         'sur_name',
+        'last_name',
         'student_phone_number',
         'gender',
         'dob',
@@ -60,7 +61,7 @@ class Student extends Model
 
     public function getFullNameAttribute(): string
     {
-        return trim("{$this->first_name} {$this->sur_name}");
+        return trim("{$this->first_name} {$this->last_name} {$this->sur_name}");
     }
 
     // 👥 Relationships

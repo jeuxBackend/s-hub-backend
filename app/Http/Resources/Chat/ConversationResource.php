@@ -62,7 +62,9 @@ class ConversationResource extends JsonResource
                 ? $participant->guardianStudents->map(function ($child) {
                     return [
                         'id' => $child->id,
-                        'full_name' => trim($child->first_name . ' ' . $child->sur_name),
+                        'first_name' => $child->first_name,
+                        'last_name' => $child->last_name,
+                        'sur_name' => $child->sur_name,
                         'classroom' => $child->classroom?->name,
                         'profile_picture' => $child->profile_picture,
                     ];

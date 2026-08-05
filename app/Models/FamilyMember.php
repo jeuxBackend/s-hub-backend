@@ -13,6 +13,7 @@ class FamilyMember extends Model
         'parent_id',
         'first_name',
         'sur_name',
+        'last_name',
         'email',
         'phone_number',
         'address',
@@ -47,7 +48,7 @@ class FamilyMember extends Model
 
     public function getFullNameAttribute(): string
     {
-        return trim("{$this->first_name} {$this->sur_name}");
+        return trim("{$this->first_name} {$this->last_name} {$this->sur_name}");
     }
 
     public function parent()

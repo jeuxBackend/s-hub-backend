@@ -17,6 +17,7 @@ class Admin extends Authenticatable
     protected $fillable = [
         'first_name',
         'sure_name',
+        'last_name',
         'email',
         'region',
         'phone_number',
@@ -43,7 +44,7 @@ class Admin extends Authenticatable
 
     public function getNameAttribute()
     {
-        return trim($this->first_name . ' ' . $this->sure_name);
+        return trim($this->first_name . ' ' . $this->last_name . ' ' . $this->sure_name);
     }
 
     public function institutions()

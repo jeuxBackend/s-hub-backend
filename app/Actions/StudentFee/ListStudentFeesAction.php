@@ -21,6 +21,7 @@ class ListStudentFeesAction
         if (!empty($filters['search'])) {
             $query->whereHas('student', function ($q) use ($filters) {
                 $q->where('first_name', 'like', '%' . $filters['search'] . '%')
+                    ->orWhere('last_name', 'like', '%' . $filters['search'] . '%')
                     ->orWhere('sur_name', 'like', '%' . $filters['search'] . '%')
                     ->orWhere('registration_number', 'like', '%' . $filters['search'] . '%');
             });

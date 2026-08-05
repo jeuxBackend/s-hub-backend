@@ -448,7 +448,7 @@ class SchoolAlertService
         );
 
         $resolverName = $actor->full_name
-            ?? trim(($actor->first_name ?? '') . ' ' . ($actor->sure_name ?? ''));
+            ?? trim(($actor->first_name ?? '') . ' ' . ($actor->last_name ?? '') . ' ' . ($actor->sure_name ?? ''));
 
         $title = 'School Alert Resolved';
         $message = sprintf(

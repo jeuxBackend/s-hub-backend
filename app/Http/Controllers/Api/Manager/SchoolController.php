@@ -53,7 +53,7 @@ class SchoolController extends Controller
 
     public function show($id)
     {
-        $school = Institution::with(['manager:id,first_name,sure_name,email', 'category'])
+        $school = Institution::with(['manager:id,first_name,sure_name,last_name,email', 'category'])
             ->where('manager_id', auth()->id())
             ->findOrFail($id);
         return $this->successResponse($school, 'School retrieved successfully');

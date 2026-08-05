@@ -19,6 +19,7 @@ class StoreStudentRequest extends FormRequest
         return [
             'first_name'                  => ['required', 'string'],
             'sur_name'                    => ['required', 'string'],
+            'last_name'                   => ['nullable', 'string'],
             'profile_picture'             => ['nullable', 'image', 'max:2048'],
             'student_phone_number'        => ['sometimes', 'nullable', 'string'],
             'gender'                      => ['required', 'in:' . implode(',', GenderType::values())],
@@ -39,6 +40,10 @@ class StoreStudentRequest extends FormRequest
         if ($this->has('first_name')) {
             $payload['first_name'] = trim($this->input('first_name'));
             $payload['sur_name'] = trim($this->input('sur_name'));
+        }
+
+        if ($this->has('last_name')) {
+            $payload['last_name'] = trim($this->input('last_name'));
         }
 
         if ($this->filled('dob')) {

@@ -31,6 +31,7 @@ class ListSchoolAdminsAction
                 fn($q) =>
                 $q->where(function ($sub) use ($request) {
                     $sub->where('first_name', 'like', '%' . $request->name . '%')
+                        ->orWhere('last_name', 'like', '%' . $request->name . '%')
                         ->orWhere('sur_name', 'like', '%' . $request->name . '%');
                 })
             )

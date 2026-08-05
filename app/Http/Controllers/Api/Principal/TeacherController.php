@@ -34,6 +34,7 @@ class TeacherController extends Controller
         $data = $request->validate([
             'first_name' => 'required|string|max:255',
             'sur_name' => 'required|string|max:255',
+            'last_name' => 'nullable|string|max:255',
             'email' => 'required|email|unique:users,email',
             'phone_number' => 'required|string|unique:users,phone_number',
             'emergency_number' => 'nullable|string|max:255',
@@ -75,6 +76,7 @@ class TeacherController extends Controller
         $data = $request->validate([
             'first_name' => 'sometimes|string|max:255',
             'sur_name' => 'sometimes|string|max:255',
+            'last_name' => 'nullable|string|max:255',
             'email' => 'sometimes|email|unique:users,email,' . $id,
             'phone_number' => 'sometimes|string|unique:users,phone_number,' . $id,
             'emergency_number' => 'nullable|string|max:255',
@@ -126,7 +128,7 @@ class TeacherController extends Controller
                 ->where('is_active', true)
                 ->when($classroomId !== null, fn ($query) => $query->where('classroom_id', $classroomId))
                 ->with([
-                    'teacher:id,first_name,sur_name,profile_picture,role,institution_id',
+                    'teacher:id,first_name,sur_name,last_name,profile_picture,role,institution_id',
                     'classroom:id,name,code,institution_id',
                     'subject:id,name,code,classroom_id,institution_id',
                 ])
@@ -136,7 +138,7 @@ class TeacherController extends Controller
                 ->where('institution_id', $principal->institution_id)
                 ->when($classroomId !== null, fn ($query) => $query->where('classroom_id', $classroomId))
                 ->with([
-                    'teacher:id,first_name,sur_name,profile_picture,role,institution_id',
+                    'teacher:id,first_name,sur_name,last_name,profile_picture,role,institution_id',
                     'classroom:id,name,code,institution_id',
                     'subject:id,name,code,classroom_id,institution_id',
                 ])
@@ -169,6 +171,7 @@ class TeacherController extends Controller
                         'name' => $teacher->full_name,
                         'first_name' => $teacher->first_name,
                         'sur_name' => $teacher->sur_name,
+                        'last_name' => $teacher->last_name,
                         'profile_picture' => $teacher->profile_picture,
                         'classrooms' => $teacherAssignments
                             ->groupBy('classroom_id')

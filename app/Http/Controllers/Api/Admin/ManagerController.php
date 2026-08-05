@@ -32,6 +32,7 @@ class ManagerController extends Controller
         $data = $request->validate([
             'first_name' => 'required|string|max:255',
             'sure_name' => 'required|string|max:255',
+            'last_name' => 'nullable|string|max:255',
             'email' => 'required|email|unique:admins,email',
             'phone_number' => 'required|string|unique:admins,phone_number',
             'password' => 'required|string|min:8',
@@ -52,6 +53,7 @@ class ManagerController extends Controller
         $data = $request->validate([
             'first_name' => 'sometimes|string|max:255',
             'sure_name' => 'sometimes|string|max:255',
+            'last_name' => 'nullable|string|max:255',
             'email' => 'sometimes|email|unique:admins,email,' . $id,
             'phone_number' => 'sometimes|string|unique:admins,phone_number,' . $id,
             'password' => 'nullable|string|min:8',

@@ -89,7 +89,7 @@ class NotifyFreeTeachersAction
                 $notified++;
                 $results[] = [
                     'teacher_id' => $teacher->id,
-                    'teacher_name' => $teacher->first_name . ' ' . $teacher->sur_name,
+                    'teacher_name' => $teacher->first_name . ' ' . $teacher->last_name . ' ' . $teacher->sur_name,
                     'status' => 'success',
                 ];
 
@@ -97,7 +97,7 @@ class NotifyFreeTeachersAction
                 $failed++;
                 $results[] = [
                     'teacher_id' => $teacher->id,
-                    'teacher_name' => $teacher->first_name . ' ' . $teacher->sur_name,
+                    'teacher_name' => $teacher->first_name . ' ' . $teacher->last_name . ' ' . $teacher->sur_name,
                     'status' => 'failed',
                     'error' => $e->getMessage(),
                 ];

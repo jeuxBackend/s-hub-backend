@@ -27,6 +27,7 @@ class UpdateUserRequest extends FormRequest
             'alternative_guardian_phone_number' => ['nullable', 'string', 'max:100'],
             'guardian_name' => ['nullable', 'string', 'max:100'],
             'sur_name' => ['nullable', 'string', 'max:100'],
+            'last_name' => ['nullable', 'string', 'max:100'],
             'title' => ['nullable', 'string', 'max:100'],
             'position' => ['nullable', 'string', 'max:100'],
             'staff_number' => ['nullable', 'string', 'max:100'],

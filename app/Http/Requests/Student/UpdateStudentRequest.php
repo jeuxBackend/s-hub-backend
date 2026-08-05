@@ -17,6 +17,7 @@ class UpdateStudentRequest extends FormRequest
         return [
             'first_name'                 => ['sometimes', 'string'],
             'sur_name'                   => ['sometimes', 'string'],
+            'last_name'                  => ['sometimes', 'nullable', 'string'],
             'profile_picture'            => ['nullable', 'image'],
             'student_phone_number'       => ['sometimes', 'nullable', 'string'],
             'term'                       => ['nullable', 'string'], // You may use enum validation here
@@ -35,6 +36,10 @@ class UpdateStudentRequest extends FormRequest
             'first_name' => trim($this->input('first_name')),
             'sur_name'   => trim($this->input('sur_name')),
         ];
+
+        if ($this->has('last_name')) {
+            $payload['last_name'] = trim($this->input('last_name'));
+        }
 
         if ($this->filled('dob')) {
             try {

@@ -24,7 +24,7 @@ class ListUsersAction
         $query
             ->when(!empty($filters['role']), fn($q) => $q->where('role', UserRole::from($filters['role'])))
             ->when(isset($filters['status']), fn($q) => $q->where('status', $filters['status']))
-            ->when(!empty($filters['name']), fn($q) => $q->whereRaw("CONCAT(first_name, ' ', sur_name) LIKE ?", ["%{$filters['name']}%"]))
+            ->when(!empty($filters['name']), fn($q) => $q->whereRaw("CONCAT(first_name, ' ', last_name, ' ', sur_name) LIKE ?", ["%{$filters['name']}%"]))
             ->when(!empty($filters['email']), fn($q) => $q->where('email', 'like', "%{$filters['email']}%"))
             ->when(!empty($filters['phone']), fn($q) => $q->where('phone_number', 'like', "%{$filters['phone']}%"));
 

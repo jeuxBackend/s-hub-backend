@@ -13,6 +13,7 @@ class GetGlobalStudentsAction
         if (!empty($data['name'])) {
             $query->where(function($q) use ($data) {
                 $q->where('first_name', 'like', '%' . $data['name'] . '%')
+                  ->orWhere('last_name', 'like', '%' . $data['name'] . '%')
                   ->orWhere('sur_name', 'like', '%' . $data['name'] . '%');
             });
         }

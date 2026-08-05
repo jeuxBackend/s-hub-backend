@@ -120,7 +120,7 @@ class ParentController extends Controller
 
         return $this->successResponse([
             'student_id' => $student->id,
-            'student_name' => trim($student->first_name . ' ' . $student->sur_name),
+            'student_name' => trim($student->first_name . ' ' . $student->last_name . ' ' . $student->sur_name),
             'target_month' => $targetDate->format('F Y'),
             'current_month_percentage' => $currentPercentage,
             'last_month_percentage' => $lastPercentage,
@@ -290,7 +290,7 @@ class ParentController extends Controller
 
                     return [
                         'student_id' => $student->id,
-                        'student_name' => trim($student->first_name . ' ' . $student->sur_name),
+                        'student_name' => trim($student->first_name . ' ' . $student->last_name . ' ' . $student->sur_name),
                         'profile_picture' => $student->profile_picture,
                         'registration_number' => $student->registration_number,
                         'classroom' => $student->classroom ? [
@@ -347,7 +347,7 @@ class ParentController extends Controller
 
         $result = [
             'student_id' => $student->id,
-            'student_name' => trim($student->first_name . ' ' . $student->sur_name),
+            'student_name' => trim($student->first_name . ' ' . $student->last_name . ' ' . $student->sur_name),
             'subject_id' => $filters['subject_id'],
             'term' => $filters['term'],
             'grades' => [

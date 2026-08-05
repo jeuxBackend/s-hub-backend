@@ -34,6 +34,7 @@ class ListTeachersAction
             ->when($request->filled('name'), function ($q) use ($request) {
                 $q->where(function ($sub) use ($request) {
                     $sub->where('first_name', 'like', '%' . $request->name . '%')
+                        ->orWhere('last_name', 'like', '%' . $request->name . '%')
                         ->orWhere('sur_name', 'like', '%' . $request->name . '%');
                 });
             })

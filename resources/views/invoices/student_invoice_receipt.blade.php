@@ -391,7 +391,7 @@
                 </div>
                 <div class="info-item">
                     <span class="key">Student name</span>
-                    <span class="val">{{ $student->first_name }} {{ $student->sur_name }}</span>
+                    <span class="val">{{ $student->first_name }} {{ $student->last_name }} {{ $student->sur_name }}</span>
                 </div>
                 <div class="info-item">
                     <span class="key">Registration No </span>

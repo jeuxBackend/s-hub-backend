@@ -28,11 +28,15 @@ class StudentController extends Controller
     public function index(FilterStudentRequest $request, ListStudentsAction $fetchAction)
     {
         try {
-            $students = $fetchAction->handle($request->validated());
+            $filters = $request->validated();
+            $students = $fetchAction->handle($filters);
+            $genderCounts = $fetchAction->countsByGender($filters);
 
             return $this->paginatedResponse(
                 StudentResource::collection($students),
-                'Students fetched successfully'
+                'Students fetched successfully',
+                200,
+                ['gender_counts' => $genderCounts]
             );
         } catch (Throwable $e) {
             return $this->exceptionResponse($e);

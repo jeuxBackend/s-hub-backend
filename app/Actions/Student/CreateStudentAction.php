@@ -24,6 +24,7 @@ class CreateStudentAction
             // Create student
             $student = Student::create([
                 'first_name' => $data['first_name'],
+                'last_name' => $data['last_name'] ?? null,
                 'sur_name' => $data['sur_name'],
                 'student_phone_number' => $data['student_phone_number'] ?? null,
                 'term' => TermType::from($data['term']),

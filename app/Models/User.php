@@ -29,6 +29,7 @@ class User extends Authenticatable
 
         'first_name',
         'sur_name',
+        'last_name',
         'title',
         'position',
         'country',
@@ -118,7 +119,7 @@ class User extends Authenticatable
 
     public function getFullNameAttribute(): string
     {
-        return trim("{$this->first_name} {$this->sur_name}");
+        return trim("{$this->first_name} {$this->last_name} {$this->sur_name}");
     }
 
     /*

@@ -13,7 +13,9 @@ class StudentReportResource extends JsonResource
             'id' => $this->id,
             'student' => [
                 'id' => $this->student->id ?? null,
-                'name' => $this->student->first_name . ' ' . $this->student->sur_name ?? null,
+                'first_name' => $this->student->first_name ?? null,
+                'last_name' => $this->student->last_name ?? null,
+                'sur_name' => $this->student->sur_name ?? null,
             ],
             'classroom' => [
                 'id' => $this->classroom->id ?? null,

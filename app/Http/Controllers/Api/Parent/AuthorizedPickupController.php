@@ -29,7 +29,10 @@ class AuthorizedPickupController extends Controller
     public function store(Request $request)
     {
         $data = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
+            'first_name' => ['nullable', 'string', 'max:255'],
+            'last_name' => ['nullable', 'string', 'max:255'],
+            'sur_name' => ['nullable', 'string', 'max:255'],
+            'relationship' => ['nullable', 'string', 'max:255'],
             'phone_number' => ['required', 'string', 'max:255'],
             'address' => ['required', 'string', 'max:1000'],
         ]);
@@ -58,7 +61,10 @@ class AuthorizedPickupController extends Controller
     public function update(Request $request, AuthorizedPickup $authorizedPickup)
     {
         $data = $request->validate([
-            'name' => ['sometimes', 'string', 'max:255'],
+            'first_name' => ['sometimes', 'nullable', 'string', 'max:255'],
+            'last_name' => ['sometimes', 'nullable', 'string', 'max:255'],
+            'sur_name' => ['sometimes', 'nullable', 'string', 'max:255'],
+            'relationship' => ['sometimes', 'nullable', 'string', 'max:255'],
             'phone_number' => ['sometimes', 'string', 'max:255'],
             'address' => ['sometimes', 'string', 'max:1000'],
         ]);

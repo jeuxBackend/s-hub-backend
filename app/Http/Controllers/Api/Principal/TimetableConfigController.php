@@ -117,7 +117,7 @@ class TimetableConfigController extends Controller
             $availabilities = TeacherAvailability::query()
                 ->where('institution_id', $institutionId)
                 ->where('config_id', $activeConfig->id)
-                ->with('teacher:id,first_name,sur_name')
+                ->with('teacher:id,first_name,last_name,sur_name')
                 ->orderBy('teacher_id')
                 ->orderBy('weekday')
                 ->orderBy('start_time')
@@ -197,7 +197,7 @@ class TimetableConfigController extends Controller
             $availabilities = TeacherAvailability::query()
                 ->where('institution_id', $institutionId)
                 ->where('config_id', $activeConfig->id)
-                ->with('teacher:id,first_name,sur_name')
+                ->with('teacher:id,first_name,last_name,sur_name')
                 ->orderBy('teacher_id')
                 ->orderBy('weekday')
                 ->orderBy('start_time')
@@ -341,7 +341,7 @@ class TimetableConfigController extends Controller
                 ->where('institution_id', $institutionId)
                 ->where('config_id', $activeConfig->id)
                 ->where('teacher_id', $teacher->id)
-                ->with('teacher:id,first_name,sur_name')
+                ->with('teacher:id,first_name,last_name,sur_name')
                 ->orderBy('weekday')
                 ->orderBy('start_time')
                 ->get()
@@ -405,7 +405,7 @@ class TimetableConfigController extends Controller
                 ->with([
                     'classroom:id,name,code',
                     'subject:id,name,classroom_id',
-                    'teacher:id,first_name,sur_name',
+                    'teacher:id,first_name,last_name,sur_name',
                 ])
                 ->orderBy('classroom_id')
                 ->orderBy('subject_id')
@@ -515,7 +515,7 @@ class TimetableConfigController extends Controller
                 ->with([
                     'classroom:id,name,code',
                     'subject:id,name,classroom_id',
-                    'teacher:id,first_name,sur_name',
+                    'teacher:id,first_name,last_name,sur_name',
                 ])
                 ->orderBy('classroom_id')
                 ->orderBy('subject_id')
@@ -632,7 +632,7 @@ class TimetableConfigController extends Controller
             $requirement->load([
                 'classroom:id,name,code',
                 'subject:id,name,classroom_id',
-                'teacher:id,first_name,sur_name',
+                'teacher:id,first_name,last_name,sur_name',
             ]);
 
             return $this->successResponse([

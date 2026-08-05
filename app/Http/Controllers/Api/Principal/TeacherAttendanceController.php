@@ -206,6 +206,7 @@ class TeacherAttendanceController extends Controller
                 return [
                     'id' => $teacher->id,
                     'first_name' => $teacher->first_name,
+                    'last_name' => $teacher->last_name,
                     'sur_name' => $teacher->sur_name,
                     'full_name' => $teacher->full_name,
                     'email' => $teacher->email,

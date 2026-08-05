@@ -4,7 +4,9 @@ namespace App\Actions\Student;
 
 use App\Models\Student;
 use App\Enums\UserRole;
+use App\Enums\GenderType;
 use App\Models\Admin;
+use Illuminate\Support\Facades\DB;
 
 class ListStudentsAction
 {
@@ -25,6 +27,33 @@ class ListStudentsAction
 
     public function handle(array $filters = [], array $relations = [])
     {
+        $query = $this->buildQuery($filters, $relations);
+
+        $perPage = $this->resolvePerPage($filters['per_page'] ?? null);
+
+        return $query->paginate($perPage);
+    }
+
+    /**
+     * Male/female totals for the same role-scoped, filtered set as handle() — ignores pagination.
+     */
+    public function countsByGender(array $filters = []): array
+    {
+        $counts = $this->buildQuery($filters)
+            ->toBase()
+            ->reorder()
+            ->select('gender', DB::raw('COUNT(*) as total'))
+            ->groupBy('gender')
+            ->pluck('total', 'gender');
+
+        return [
+            'male' => (int) ($counts[GenderType::Male->value] ?? 0),
+            'female' => (int) ($counts[GenderType::Female->value] ?? 0),
+        ];
+    }
+
+    private function buildQuery(array $filters, array $relations = [])
+    {
         $user = auth()->user();
 
         $query = Student::query()
@@ -34,9 +63,7 @@ class ListStudentsAction
         $this->applyRoleConstraints($query, $user, $filters);
         $this->applyFilters($query, $filters, $user);
 
-        $perPage = $this->resolvePerPage($filters['per_page'] ?? null);
-
-        return $query->paginate($perPage);
+        return $query;
     }
 
     // -------------------------------------------------------------------------
@@ -124,6 +151,7 @@ class ListStudentsAction
 
                 $q->where(function ($nameQuery) use ($search) {
                     $nameQuery->whereRaw('LOWER(first_name) LIKE ?', ['%' . $search . '%'])
+                        ->orWhereRaw('LOWER(last_name) LIKE ?', ['%' . $search . '%'])
                         ->orWhereRaw('LOWER(sur_name) LIKE ?', ['%' . $search . '%']);
                 });
             })

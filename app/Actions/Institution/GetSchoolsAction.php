@@ -8,7 +8,7 @@ class GetSchoolsAction
 {
     public function handle(array $data = [])
     {
-        $query = Institution::with('manager:id,first_name,sure_name,email')->with('category');
+        $query = Institution::with('manager:id,first_name,last_name,sure_name,email')->with('category');
 
         if (!empty($data['name'])) {
             $query->where('name', 'like', '%' . $data['name'] . '%');

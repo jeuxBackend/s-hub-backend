@@ -63,7 +63,7 @@ class GetStudentYearMarksAction
 
         return [
             'student_id' => $student->id,
-            'student_name' => trim($student->first_name . ' ' . $student->sur_name),
+            'student_name' => $student->full_name,
             'subjects' => $subjectsData,
             'total_obtained' => $totalObtainedSum,
             'total_max' => $totalMaxSum,

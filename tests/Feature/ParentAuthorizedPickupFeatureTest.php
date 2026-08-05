@@ -27,17 +27,21 @@ class ParentAuthorizedPickupFeatureTest extends TestCase
         $this->actingAs($parent, 'sanctum');
 
         $payload = [
-            'name' => 'Pickup Person',
+            'first_name' => 'Pickup',
+            'last_name' => 'Middle',
+            'sur_name' => 'Person',
             'phone_number' => '5200000001',
             'address' => 'Street 1',
         ];
 
         $this->postJson('/api/v1/parent/authorized-pickup', $payload)
             ->assertStatus(201)
-            ->assertJsonPath('data.name', 'Pickup Person');
+            ->assertJsonPath('data.first_name', 'Pickup')
+            ->assertJsonPath('data.sur_name', 'Person');
 
         $this->postJson('/api/v1/parent/authorized-pickup', [
-            'name' => 'Another Person',
+            'first_name' => 'Another',
+            'sur_name' => 'Person',
             'phone_number' => '5200000002',
             'address' => 'Street 2',
         ])->assertStatus(422);
@@ -60,7 +64,8 @@ class ParentAuthorizedPickupFeatureTest extends TestCase
 
         $authorizedPickup = AuthorizedPickup::create([
             'parent_id' => $parent->id,
-            'name' => 'Initial Pickup',
+            'first_name' => 'Initial',
+            'sur_name' => 'Pickup',
             'phone_number' => '5400000001',
             'address' => 'Old Address',
         ]);
@@ -68,10 +73,11 @@ class ParentAuthorizedPickupFeatureTest extends TestCase
         $this->actingAs($parent, 'sanctum');
 
         $this->patchJson("/api/v1/parent/authorized-pickup/{$authorizedPickup->id}", [
-            'name' => 'Updated Pickup',
+            'first_name' => 'Updated',
+            'sur_name' => 'Pickup',
             'address' => 'New Address',
         ])->assertOk()
-            ->assertJsonPath('data.name', 'Updated Pickup')
+            ->assertJsonPath('data.first_name', 'Updated')
             ->assertJsonPath('data.address', 'New Address');
 
         $this->deleteJson("/api/v1/parent/authorized-pickup/{$authorizedPickup->id}")
