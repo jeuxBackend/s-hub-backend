@@ -23,6 +23,7 @@ class CreateTeacherAction
         $data['country'] = $data['country'] ?? null;
         $data['title'] = $data['title'] ?? null;
         $data['emergency_number'] = $data['emergency_number'] ?? null;
+        $data['emergency_contact_name'] = $data['emergency_contact_name'] ?? null;
 
         Log::info('data: ', [$data]);
         // $data['position'] = $data['position'] ;

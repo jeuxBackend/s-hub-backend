@@ -19,6 +19,7 @@ class User extends Authenticatable
         'email',
         'phone_number',
         'emergency_number',
+        'emergency_contact_name',
         'password',
         'role',
         'otp_code',

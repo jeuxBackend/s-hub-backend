@@ -33,6 +33,7 @@ class NotifyTeacherBirthdays extends Command
         foreach ($teachers as $teacher) {
             $timezone = $teacher->timezone ?: config('app.timezone', 'UTC');
             $todayInTeacherTimezone = Carbon::now($timezone);
+            $tomorrowInTeacherTimezone = $todayInTeacherTimezone->copy()->addDay();
             $birthday = $teacher->dob;
 
             if (!$birthday) {
@@ -40,74 +41,82 @@ class NotifyTeacherBirthdays extends Command
                 continue;
             }
 
-            if (
-                (int) $birthday->month !== (int) $todayInTeacherTimezone->month ||
-                (int) $birthday->day !== (int) $todayInTeacherTimezone->day
-            ) {
+            $isBirthdayToday = (int) $birthday->month === (int) $todayInTeacherTimezone->month
+                && (int) $birthday->day === (int) $todayInTeacherTimezone->day;
+
+            $isBirthdayTomorrow = (int) $birthday->month === (int) $tomorrowInTeacherTimezone->month
+                && (int) $birthday->day === (int) $tomorrowInTeacherTimezone->day;
+
+            if (!$isBirthdayToday && !$isBirthdayTomorrow) {
                 $skippedCount++;
                 continue;
             }
 
-            $birthdayDate = $todayInTeacherTimezone->toDateString();
             $institution = $teacher->institution;
             $principal = $institution?->principal;
 
-            if ($this->teacherNotificationAlreadySent($teacher->id, $birthdayDate)) {
-                \Log::info("Birthday wish already sent to teacher {$teacher->id} for {$birthdayDate}, skipping.");
-            } else {
-                $teacherTitle = 'Happy Birthday!';
-                $teacherMessage = "Happy Birthday, {$teacher->full_name}! Wishing you a wonderful day filled with joy and success.";
+            if ($isBirthdayToday) {
+                $birthdayDate = $todayInTeacherTimezone->toDateString();
 
-                $this->storeAndSendNotification(
-                    recipient: $teacher,
-                    type: 'teacher_birthday_wish',
-                    title: $teacherTitle,
-                    message: $teacherMessage,
-                    meta: [
-                        'recipient_role' => 'teacher',
-                        'birthday_date' => $birthdayDate,
-                        'teacher_id' => (string) $teacher->id,
-                        'teacher_name' => $teacher->full_name,
-                        'timezone' => $timezone,
-                    ],
-                    firebaseNotificationService: $firebaseNotificationService
-                );
+                if ($this->teacherNotificationAlreadySent($teacher->id, $birthdayDate)) {
+                    \Log::info("Birthday wish already sent to teacher {$teacher->id} for {$birthdayDate}, skipping.");
+                } else {
+                    $teacherTitle = 'Happy Birthday!';
+                    $teacherMessage = "Happy Birthday, {$teacher->full_name}! Wishing you a wonderful day filled with joy and success.";
 
-                $teacherNotificationsSent++;
+                    $this->storeAndSendNotification(
+                        recipient: $teacher,
+                        type: 'teacher_birthday_wish',
+                        title: $teacherTitle,
+                        message: $teacherMessage,
+                        meta: [
+                            'recipient_role' => 'teacher',
+                            'birthday_date' => $birthdayDate,
+                            'teacher_id' => (string) $teacher->id,
+                            'teacher_name' => $teacher->full_name,
+                            'timezone' => $timezone,
+                        ],
+                        firebaseNotificationService: $firebaseNotificationService
+                    );
+
+                    $teacherNotificationsSent++;
+                }
             }
 
-            if (!$principal instanceof User) {
-                \Log::info("Teacher {$teacher->id} has no principal linked to institution {$teacher->institution_id}, skipping principal notification.");
-                continue;
+            if ($isBirthdayTomorrow) {
+                if (!$principal instanceof User) {
+                    \Log::info("Teacher {$teacher->id} has no principal linked to institution {$teacher->institution_id}, skipping principal notification.");
+                } else {
+                    $upcomingBirthdayDate = $tomorrowInTeacherTimezone->toDateString();
+
+                    if ($this->principalNotificationAlreadySent($principal->id, $teacher->id, $upcomingBirthdayDate)) {
+                        \Log::info("Birthday alert already sent to principal {$principal->id} for teacher {$teacher->id} on {$upcomingBirthdayDate}, skipping.");
+                    } else {
+                        $principalTitle = 'Teacher Birthday Tomorrow';
+                        $principalMessage = "{$teacher->full_name} has a birthday tomorrow.";
+
+                        $this->storeAndSendNotification(
+                            recipient: $principal,
+                            type: 'teacher_birthday_wish',
+                            title: $principalTitle,
+                            message: $principalMessage,
+                            meta: [
+                                'recipient_role' => 'principal',
+                                'birthday_date' => $upcomingBirthdayDate,
+                                'teacher_id' => (string) $teacher->id,
+                                'teacher_name' => $teacher->full_name,
+                                'teacher_timezone' => $timezone,
+                                'principal_timezone' => $principal->timezone ?? config('app.timezone', 'UTC'),
+                                'institution_id' => (string) $teacher->institution_id,
+                                'institution_name' => $institution?->name ?? 'N/A',
+                            ],
+                            firebaseNotificationService: $firebaseNotificationService
+                        );
+
+                        $principalNotificationsSent++;
+                    }
+                }
             }
-
-            if ($this->principalNotificationAlreadySent($principal->id, $teacher->id, $birthdayDate)) {
-                \Log::info("Birthday alert already sent to principal {$principal->id} for teacher {$teacher->id} on {$birthdayDate}, skipping.");
-                continue;
-            }
-
-            $principalTitle = 'Teacher Birthday Today';
-            $principalMessage = "{$teacher->full_name} has a birthday today.";
-
-            $this->storeAndSendNotification(
-                recipient: $principal,
-                type: 'teacher_birthday_wish',
-                title: $principalTitle,
-                message: $principalMessage,
-                meta: [
-                    'recipient_role' => 'principal',
-                    'birthday_date' => $birthdayDate,
-                    'teacher_id' => (string) $teacher->id,
-                    'teacher_name' => $teacher->full_name,
-                    'teacher_timezone' => $timezone,
-                    'principal_timezone' => $principal->timezone ?? config('app.timezone', 'UTC'),
-                    'institution_id' => (string) $teacher->institution_id,
-                    'institution_name' => $institution?->name ?? 'N/A',
-                ],
-                firebaseNotificationService: $firebaseNotificationService
-            );
-
-            $principalNotificationsSent++;
         }
 
         \Log::info("Teacher birthday cron completed. Teacher notifications: {$teacherNotificationsSent}, Principal notifications: {$principalNotificationsSent}, Skipped: {$skippedCount}");
