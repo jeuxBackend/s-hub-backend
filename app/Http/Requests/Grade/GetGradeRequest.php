@@ -28,6 +28,7 @@ class GetGradeRequest extends FormRequest
             'subject_id'   => ['nullable', 'exists:subjects,id'],
             'term'         => ['nullable', 'in:first,second,third,final'],
  // adjust if using enum
+            'type'         => ['nullable', 'string', 'max:50'],
             // 'paginate'     => ['nullable', 'boolean'],
         ];
     }

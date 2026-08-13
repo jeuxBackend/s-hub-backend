@@ -15,9 +15,15 @@ class TeacherAttendance extends Model
         'institution_id',
         'date',
         'status',
+        'checked_out_at',
+        'checkout_type',
         'type',
         'is_remote',
         'message',
+    ];
+
+    protected $casts = [
+        'checked_out_at' => 'datetime',
     ];
 
     public function teacher()

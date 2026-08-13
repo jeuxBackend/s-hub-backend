@@ -33,6 +33,9 @@ class CreateStudentAction
                 'dob' => $data['dob'],
                 'age' => $calculatedAge,
                 'religion' => $data['religion'] ?? null,
+                'nationality' => $data['nationality'] ?? null,
+                'country_of_birth' => $data['country_of_birth'] ?? null,
+                'primary_language' => $data['primary_language'] ?? null,
                 'profile_picture' => $data['profile_picture'] ?? null,
                 'guardian_id' => $data['guardian_id'], // FK to users table
                 'address' => $data['address'] ?? null,

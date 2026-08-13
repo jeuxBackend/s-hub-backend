@@ -45,6 +45,9 @@ class GradeController extends Controller
         if (!empty($filters['date'])) {
             $gradesQuery->whereDate('date', $filters['date']);
         }
+        if (!empty($filters['type'])) {
+            $gradesQuery->where('type', $filters['type']);
+        }
 
         $allGrades = $gradesQuery->get();
 

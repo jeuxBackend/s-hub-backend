@@ -25,10 +25,14 @@ class UserResource extends JsonResource
             'longitude' => $this->longitude,
             'latitude' => $this->latitude,
             'country' => $this->country,
+            'nationality' => $this->nationality,
+            'country_of_birth' => $this->country_of_birth,
+            'primary_language' => $this->primary_language,
 
             'first_name' => $this->first_name,
             'last_name' => $this->last_name,
             'sur_name' => $this->sur_name,
+            'gender' => $this->gender?->value,
 
             'profile_picture' => $this->profile_picture,
             'created_by' => $this->creator?->full_name,

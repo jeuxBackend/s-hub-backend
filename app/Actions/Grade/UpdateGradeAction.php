@@ -28,7 +28,7 @@ class UpdateGradeAction
 
         $grade->update($gradeData);
 
-        if (!in_array($grade->type, ['final_marks', 'years_marks'])) {
+        if (!in_array($grade->type, ['final_marks', 'years_marks', 'mock_exam'])) {
             app(\App\Actions\Grade\CalculateStudentGradesAction::class)->handle(
                 $grade->student_id,
                 $grade->classroom_id,

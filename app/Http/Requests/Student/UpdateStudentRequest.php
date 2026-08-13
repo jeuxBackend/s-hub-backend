@@ -26,6 +26,9 @@ class UpdateStudentRequest extends FormRequest
             'dob'                        => ['nullable', 'date', 'before:today'],
             'age'                        => ['nullable', 'integer'],
             'religion'                   => ['nullable', 'string'],
+            'nationality'                => ['nullable', 'string', 'max:100'],
+            'country_of_birth'           => ['nullable', 'string', 'max:100'],
+            'primary_language'           => ['nullable', 'string', 'max:100'],
             'address'                    => ['nullable', 'string'],
         ];
     }

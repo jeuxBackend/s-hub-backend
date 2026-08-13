@@ -19,7 +19,7 @@ class StudentGradeResource extends JsonResource
             'id'           => $this->id,
             'student'      => new StudentResource($this->student),
             'subject'      => new SubjectResource($this->subject),
-            'term'         => $this->term->value,
+            'term'         => $this->term?->value,
             'score'        => $this->score,
             'remarks'      => $this->remarks,
             'type'         => $this->type,

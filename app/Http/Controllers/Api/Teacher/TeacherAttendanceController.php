@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\Teacher;
 
+use App\Actions\Teacher\SignOutOfClassAction;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\TeacherAttendance;
@@ -145,6 +146,24 @@ class TeacherAttendanceController extends Controller
 
             return $this->successResponse($attendance, 'Attendance marked successfully.');
 
+        } catch (Throwable $e) {
+            return $this->exceptionResponse($e);
+        }
+    }
+
+    /**
+     * Sign out of the currently ongoing class.
+     */
+    public function signOut(Request $request, SignOutOfClassAction $action)
+    {
+        $request->validate([
+            'subject_id' => 'required|exists:subjects,id',
+        ]);
+
+        try {
+            $attendance = $action->handle(auth()->user(), (int) $request->input('subject_id'));
+
+            return $this->successResponse($attendance, 'Signed out of class successfully.');
         } catch (Throwable $e) {
             return $this->exceptionResponse($e);
         }

@@ -31,6 +31,7 @@ class Institution extends Model
         'phone_verified',
         'alert_feature_enabled',
         'allowed_alert_types',
+        'mock_exam_classroom_ids',
         'subjects',
         'latitude',
         'longitude',
@@ -41,6 +42,7 @@ class Institution extends Model
         'phone_verified' => 'boolean',
         'alert_feature_enabled' => 'boolean',
         'allowed_alert_types' => 'array',
+        'mock_exam_classroom_ids' => 'array',
         'subjects' => 'array',
     ];
 

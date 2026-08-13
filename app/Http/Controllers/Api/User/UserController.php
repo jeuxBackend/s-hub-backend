@@ -72,7 +72,7 @@ class UserController extends Controller
         }
     }
 
-    public function getAuthenticatedUser()
+    public function getAuthenticatedUser(\App\Actions\Teacher\GetOngoingClassAction $getOngoingClassAction)
     {
         try {
             $user = auth()->user();
@@ -127,6 +127,7 @@ class UserController extends Controller
                 'role' => $user->role->value,
                 'is_registered' => !is_null($user->password),
                 'unread_notification_count' => $unreadNotificationCount,
+                'ongoing_class' => $getOngoingClassAction->handle($user),
             ], 'Authenticated user data retrieved successfully');
         } catch (Throwable $e) {
             return $this->exceptionResponse($e);

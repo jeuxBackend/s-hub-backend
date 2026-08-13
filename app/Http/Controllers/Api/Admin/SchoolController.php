@@ -9,6 +9,7 @@ use App\Actions\Institution\UpdateSchoolAction;
 use App\Http\Controllers\Controller;
 use App\Models\Institution;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class SchoolController extends Controller
 {
@@ -59,6 +60,10 @@ class SchoolController extends Controller
             'alert_feature_enabled' => 'sometimes|boolean',
             'allowed_alert_types' => 'nullable|array',
             'allowed_alert_types.*' => 'in:abduction,emergency',
+            'mock_exam_classroom_ids' => 'nullable|array',
+            'mock_exam_classroom_ids.*' => [
+                Rule::exists('classrooms', 'id')->where('institution_id', $id),
+            ],
         ]);
 
         $school = $this->updateSchoolAction->handle($data, $id);

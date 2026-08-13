@@ -28,6 +28,7 @@ class InstitutionResource extends JsonResource
             'phone_verified' => (bool) $this->phone_verified,
             'alert_feature_enabled' => (bool) $this->alert_feature_enabled,
             'allowed_alert_types' => $this->allowed_alert_types ?? [],
+            'mock_exam_classroom_ids' => $this->mock_exam_classroom_ids ?? [],
             'active_alerts_count' => $this->when(isset($this->active_alerts_count), (int) $this->active_alerts_count),
             'potential_abduction_alerts_count' => $this->when(isset($this->potential_abduction_alerts_count), (int) $this->potential_abduction_alerts_count),
             'students_count' => $this->when(isset($this->students_count), (int) $this->students_count),

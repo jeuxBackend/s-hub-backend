@@ -291,6 +291,9 @@ class ParentController extends Controller
                     return [
                         'student_id' => $student->id,
                         'student_name' => trim($student->first_name . ' ' . $student->last_name . ' ' . $student->sur_name),
+                        'first_name' => $student->first_name,
+                        'last_name' => $student->last_name,
+                        'sur_name' => $student->sur_name,
                         'profile_picture' => $student->profile_picture,
                         'registration_number' => $student->registration_number,
                         'classroom' => $student->classroom ? [
@@ -325,7 +328,8 @@ class ParentController extends Controller
         $filters = $request->validate([
             'student_id' => ['required', 'exists:students,id'],
             'subject_id' => ['required', 'exists:subjects,id'],
-            'term' => ['required'],
+            'term' => ['nullable', 'in:first,second,third,final'],
+            'type' => ['nullable', 'string', 'max:50'],
         ]);
 
         $authId = auth()->id();
@@ -337,19 +341,26 @@ class ParentController extends Controller
             return $this->errorResponse('Unauthorized access. This student is not registered under your profile.', 403);
         }
 
-        $grades = \App\Models\StudentGrade::where('student_id', $student->id)
-            ->where('subject_id', $filters['subject_id'])
-            ->where(function ($q) use ($filters) {
+        $gradesQuery = \App\Models\StudentGrade::where('student_id', $student->id)
+            ->where('subject_id', $filters['subject_id']);
+
+        if (!empty($filters['type'])) {
+            $gradesQuery->where('type', $filters['type']);
+        } elseif (!empty($filters['term'])) {
+            $gradesQuery->where(function ($q) use ($filters) {
                 $q->where('term', $filters['term'])
-                    ->orWhere('type', 'years_marks');
-            })
-            ->get();
+                    ->orWhere('type', 'years_marks')
+                    ->orWhere('type', 'mock_exam');
+            });
+        }
+
+        $grades = $gradesQuery->get();
 
         $result = [
             'student_id' => $student->id,
             'student_name' => trim($student->first_name . ' ' . $student->last_name . ' ' . $student->sur_name),
             'subject_id' => $filters['subject_id'],
-            'term' => $filters['term'],
+            'term' => $filters['term'] ?? null,
             'grades' => [
                 'test_1' => $grades->where('type', 'test_1')->first(),
                 'test_2' => $grades->where('type', 'test_2')->first(),
@@ -358,6 +369,7 @@ class ParentController extends Controller
                 'final_marks' => $grades->where('type', 'final_marks')->first(),
                 'exam_marks' => $grades->where('type', 'exam_marks')->first(),
                 'years_marks' => $grades->where('type', 'years_marks')->first(),
+                'mock_exam' => $grades->where('type', 'mock_exam')->first(),
                 // Keep these just in case old data exists
                 'exam' => $grades->where('type', 'exam')->first(),
                 'assignment' => $grades->where('type', 'assignment')->first(),

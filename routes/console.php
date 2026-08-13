@@ -12,5 +12,6 @@ Artisan::command('inspire', function () {
 Schedule::command('tuition:process-scheduled')->daily();
 Schedule::command('birthday:notify-teachers')->dailyAt('00:05')->withoutOverlapping();
 Schedule::command('attendance:notify-teachers')->everyMinute()->withoutOverlapping();
+Schedule::command('attendance:auto-signout-teachers')->everyMinute()->withoutOverlapping();
 Schedule::command('attendance:notify-principal-absent-teacher')->everyMinute()->withoutOverlapping();
 Schedule::command('attendance:reassign-missed-proxy')->everyThreeMinutes()->withoutOverlapping();

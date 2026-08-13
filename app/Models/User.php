@@ -31,9 +31,13 @@ class User extends Authenticatable
         'first_name',
         'sur_name',
         'last_name',
+        'gender',
         'title',
         'position',
         'country',
+        'nationality',
+        'country_of_birth',
+        'primary_language',
         'profile_picture',
         'staff_number',
 
@@ -93,6 +97,7 @@ class User extends Authenticatable
             'permissions' => 'json',
             'role' => UserRole::class,
             'guardian_type' => GuardianType::class,
+            'gender' => \App\Enums\GenderType::class,
             'dob' => 'date',
         ];
     }
@@ -120,7 +125,7 @@ class User extends Authenticatable
 
     public function getFullNameAttribute(): string
     {
-        return trim("{$this->first_name} {$this->last_name} {$this->sur_name}");
+        return trim("{$this->sur_name} {$this->first_name} {$this->last_name}");
     }
 
     /*

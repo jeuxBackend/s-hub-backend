@@ -86,18 +86,33 @@ class SchoolAdminController extends Controller
     {
         try {
             $requester = auth()->user();
-            $teachers = User::where('institution_id', $requester->institution_id)
+            $teacherQuery = User::where('institution_id', $requester->institution_id)
                 ->where('role', \App\Enums\UserRole::Teacher->value)
-                ->whereNotNull('password')
-                ->get(['id', 'first_name', 'last_name', 'sur_name'])
+                ->whereNotNull('password');
+
+            $teachers = (clone $teacherQuery)
+                ->get(['id', 'first_name', 'last_name', 'sur_name', 'gender'])
                 ->map(function ($user) {
                 return [
                     'id' => $user->id,
                     'full_name' => $user->full_name,
+                    'gender' => $user->gender?->value,
                 ];
             });
 
-            return $this->successResponse($teachers, 'Teachers list retrieved successfully');
+            $genderCounts = (clone $teacherQuery)
+                ->toBase()
+                ->reorder()
+                ->select('gender', \Illuminate\Support\Facades\DB::raw('COUNT(*) as total'))
+                ->groupBy('gender')
+                ->pluck('total', 'gender');
+
+            return $this->successResponse([
+                'teachers' => $teachers,
+                'total_teachers' => $teachers->count(),
+                'male_teachers' => (int) ($genderCounts[\App\Enums\GenderType::Male->value] ?? 0),
+                'female_teachers' => (int) ($genderCounts[\App\Enums\GenderType::Female->value] ?? 0),
+            ], 'Teachers list retrieved successfully');
         } catch (Throwable $e) {
             return $this->exceptionResponse($e);
         }

@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\Admin\ClassnameController;
 use App\Http\Controllers\Api\Admin\ActivityControler;
 use App\Http\Controllers\Api\Admin\ManagerInvoiceController;
 use App\Http\Controllers\Api\Admin\SchoolController;
@@ -80,6 +81,18 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'active.user'])->group(function
 
     Route::patch('users/allow-alert/toggle', [UserController::class, 'toggleAllowAlert']);
 
+    // Class names: per-institution, managed by admin/sub_admin/manager only.
+    // Listing/viewing is open to any authenticated, active user regardless of role.
+    Route::get('classnames', [ClassnameController::class, 'index']);
+    Route::get('classnames/{classname}', [ClassnameController::class, 'show']);
+
+    Route::middleware('role:admin,sub_admin,manager')->group(function () {
+        Route::post('classnames', [ClassnameController::class, 'store']);
+        Route::put('classnames/{classname}', [ClassnameController::class, 'update']);
+        Route::patch('classnames/{classname}', [ClassnameController::class, 'update']);
+        Route::delete('classnames/{classname}', [ClassnameController::class, 'destroy']);
+    });
+
     Route::middleware(['otp.verified', 'role:principal,school-admin,teacher'])->group(function () {
         // Attendance
         Route::prefix('attendances')->group(function () {
@@ -113,6 +126,7 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'active.user'])->group(function
         Route::put('teacher/profile', [UserController::class, 'updateProfile']);
         Route::post('teacher/profile', [UserController::class, 'updateProfile']);
         Route::post('teacher/attendance/mark', [TeacherAttendanceController::class, 'markAttendance']);
+        Route::post('teacher/attendance/sign-out', [TeacherAttendanceController::class, 'signOut']);
         Route::post('teacher/proxy-attendance/mark', [FreePeriodTeacherController::class, 'markProxyAttendance']);
 
         // Assignment Routes - Teacher Side

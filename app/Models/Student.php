@@ -24,6 +24,9 @@ class Student extends Model
         'dob',
         'age',
         'religion',
+        'nationality',
+        'country_of_birth',
+        'primary_language',
         'term',
         'classroom_id',
         'institution_id',
@@ -203,9 +206,35 @@ class Student extends Model
             : 0;
 
         $hasYearMarks = $totalMaxSum > 0;
+
+        $institution = $this->relationLoaded('institution')
+            ? $this->institution
+            : $this->institution()->first();
+
+        $mockExamRequired = $institution
+            && in_array($this->classroom_id, $institution->mock_exam_classroom_ids ?? [], false);
+
+        $hasMockExamMarks = true;
+
+        if ($mockExamRequired) {
+            $mockExamRecords = $grades->where('type', 'mock_exam');
+
+            foreach ($classroomSubjects as $subject) {
+                $hasScore = $mockExamRecords
+                    ->where('subject_id', $subject->id)
+                    ->whereNotNull('score')
+                    ->isNotEmpty();
+
+                if (!$hasScore) {
+                    $hasMockExamMarks = false;
+                    break;
+                }
+            }
+        }
+
         $promotionStatus = $latestPromotion?->status;
         $promotionSent = in_array($promotionStatus, ['submitted', 'approved'], true);
-        $eligible = $hasExamMarks && $hasYearMarks && $overallPercentage > 50 && !$promotionSent;
+        $eligible = $hasExamMarks && $hasYearMarks && $overallPercentage > 50 && $hasMockExamMarks && !$promotionSent;
 
         if (!$hasExamMarks) {
             $reason = 'No exam marks available yet.';
@@ -213,6 +242,8 @@ class Student extends Model
             $reason = 'Year marks are not calculated yet.';
         } elseif ($overallPercentage <= 50) {
             $reason = 'Year marks must be above 50% to promote.';
+        } elseif (!$hasMockExamMarks) {
+            $reason = 'Mock exam marks must be recorded for all subjects before this student can be promoted.';
         } elseif ($promotionSent) {
             $reason = 'Promotion request already sent.';
         } else {
@@ -222,6 +253,8 @@ class Student extends Model
         return [
             'has_exam_marks' => $hasExamMarks,
             'overall_percentage' => $overallPercentage,
+            'mock_exam_required' => $mockExamRequired,
+            'has_mock_exam_marks' => $hasMockExamMarks,
             'eligible' => $eligible,
             'promotion_sent' => $promotionSent,
             'promotion_status' => $promotionStatus,

@@ -58,6 +58,9 @@ class SignupRequest extends FormRequest
                 'guardian_relation'                 => ['nullable', 'string'],
                 'guardian_phone_number'             => ['required', 'string'],
                 'alternative_guardian_phone_number' => ['nullable', 'string'],
+                'nationality'                        => ['nullable', 'string', 'max:100'],
+                'country_of_birth'                   => ['nullable', 'string', 'max:100'],
+                'primary_language'                   => ['nullable', 'string', 'max:100'],
             ],
 
             UserRole::SchoolAdmin->value => [

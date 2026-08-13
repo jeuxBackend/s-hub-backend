@@ -44,6 +44,9 @@ class GuardianController extends Controller
             'alternative_email' => 'nullable|email|unique:users,email',
             'address' => 'nullable|string|max:255',
             'allow_alert' => 'nullable|boolean',
+            'nationality' => 'nullable|string|max:100',
+            'country_of_birth' => 'nullable|string|max:100',
+            'primary_language' => 'nullable|string|max:100',
         ]);
 
         try {
@@ -90,6 +93,9 @@ class GuardianController extends Controller
             'alternative_email' => 'sometimes|email|unique:users,email,' . $id,
             'address' => 'sometimes|string|max:255',
             'allow_alert' => 'sometimes|boolean',
+            'nationality' => 'nullable|string|max:100',
+            'country_of_birth' => 'nullable|string|max:100',
+            'primary_language' => 'nullable|string|max:100',
         ]);
 
         try {

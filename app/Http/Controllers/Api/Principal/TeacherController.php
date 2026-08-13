@@ -23,7 +23,18 @@ class TeacherController extends Controller
     {
         try {
             $teachers = $action->handle($request);
-            return $this->paginatedResponse(UserResource::collection($teachers), 'Teachers retrieved successfully');
+            $genderCounts = $action->countsByGender($request);
+
+            return $this->paginatedResponse(
+                UserResource::collection($teachers),
+                'Teachers retrieved successfully',
+                200,
+                [
+                    'total_teachers' => $teachers->total(),
+                    'male_teachers' => $genderCounts['male'],
+                    'female_teachers' => $genderCounts['female'],
+                ]
+            );
         } catch (Throwable $e) {
             return $this->exceptionResponse($e);
         }
@@ -35,6 +46,7 @@ class TeacherController extends Controller
             'first_name' => 'required|string|max:255',
             'sur_name' => 'required|string|max:255',
             'last_name' => 'nullable|string|max:255',
+            'gender' => 'nullable|in:male,female,other',
             'email' => 'required|email|unique:users,email',
             'phone_number' => 'required|string|unique:users,phone_number',
             'emergency_number' => 'nullable|string|max:255',
@@ -78,6 +90,7 @@ class TeacherController extends Controller
             'first_name' => 'sometimes|string|max:255',
             'sur_name' => 'sometimes|string|max:255',
             'last_name' => 'nullable|string|max:255',
+            'gender' => 'nullable|in:male,female,other',
             'email' => 'sometimes|email|unique:users,email,' . $id,
             'phone_number' => 'sometimes|string|unique:users,phone_number,' . $id,
             'emergency_number' => 'nullable|string|max:255',

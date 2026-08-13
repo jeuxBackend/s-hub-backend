@@ -2,6 +2,7 @@
 
 namespace App\Actions\Auth;
 
+use App\Actions\Teacher\GetOngoingClassAction;
 use App\Http\Resources\FamilyMemberResource;
 use App\Models\User;
 use App\Models\FamilyMember;
@@ -14,6 +15,10 @@ use App\Http\Resources\UserResource;
 
 class LoginAction
 {
+    public function __construct(private GetOngoingClassAction $getOngoingClassAction)
+    {
+    }
+
     public function handle(array $data): array
     {
         $loginField = filter_var($data['login'], FILTER_VALIDATE_EMAIL)
@@ -54,6 +59,7 @@ class LoginAction
             'unread_notification_count' => $unreadNotificationCount,
             'logged_in_via_family_member' => (bool) $familyMember,
             'family_member' => $familyMember ? new FamilyMemberResource($familyMember) : null,
+            'ongoing_class' => $this->getOngoingClassAction->handle($user),
         ];
     }
 
