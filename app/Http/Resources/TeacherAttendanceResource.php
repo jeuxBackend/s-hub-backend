@@ -11,6 +11,8 @@ class TeacherAttendanceResource extends JsonResource
      */
     public function toArray($request): array
     {
+        $timezone = optional($this->teacher)->timezone ?: config('app.timezone', 'UTC');
+
         return [
             'id' => $this->id,
             'teacher_id' => $this->teacher_id,
@@ -22,6 +24,9 @@ class TeacherAttendanceResource extends JsonResource
             'class_name' => $this->whenLoaded('subject', fn() => optional($this->subject->classroom)->name),
             'date' => $this->date,
             'status' => $this->status,
+            'marked_at' => $this->created_at?->copy()->timezone($timezone)->format('Y-m-d H:i:s'),
+            'checked_out_at' => $this->checked_out_at?->copy()->timezone($timezone)->format('Y-m-d H:i:s'),
+            'timezone' => $timezone,
             'message' => $this->message,
             'created_at' => $this->created_at,
         ];

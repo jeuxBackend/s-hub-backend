@@ -32,7 +32,7 @@ class TeacherAttendanceController extends Controller
             $teacher = auth()->user();
 
             $query = TeacherAttendance::where('teacher_id', $teacher->id)
-                ->with(['subject.classroom'])
+                ->with(['subject.classroom', 'teacher'])
                 ->orderBy('date', 'desc')
                 ->orderBy('created_at', 'desc');
 

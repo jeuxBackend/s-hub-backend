@@ -22,7 +22,7 @@ class TeacherAttendanceController extends Controller
     {
         try {
             $query = TeacherAttendance::where('teacher_id', $teacherId)
-                ->with(['subject.classroom'])
+                ->with(['subject.classroom', 'teacher'])
                 ->orderBy('created_at', 'desc');
 
             // Optional filters: date range
@@ -35,8 +35,8 @@ class TeacherAttendanceController extends Controller
 
             $paginated = $query->paginate($request->input('per_page', 20));
 
-            // Load subject and classroom for each attendance record
-            $items = $paginated->getCollection()->load(['subject.classroom']);
+            // Load subject, classroom and teacher for each attendance record
+            $items = $paginated->getCollection()->load(['subject.classroom', 'teacher']);
 
             // Compute summary statistics
             $total = $paginated->total();
