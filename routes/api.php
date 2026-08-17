@@ -127,6 +127,7 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'active.user'])->group(function
         Route::post('teacher/profile', [UserController::class, 'updateProfile']);
         Route::post('teacher/attendance/mark', [TeacherAttendanceController::class, 'markAttendance']);
         Route::post('teacher/attendance/sign-out', [TeacherAttendanceController::class, 'signOut']);
+        Route::get('teacher/attendance/history', [TeacherAttendanceController::class, 'history']);
         Route::post('teacher/proxy-attendance/mark', [FreePeriodTeacherController::class, 'markProxyAttendance']);
 
         // Assignment Routes - Teacher Side

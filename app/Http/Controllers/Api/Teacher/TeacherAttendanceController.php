@@ -3,7 +3,9 @@
 namespace App\Http\Controllers\Api\Teacher;
 
 use App\Actions\Teacher\SignOutOfClassAction;
+use App\Enums\AttendanceStatus;
 use App\Http\Controllers\Controller;
+use App\Http\Resources\TeacherAttendanceResource;
 use Illuminate\Http\Request;
 use App\Models\TeacherAttendance;
 use App\Models\Subject;
@@ -15,6 +17,58 @@ use Throwable;
 
 class TeacherAttendanceController extends Controller
 {
+    /**
+     * Return the authenticated teacher's own attendance history, paginated.
+     */
+    public function history(Request $request)
+    {
+        $request->validate([
+            'from' => ['nullable', 'date'],
+            'to' => ['nullable', 'date'],
+            'per_page' => ['nullable', 'integer', 'min:1', 'max:100'],
+        ]);
+
+        try {
+            $teacher = auth()->user();
+
+            $query = TeacherAttendance::where('teacher_id', $teacher->id)
+                ->with(['subject.classroom'])
+                ->orderBy('date', 'desc')
+                ->orderBy('created_at', 'desc');
+
+            if ($request->filled('from')) {
+                $query->whereDate('date', '>=', $request->input('from'));
+            }
+            if ($request->filled('to')) {
+                $query->whereDate('date', '<=', $request->input('to'));
+            }
+
+            $paginated = $query->paginate($request->input('per_page', 20));
+            $items = $paginated->getCollection();
+
+            $total = $paginated->total();
+            $presentCount = $items->where('status', AttendanceStatus::Present->value)->count();
+            $absentCount = $items->where('status', AttendanceStatus::Absent->value)->count();
+            $lateCount = $items->where('status', AttendanceStatus::Late->value)->count();
+
+            return $this->paginatedResponse(
+                TeacherAttendanceResource::collection($paginated),
+                'Attendance history fetched successfully',
+                200,
+                [
+                    'present_count' => $presentCount,
+                    'absent_count' => $absentCount,
+                    'late_count' => $lateCount,
+                    'present_percentage' => $total ? round(($presentCount / $total) * 100, 2) : 0,
+                    'absent_percentage' => $total ? round(($absentCount / $total) * 100, 2) : 0,
+                    'late_percentage' => $total ? round(($lateCount / $total) * 100, 2) : 0,
+                ]
+            );
+        } catch (Throwable $e) {
+            return $this->exceptionResponse($e);
+        }
+    }
+
     /**
      * Mark teacher attendance
      */
