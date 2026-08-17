@@ -44,7 +44,7 @@ class TeacherController extends Controller
     {
         $data = $request->validate([
             'first_name' => 'required|string|max:255',
-            'sur_name' => 'required|string|max:255',
+            'sur_name' => 'nullable|string|max:255',
             'last_name' => 'nullable|string|max:255',
             'gender' => 'nullable|in:male,female,other',
             'email' => 'required|email|unique:users,email',
@@ -87,8 +87,8 @@ class TeacherController extends Controller
     public function update(Request $request, $id, UpdateUserAction $action, GetUserAction $getAction)
     {
         $data = $request->validate([
-            'first_name' => 'sometimes|string|max:255',
-            'sur_name' => 'sometimes|string|max:255',
+            'first_name' => 'required|max:255',
+            'sur_name' => 'nullable|max:255',
             'last_name' => 'nullable|string|max:255',
             'gender' => 'nullable|in:male,female,other',
             'email' => 'sometimes|email|unique:users,email,' . $id,
@@ -141,7 +141,7 @@ class TeacherController extends Controller
             $requirementAssignments = ClassSubjectRequirement::query()
                 ->where('institution_id', $principal->institution_id)
                 ->where('is_active', true)
-                ->when($classroomId !== null, fn ($query) => $query->where('classroom_id', $classroomId))
+                ->when($classroomId !== null, fn($query) => $query->where('classroom_id', $classroomId))
                 ->with([
                     'teacher:id,first_name,sur_name,last_name,profile_picture,role,institution_id',
                     'classroom:id,name,code,institution_id',
@@ -151,7 +151,7 @@ class TeacherController extends Controller
 
             $timetableAssignments = TimetableEntry::query()
                 ->where('institution_id', $principal->institution_id)
-                ->when($classroomId !== null, fn ($query) => $query->where('classroom_id', $classroomId))
+                ->when($classroomId !== null, fn($query) => $query->where('classroom_id', $classroomId))
                 ->with([
                     'teacher:id,first_name,sur_name,last_name,profile_picture,role,institution_id',
                     'classroom:id,name,code,institution_id',
@@ -168,7 +168,7 @@ class TeacherController extends Controller
                         && $assignment->classroom !== null
                         && $assignment->subject !== null;
                 })
-                ->unique(fn ($assignment) => $assignment->teacher_id . ':' . $assignment->classroom_id . ':' . $assignment->subject_id)
+                ->unique(fn($assignment) => $assignment->teacher_id . ':' . $assignment->classroom_id . ':' . $assignment->subject_id)
                 ->sortBy([
                     ['teacher_id', 'asc'],
                     ['classroom_id', 'asc'],
