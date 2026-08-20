@@ -17,7 +17,7 @@ class ReassignMissedProxyAttendance extends Command
 
     protected $description = 'Reassign proxy classes when the current proxy teacher does not mark attendance in time.';
 
-    private const RESPONSE_GRACE_MINUTES = 3; // Changed from 1 to 3 minutes
+    private const RESPONSE_GRACE_MINUTES = 5; // Changed from 3 to 5 minutes
 
     private const MINUTES_REQUIRED_FOR_NEW_PROXY = 15;
 

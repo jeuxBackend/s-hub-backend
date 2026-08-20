@@ -35,7 +35,7 @@ class NotifyPrincipalLateTeacher extends Command
     public function handle(FirebaseNotificationService $firebaseNotificationService, TimetableEntryResolver $resolver)
     {
         // Use teacher's timezone for timing
-        \Log::info('Cron checking for absent teachers (>= 3 mins late)');
+        \Log::info('Cron checking for absent teachers (>= 15 mins late)');
 
         $entries = TimetableEntry::query()
             ->with(['subject', 'teacher', 'classroom', 'institution.principal'])
@@ -71,11 +71,11 @@ class NotifyPrincipalLateTeacher extends Command
                     continue;
                 }
 
-                // Check if class started 3 or more minutes ago
-                $latenessThreshold = $nowTeacher->copy()->subMinutes(3);
+                // Check if class started 15 or more minutes ago
+                $latenessThreshold = $nowTeacher->copy()->subMinutes(15);
 
                 if ($classStartTime->greaterThan($latenessThreshold)) {
-                    \Log::debug("Subject {$subject->id} start time ({$classStartTime->format('H:i:s')}) is not yet 3 minutes past (teacher timezone {$teacherTimezone}), skipping");
+                    \Log::debug("Subject {$subject->id} start time ({$classStartTime->format('H:i:s')}) is not yet 15 minutes past (teacher timezone {$teacherTimezone}), skipping");
                     $skippedCount++;
                     continue;
                 }
@@ -146,7 +146,7 @@ class NotifyPrincipalLateTeacher extends Command
 
                     if ($teacher instanceof User) {
                         $teacherTitle = 'Attendance Marked Absent';
-                        $teacherMessage = "Your attendance was automatically marked absent for {$subject->name} because you were more than 3 minutes late.";
+                        $teacherMessage = "Your attendance was automatically marked absent for {$subject->name} because you were more than 15 minutes late.";
 
                         $this->storeAndSendNotification(
                             recipient: $teacher,
