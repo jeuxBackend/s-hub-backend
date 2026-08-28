@@ -186,6 +186,49 @@ class SchoolAlertService
         });
     }
 
+    /**
+     * Auto-resolve every abduction alert that has passed the abduction expiry
+     * window without being resolved. Intended to be driven by a scheduled command.
+     */
+    public function autoResolveExpiredAlerts(): int
+    {
+        $cutoff = now()->subMinutes(SchoolAlert::ABDUCTION_EXPIRY_MINUTES);
+
+        $expiredAlerts = SchoolAlert::where('type', 'abduction')
+            ->where('status', '!=', 'resolved')
+            ->where('created_at', '<=', $cutoff)
+            ->get();
+
+        $resolvedCount = 0;
+
+        foreach ($expiredAlerts as $alert) {
+            try {
+                $updatedAlert = DB::transaction(function () use ($alert) {
+                    $alert->update([
+                        'status' => 'resolved',
+                        'resolved_by' => null,
+                        'resolved_at' => now(),
+                    ]);
+
+                    return $alert->fresh(['responses.user', 'responses.student', 'creator', 'confirmedBy', 'resolvedBy']);
+                });
+
+                $this->dispatchAlertResolutionNotification($updatedAlert, null);
+                event(new SchoolAlertBroadcastedEvent($updatedAlert));
+
+                $resolvedCount++;
+            } catch (Throwable $e) {
+                Log::error('Failed to auto-resolve expired school alert', [
+                    'alert_id' => $alert->id,
+                    'institution_id' => $alert->institution_id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
+
+        return $resolvedCount;
+    }
+
     public function resolveAlert(SchoolAlert $alert, User|Admin $actor, array $data = []): SchoolAlert
     {
         $updatedAlert = DB::transaction(function () use ($alert, $actor, $data) {
@@ -437,7 +480,7 @@ class SchoolAlertService
         }
     }
 
-    protected function dispatchAlertResolutionNotification(SchoolAlert $alert, User|Admin $actor): void
+    protected function dispatchAlertResolutionNotification(SchoolAlert $alert, User|Admin|null $actor): void
     {
         $recipients = $this->filterRecipientsForAlert(
             User::query()
@@ -447,16 +490,25 @@ class SchoolAlertService
             $alert
         );
 
-        $resolverName = $actor->full_name
-            ?? trim(($actor->first_name ?? '') . ' ' . ($actor->last_name ?? '') . ' ' . ($actor->sure_name ?? ''));
-
         $title = 'School Alert Resolved';
-        $message = sprintf(
-            '%s alert "%s" has been resolved by %s.',
-            ucfirst($alert->type),
-            $alert->title,
-            $resolverName
-        );
+
+        if ($actor) {
+            $resolverName = $actor->full_name
+                ?? trim(($actor->first_name ?? '') . ' ' . ($actor->last_name ?? '') . ' ' . ($actor->sure_name ?? ''));
+
+            $message = sprintf(
+                '%s alert "%s" has been resolved by %s.',
+                ucfirst($alert->type),
+                $alert->title,
+                $resolverName
+            );
+        } else {
+            $message = sprintf(
+                '%s alert "%s" was automatically marked resolved after expiring with no action taken.',
+                ucfirst($alert->type),
+                $alert->title
+            );
+        }
 
         foreach ($recipients as $recipient) {
             $notification = $this->createResolutionNotificationLog($recipient, $alert, $actor, $title, $message);
@@ -483,7 +535,7 @@ class SchoolAlertService
                         'alert_type' => $alert->type,
                         'alert_status' => $alert->status,
                         'state' => 'resolved',
-                        'resolved_by' => $actor->id,
+                        'resolved_by' => $actor?->id,
                     ]
                 );
             } catch (Throwable $e) {
@@ -518,7 +570,7 @@ class SchoolAlertService
         return (bool) ($recipient->allow_alert ?? true);
     }
 
-    protected function createResolutionNotificationLog(User $recipient, SchoolAlert $alert, User|Admin $actor, string $title, string $message): ?NotificationLog
+    protected function createResolutionNotificationLog(User $recipient, SchoolAlert $alert, User|Admin|null $actor, string $title, string $message): ?NotificationLog
     {
         $payload = [
             'user_id' => $recipient->id,
@@ -535,7 +587,7 @@ class SchoolAlertService
                 'alert_type' => $alert->type,
                 'alert_status' => $alert->status,
                 'state' => 'resolved',
-                'resolved_by' => $actor->id,
+                'resolved_by' => $actor?->id,
                 'resolved_at' => $alert->resolved_at?->toISOString(),
             ],
             'sent_at' => now($recipient->timezone ?? config('app.timezone', 'UTC')),

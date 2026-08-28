@@ -15,3 +15,4 @@ Schedule::command('attendance:notify-teachers')->everyMinute()->withoutOverlappi
 Schedule::command('attendance:auto-signout-teachers')->everyMinute()->withoutOverlapping();
 Schedule::command('attendance:notify-principal-absent-teacher')->everyMinute()->withoutOverlapping();
 Schedule::command('attendance:reassign-missed-proxy')->everyThreeMinutes()->withoutOverlapping();
+Schedule::command('alerts:auto-resolve-expired')->everyMinute()->withoutOverlapping();
