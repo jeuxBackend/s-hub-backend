@@ -40,15 +40,24 @@ class GetUserAction
                 'active_alerts_count',
                 $activeAlertsQuery->count()
             );
+            $user->institution->setAttribute(
+                'active_alerts_created_by',
+                (clone $activeAlertsQuery)->pluck('created_by')->unique()->values()->all()
+            );
 
             if (in_array($user->role, [UserRole::Teacher, UserRole::SchoolAdmin], true)) {
+                $potentialAbductionQuery = SchoolAlert::where('institution_id', $user->institution_id)
+                    ->where('type', 'abduction')
+                    ->where('status', 'potential')
+                    ->excludingExpiredAbduction();
+
                 $user->institution->setAttribute(
                     'potential_abduction_alerts_count',
-                    SchoolAlert::where('institution_id', $user->institution_id)
-                        ->where('type', 'abduction')
-                        ->where('status', 'potential')
-                        ->excludingExpiredAbduction()
-                        ->count()
+                    (clone $potentialAbductionQuery)->count()
+                );
+                $user->institution->setAttribute(
+                    'potential_abduction_alerts_created_by',
+                    (clone $potentialAbductionQuery)->pluck('created_by')->unique()->values()->all()
                 );
             }
 
