@@ -91,7 +91,8 @@ class UserController extends Controller
             }
 
             if (in_array($user->role, [\App\Enums\UserRole::Principal, \App\Enums\UserRole::SchoolAdmin, \App\Enums\UserRole::Teacher, \App\Enums\UserRole::Parent], true) && $user->relationLoaded('institution') && $user->institution) {
-                $activeAlertsQuery = SchoolAlert::where('institution_id', $user->institution_id);
+                $activeAlertsQuery = SchoolAlert::where('institution_id', $user->institution_id)
+                    ->excludingExpiredAbduction();
 
                 if ($user->role === \App\Enums\UserRole::Principal) {
                     $activeAlertsQuery->where('status', '!=', 'resolved');
@@ -112,6 +113,7 @@ class UserController extends Controller
                         SchoolAlert::where('institution_id', $user->institution_id)
                             ->where('type', 'abduction')
                             ->where('status', 'potential')
+                            ->excludingExpiredAbduction()
                             ->count()
                     );
                 }

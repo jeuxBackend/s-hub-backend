@@ -742,6 +742,6 @@ class SchoolAlertService
             return false;
         }
 
-        return Carbon::parse($alert->created_at)->addMinutes(15)->isPast();
+        return Carbon::parse($alert->created_at)->addMinutes(SchoolAlert::ABDUCTION_EXPIRY_MINUTES)->isPast();
     }
 }

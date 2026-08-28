@@ -25,7 +25,8 @@ class GetUserAction
         if (in_array($user->role, [UserRole::Principal, UserRole::SchoolAdmin, UserRole::Teacher, UserRole::Parent], true) && $user->institution_id && $user->institution) {
             $institutionId = $user->institution_id;
 
-            $activeAlertsQuery = SchoolAlert::where('institution_id', $user->institution_id);
+            $activeAlertsQuery = SchoolAlert::where('institution_id', $user->institution_id)
+                ->excludingExpiredAbduction();
 
             if ($user->role === UserRole::Principal) {
                 $activeAlertsQuery->where('status', '!=', 'resolved');
@@ -46,6 +47,7 @@ class GetUserAction
                     SchoolAlert::where('institution_id', $user->institution_id)
                         ->where('type', 'abduction')
                         ->where('status', 'potential')
+                        ->excludingExpiredAbduction()
                         ->count()
                 );
             }

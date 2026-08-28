@@ -212,10 +212,17 @@ class TeacherAttendanceController extends Controller
     {
         $request->validate([
             'subject_id' => 'required|exists:subjects,id',
+            'latitude' => 'nullable|numeric',
+            'longitude' => 'nullable|numeric',
         ]);
 
         try {
-            $attendance = $action->handle(auth()->user(), (int) $request->input('subject_id'));
+            $attendance = $action->handle(
+                auth()->user(),
+                (int) $request->input('subject_id'),
+                $request->filled('latitude') ? (float) $request->input('latitude') : null,
+                $request->filled('longitude') ? (float) $request->input('longitude') : null,
+            );
 
             return $this->successResponse($attendance, 'Signed out of class successfully.');
         } catch (Throwable $e) {

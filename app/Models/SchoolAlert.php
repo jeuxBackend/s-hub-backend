@@ -9,6 +9,8 @@ class SchoolAlert extends Model
 {
     public const ACTIVE_COUNT_WINDOW_MINUTES = 30;
 
+    public const ABDUCTION_EXPIRY_MINUTES = 15;
+
     protected $fillable = [
         'institution_id',
         'created_by',
@@ -58,5 +60,18 @@ class SchoolAlert extends Model
     public function scopeWithinActiveCountWindow(Builder $query): Builder
     {
         return $query->where('created_at', '>=', now()->subMinutes(self::ACTIVE_COUNT_WINDOW_MINUTES));
+    }
+
+    /**
+     * Excludes abduction alerts that have passed the abduction expiry window
+     * without being resolved (mirrors SchoolAlertService::isExpiredForCurrentView).
+     */
+    public function scopeExcludingExpiredAbduction(Builder $query): Builder
+    {
+        return $query->where(function (Builder $q) {
+            $q->where('type', '!=', 'abduction')
+                ->orWhere('status', 'resolved')
+                ->orWhere('created_at', '>', now()->subMinutes(self::ABDUCTION_EXPIRY_MINUTES));
+        });
     }
 }
