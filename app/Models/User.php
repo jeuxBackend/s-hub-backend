@@ -70,6 +70,7 @@ class User extends Authenticatable
         'email_verified_at',
         'remote_teaching',
         'timezone',
+        'current_authorized_pickup_id',
     ];
 
     // Hidden attributes
@@ -177,9 +178,21 @@ class User extends Authenticatable
         return $this->hasMany(FamilyMember::class, 'parent_id');
     }
 
+    /**
+     * The parent's currently selected authorized pickup, shown across
+     * principal/teacher/admin/school-admin views of their children.
+     */
     public function authorizedPickup()
     {
-        return $this->hasOne(AuthorizedPickup::class, 'parent_id');
+        return $this->belongsTo(AuthorizedPickup::class, 'current_authorized_pickup_id');
+    }
+
+    /**
+     * Every authorized pickup the parent has ever added.
+     */
+    public function authorizedPickups()
+    {
+        return $this->hasMany(AuthorizedPickup::class, 'parent_id');
     }
 
     /**

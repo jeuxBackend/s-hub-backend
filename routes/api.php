@@ -147,7 +147,9 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'active.user'])->group(function
         Route::post('family-members/{familyMember}', [\App\Http\Controllers\Api\Parent\FamilyMemberController::class, 'update']);
         Route::delete('family-members/{familyMember}', [\App\Http\Controllers\Api\Parent\FamilyMemberController::class, 'destroy']);
         Route::get('authorized-pickup', [\App\Http\Controllers\Api\Parent\AuthorizedPickupController::class, 'index']);
+        Route::get('authorized-pickup/all', [\App\Http\Controllers\Api\Parent\AuthorizedPickupController::class, 'all']);
         Route::post('authorized-pickup', [\App\Http\Controllers\Api\Parent\AuthorizedPickupController::class, 'store']);
+        Route::patch('authorized-pickup/{authorizedPickup}/set-current', [\App\Http\Controllers\Api\Parent\AuthorizedPickupController::class, 'setCurrent']);
         Route::patch('authorized-pickup/{authorizedPickup}', [\App\Http\Controllers\Api\Parent\AuthorizedPickupController::class, 'update']);
         Route::delete('authorized-pickup/{authorizedPickup}', [\App\Http\Controllers\Api\Parent\AuthorizedPickupController::class, 'destroy']);
     });

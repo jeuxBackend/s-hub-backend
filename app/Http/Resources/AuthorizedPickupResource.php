@@ -18,6 +18,10 @@ class AuthorizedPickupResource extends JsonResource
             'relationship' => $this->relationship,
             'phone_number' => $this->phone_number,
             'address' => $this->address,
+            'is_current' => $this->when(
+                $request->user()?->id === $this->parent_id,
+                fn () => $this->id === $request->user()->current_authorized_pickup_id
+            ),
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
         ];

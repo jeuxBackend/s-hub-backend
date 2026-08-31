@@ -7,7 +7,6 @@ use App\Http\Resources\AuthorizedPickupResource;
 use App\Models\AuthorizedPickup;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\Request;
-use Illuminate\Validation\ValidationException;
 use Throwable;
 
 class AuthorizedPickupController extends Controller
@@ -19,7 +18,25 @@ class AuthorizedPickupController extends Controller
 
             return $this->successResponse(
                 $authorizedPickup ? new AuthorizedPickupResource($authorizedPickup) : null,
-                'Authorized pickup retrieved successfully'
+                'Current authorized pickup retrieved successfully'
+            );
+        } catch (Throwable $e) {
+            return $this->exceptionResponse($e);
+        }
+    }
+
+    /**
+     * GET /parent/authorized-pickup/all
+     * Every authorized pickup this parent has ever added.
+     */
+    public function all()
+    {
+        try {
+            $authorizedPickups = auth()->user()->authorizedPickups()->orderByDesc('id')->get();
+
+            return $this->successResponse(
+                AuthorizedPickupResource::collection($authorizedPickups),
+                'Authorized pickups retrieved successfully'
             );
         } catch (Throwable $e) {
             return $this->exceptionResponse($e);
@@ -40,18 +57,39 @@ class AuthorizedPickupController extends Controller
         try {
             $parent = auth()->user();
 
-            if ($parent->authorizedPickup()->exists()) {
-                throw ValidationException::withMessages([
-                    'authorized_pickup' => ['A parent can add only 1 authorized pickup.'],
-                ]);
-            }
+            $authorizedPickup = $parent->authorizedPickups()->create($data);
 
-            $authorizedPickup = $parent->authorizedPickup()->create($data);
+            // First one ever added automatically becomes the current pickup.
+            if (!$parent->current_authorized_pickup_id) {
+                $parent->update(['current_authorized_pickup_id' => $authorizedPickup->id]);
+            }
 
             return $this->successResponse(
                 new AuthorizedPickupResource($authorizedPickup),
                 'Authorized pickup created successfully',
                 201
+            );
+        } catch (Throwable $e) {
+            return $this->exceptionResponse($e);
+        }
+    }
+
+    /**
+     * PATCH /parent/authorized-pickup/{authorizedPickup}/set-current
+     * Select which of the parent's authorized pickups is the current one.
+     */
+    public function setCurrent(AuthorizedPickup $authorizedPickup)
+    {
+        try {
+            if ($authorizedPickup->parent_id !== auth()->id()) {
+                throw new AuthorizationException('You are not authorized to manage this authorized pickup.');
+            }
+
+            auth()->user()->update(['current_authorized_pickup_id' => $authorizedPickup->id]);
+
+            return $this->successResponse(
+                new AuthorizedPickupResource($authorizedPickup),
+                'Current authorized pickup updated successfully'
             );
         } catch (Throwable $e) {
             return $this->exceptionResponse($e);
