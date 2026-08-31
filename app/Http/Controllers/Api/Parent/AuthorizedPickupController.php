@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers\Api\Parent;
 
+use App\Enums\UserRole;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\AuthorizedPickupResource;
 use App\Models\AuthorizedPickup;
+use App\Models\User;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\Request;
 use Throwable;
@@ -26,13 +28,41 @@ class AuthorizedPickupController extends Controller
     }
 
     /**
-     * GET /parent/authorized-pickup/all
-     * Every authorized pickup this parent has ever added.
+     * GET /parent/authorized-pickup/all?parent_id=123
+     * Every authorized pickup a parent has ever added.
+     * Callable by the parent themselves, or by a principal/teacher/school-admin
+     * viewing a parent belonging to their own institution.
      */
-    public function all()
+    public function all(Request $request)
     {
+        $request->validate([
+            'parent_id' => ['required', 'integer', 'exists:users,id'],
+        ]);
+
         try {
-            $authorizedPickups = auth()->user()->authorizedPickups()->orderByDesc('updated_at')->get();
+            $actor = auth()->user();
+            $parentId = (int) $request->input('parent_id');
+
+            if ($actor->role === UserRole::Parent) {
+                if ($parentId !== $actor->id) {
+                    throw new AuthorizationException('You can only view your own authorized pickups.');
+                }
+
+                $parent = $actor;
+            } else {
+                $parent = User::where('id', $parentId)
+                    ->where('role', UserRole::Parent->value)
+                    ->first();
+
+                if (!$parent || $parent->institution_id !== $actor->institution_id) {
+                    throw new AuthorizationException("You are not authorized to view this parent's authorized pickups.");
+                }
+            }
+
+            $authorizedPickups = AuthorizedPickup::where('parent_id', $parentId)
+                ->orderByDesc('updated_at')
+                ->get()
+                ->each(fn (AuthorizedPickup $pickup) => $pickup->setRelation('parent', $parent));
 
             return $this->successResponse(
                 AuthorizedPickupResource::collection($authorizedPickups),
