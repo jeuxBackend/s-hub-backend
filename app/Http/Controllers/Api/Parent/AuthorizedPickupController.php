@@ -32,7 +32,7 @@ class AuthorizedPickupController extends Controller
     public function all()
     {
         try {
-            $authorizedPickups = auth()->user()->authorizedPickups()->orderByDesc('id')->get();
+            $authorizedPickups = auth()->user()->authorizedPickups()->orderByDesc('updated_at')->get();
 
             return $this->successResponse(
                 AuthorizedPickupResource::collection($authorizedPickups),

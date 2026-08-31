@@ -9,6 +9,13 @@ class AuthorizedPickupResource extends JsonResource
 {
     public function toArray(Request $request): array
     {
+        $isOwningParent = $request->user()?->id === $this->parent_id;
+
+        $timezone = $isOwningParent
+            ? $request->user()->timezone
+            : ($this->relationLoaded('parent') ? $this->parent?->timezone : null);
+        $timezone = $timezone ?: config('app.timezone', 'UTC');
+
         return [
             'id' => $this->id,
             'parent_id' => $this->parent_id,
@@ -19,10 +26,10 @@ class AuthorizedPickupResource extends JsonResource
             'phone_number' => $this->phone_number,
             'address' => $this->address,
             'is_current' => $this->when(
-                $request->user()?->id === $this->parent_id,
+                $isOwningParent,
                 fn () => $this->id === $request->user()->current_authorized_pickup_id
             ),
-            'created_at' => $this->created_at,
+            'created_at' => $this->created_at?->copy()->timezone($timezone)->format('Y-m-d H:i:s'),
             'updated_at' => $this->updated_at,
         ];
     }
