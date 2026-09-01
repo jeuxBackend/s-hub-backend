@@ -15,6 +15,7 @@ class Institution extends Model
         'subadmin_id',
         'category_id',
         'status',
+        'is_blocked',
         'name',
         'slogan',
         'logo',
@@ -35,11 +36,13 @@ class Institution extends Model
         'subjects',
         'latitude',
         'longitude',
+        'timezone',
     ];
 
     protected $casts = [
         'email_verified' => 'boolean',
         'phone_verified' => 'boolean',
+        'is_blocked' => 'boolean',
         'alert_feature_enabled' => 'boolean',
         'allowed_alert_types' => 'array',
         'mock_exam_classroom_ids' => 'array',

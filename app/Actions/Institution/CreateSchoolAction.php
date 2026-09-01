@@ -9,10 +9,10 @@ class CreateSchoolAction
 {
     public function handle(array $data)
     {
-        if (isset($data['logo']) && $data['logo'] instanceof \Illuminate\Http\UploadedFile) {
-            $data['logo'] = $data['logo']->store('institutions/logos', 'public');
+        if (isset($data['school_logo']) && $data['school_logo'] instanceof \Illuminate\Http\UploadedFile) {
+            $data['logo'] = $data['school_logo']->store('institutions/logos', 'public');
         }
 
-        return Institution::create($data);
+        return Institution::create($data)->fresh();
     }
 }

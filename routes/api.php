@@ -308,10 +308,13 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'active.user'])->group(function
         Route::apiResource('manager-invoices', ManagerInvoiceController::class);
 
         // Read-only views for Admin
-        Route::apiResource('schools', SchoolController::class)->only(['index', 'show'])->middleware('subadmin.permission:School');
+        Route::apiResource('schools', SchoolController::class)->only(['index', 'show', 'store', 'update', 'destroy'])->middleware('subadmin.permission:School');
         Route::apiResource('teachers', AdminTeacherController::class)->only(['index', 'show'])->middleware('subadmin.permission:Teachers');
         Route::apiResource('students', AdminStudentController::class)->only(['index', 'show'])->middleware('subadmin.permission:Students');
         Route::patch('schools/{id}/alert-feature', [SchoolController::class, 'toggleAlertFeature']);
+        Route::get('categories', [\App\Http\Controllers\Api\Admin\CategoryController::class, 'index'])->middleware('subadmin.permission:School');
+        Route::post('categories', [\App\Http\Controllers\Api\Admin\CategoryController::class, 'store'])->middleware('subadmin.permission:School');
+        Route::delete('categories/{category}', [\App\Http\Controllers\Api\Admin\CategoryController::class, 'destroy'])->middleware('subadmin.permission:School');
     });
 
     // ===================== MANAGER ONLY =====================
@@ -329,6 +332,9 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'active.user'])->group(function
 
         Route::get('dashboard-stats', [ManagerDashboardController::class, 'stats']);
         Route::get('my-invoices', [ActivitiesController::class, 'getInvoices']);
+        Route::get('categories', [\App\Http\Controllers\Api\Admin\CategoryController::class, 'index']);
+        Route::post('categories', [\App\Http\Controllers\Api\Admin\CategoryController::class, 'store']);
+        Route::delete('categories/{category}', [\App\Http\Controllers\Api\Admin\CategoryController::class, 'destroy']);
 
         // Stripe Connect for Managers
         Route::post('stripe/connect', [\App\Http\Controllers\Api\Manager\StripeConnectController::class, 'connect']);
