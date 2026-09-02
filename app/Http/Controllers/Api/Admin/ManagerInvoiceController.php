@@ -9,6 +9,7 @@ use App\Actions\Invoice\UpdateInvoiceAction;
 use App\Http\Controllers\Controller;
 use App\Models\ManagerInvoice;
 use Illuminate\Http\Request;
+use Illuminate\Http\Resources\Json\JsonResource;
 
 class ManagerInvoiceController extends Controller
 {
@@ -25,10 +26,12 @@ class ManagerInvoiceController extends Controller
      */
     public function index(Request $request)
     {
-        $managerId = $request->query('manager_id');
-        $invoices = $this->getInvoicesAction->handle($managerId);
+        $invoices = $this->getInvoicesAction->handle($request->all());
 
-        return $this->successResponse($invoices, 'Invoices retrieved successfully');
+        return $this->paginatedResponse(
+            JsonResource::collection($invoices),
+            'Invoices retrieved successfully'
+        );
     }
 
     /**
@@ -40,9 +43,12 @@ class ManagerInvoiceController extends Controller
             'manager_id' => 'required|exists:admins,id',
             'number_of_instutes' => 'required|integer|min:1',
             'price_per_instute' => 'required|numeric|min:0',
+            'currency' => 'nullable|string|size:3',
             'due_date' => 'required|date|after:today',
             'status' => 'nullable|in:pending,paid,overdue',
         ]);
+
+        $data['created_by'] = auth()->id();
 
         $invoice = $this->createInvoiceAction->handle($data);
 
@@ -54,7 +60,7 @@ class ManagerInvoiceController extends Controller
      */
     public function show(string $id)
     {
-        $invoice = ManagerInvoice::with('manager')->findOrFail($id);
+        $invoice = ManagerInvoice::with(['manager', 'creator'])->findOrFail($id);
         return $this->successResponse($invoice);
     }
 
@@ -63,7 +69,15 @@ class ManagerInvoiceController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        $invoice = $this->updateInvoiceAction->handle($request, $id);
+        $data = $request->validate([
+            'number_of_instutes' => 'sometimes|integer|min:1',
+            'price_per_instute' => 'sometimes|numeric|min:0',
+            'currency' => 'sometimes|nullable|string|size:3',
+            'due_date' => 'sometimes|date',
+            'status' => 'sometimes|in:pending,paid,overdue',
+        ]);
+
+        $invoice = $this->updateInvoiceAction->handle($data, $id);
 
         return $this->successResponse($invoice, 'Invoice updated successfully');
     }
@@ -73,8 +87,8 @@ class ManagerInvoiceController extends Controller
      */
     public function destroy(string $id)
     {
-        $invoice = ManagerInvoice::destroy($id);
+        $this->deleteInvoiceAction->handle($id);
 
-        return $this->successResponse($invoice, 'Invoice deleted successfully');
+        return $this->successResponse(null, 'Invoice deleted successfully');
     }
 }

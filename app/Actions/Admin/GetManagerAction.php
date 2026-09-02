@@ -34,7 +34,16 @@ class GetManagerAction
         if (!empty($data['email'])) {
             $query->where('email', 'like', '%' . $data['email'] . '%');
         }
+        if (!empty($data['category_id'])) {
+            $query->whereHas('institutions', function ($q) use ($data) {
+                $q->where('category_id', $data['category_id']);
+            });
+        }
+        if (isset($data['status']) && $data['status'] !== '') {
+            $isActive = in_array(strtolower((string) $data['status']), ['active', '1', 'true'], true);
+            $query->where('status', $isActive);
+        }
 
-        return $query->orderBy('first_name', 'desc')->get();
+        return $query->orderBy('first_name', 'desc')->paginate($data['per_page'] ?? 20);
     }
 }

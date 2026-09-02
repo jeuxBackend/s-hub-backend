@@ -209,11 +209,6 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'active.user'])->group(function
             Route::get('classrooms/{id}/timetable', [\App\Http\Controllers\Api\Principal\PrincipalTimetableController::class, 'getClassroomTimetable']);
             Route::get('subjects/{id}/timetable', [\App\Http\Controllers\Api\Principal\PrincipalTimetableController::class, 'getSubjectTimetable']);
             Route::post('final-results-submissions', [\App\Http\Controllers\Api\Principal\FinalResultSubmissionController::class, 'store']);
-
-            // Add new endpoints for classroom statistics
-            Route::get('classrooms/{id}/average-attendance', [ClassroomController::class, 'getAverageAttendance']);
-            Route::get('classrooms/{id}/average-performance', [ClassroomController::class, 'getAveragePerformance']);
-            Route::get('classrooms/{id}/tuition-paid-owed', [ClassroomController::class, 'getTuitionPaidOwed']);
         });
 
 
@@ -231,6 +226,9 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'active.user'])->group(function
             Route::post('classrooms/in-charge', [ClassroomController::class, 'assignInCharge']);
             Route::get('classrooms/{id}/subject-performance', [ClassroomController::class, 'subjectPerformance']);
             Route::get('classrooms/{id}/performance-stats', [ClassroomController::class, 'performanceStats']);
+            Route::get('classrooms/{id}/average-attendance', [ClassroomController::class, 'getAverageAttendance']);
+            Route::get('classrooms/{id}/average-performance', [ClassroomController::class, 'getAveragePerformance']);
+            Route::get('classrooms/{id}/tuition-paid-owed', [ClassroomController::class, 'getTuitionPaidOwed'])->middleware('schooladmin.permission:Finance');
             Route::apiResource('classrooms', ClassroomController::class);
             Route::apiResource('subjects', SubjectController::class);
             Route::get('student-promotions', [PrincipalStudentPromotionController::class, 'index']);
@@ -309,7 +307,7 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'active.user'])->group(function
 
         // Read-only views for Admin
         Route::apiResource('schools', SchoolController::class)->only(['index', 'show', 'store', 'update', 'destroy'])->middleware('subadmin.permission:School');
-        Route::apiResource('teachers', AdminTeacherController::class)->only(['index', 'show'])->middleware('subadmin.permission:Teachers');
+        Route::apiResource('teachers', AdminTeacherController::class)->only(['index', 'show', 'update', 'destroy'])->middleware('subadmin.permission:Teachers');
         Route::apiResource('students', AdminStudentController::class)->only(['index', 'show'])->middleware('subadmin.permission:Students');
         Route::patch('schools/{id}/alert-feature', [SchoolController::class, 'toggleAlertFeature']);
         Route::get('categories', [\App\Http\Controllers\Api\Admin\CategoryController::class, 'index'])->middleware('subadmin.permission:School');

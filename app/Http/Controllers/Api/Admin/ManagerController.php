@@ -24,7 +24,10 @@ class ManagerController extends Controller
     public function index(Request $request)
     {
         $managers = $this->getManagerAction->handle($request->all());
-        return $this->successResponse($managers, 'Admin managers list');
+        return $this->paginatedResponse(
+            \Illuminate\Http\Resources\Json\JsonResource::collection($managers),
+            'Admin managers list'
+        );
     }
 
     public function store(Request $request)

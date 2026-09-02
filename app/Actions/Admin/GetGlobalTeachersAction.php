@@ -9,7 +9,7 @@ class GetGlobalTeachersAction
 {
     public function handle(array $data = [])
     {
-        $query = User::where('role', UserRole::Teacher->value)
+        $query = User::whereIn('role', [UserRole::Teacher->value, UserRole::SchoolAdmin->value])
             ->with('institution');
 
         if (!empty($data['name'])) {
@@ -37,6 +37,6 @@ class GetGlobalTeachersAction
             $query->where('status', $data['status']);
         }
 
-        return $query->orderBy('id', 'desc')->get();
+        return $query->orderBy('id', 'desc')->paginate($data['per_page'] ?? 20);
     }
 }

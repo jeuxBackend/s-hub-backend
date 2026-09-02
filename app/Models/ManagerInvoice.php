@@ -11,9 +11,11 @@ class ManagerInvoice extends Model
 
     protected $fillable = [
         'manager_id',
+        'created_by',
         'invoice_number',
         'number_of_instutes',
         'price_per_instute',
+        'currency',
         'total_amount',
         'due_date',
         'status',
@@ -21,6 +23,11 @@ class ManagerInvoice extends Model
 
     public function manager()
     {
-        return $this->belongsTo(Admin::class);
+        return $this->belongsTo(Admin::class, 'manager_id');
+    }
+
+    public function creator()
+    {
+        return $this->belongsTo(Admin::class, 'created_by');
     }
 }

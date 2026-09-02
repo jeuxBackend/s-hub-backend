@@ -6,8 +6,17 @@ use App\Models\ManagerInvoice;
 
 class GetManagerInvoicesAction
 {
-    public function handle($data)
+    public function handle(array $data = [])
     {
-        return ManagerInvoice::where('manager_id', $data['manager_id'])->get();
+        $query = ManagerInvoice::with(['manager', 'creator'])->latest();
+
+        if (!empty($data['manager_id'])) {
+            $query->where('manager_id', $data['manager_id']);
+        }
+        if (!empty($data['status'])) {
+            $query->where('status', $data['status']);
+        }
+
+        return $query->paginate($data['per_page'] ?? 20);
     }
 }
