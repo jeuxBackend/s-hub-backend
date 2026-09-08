@@ -13,6 +13,9 @@ class GeneralReportResource extends JsonResource
             'id' => $this->id,
             'reporter' => [
                 'id' => $this->reporter->id ?? null,
+                'first_name' => $this->reporter->first_name ?? null,
+                'last_name' => $this->reporter->last_name ?? null,
+                'sur_name' => $this->reporter->sur_name ?? $this->reporter->sure_name ?? null,
                 'full_name' => $this->reporter->full_name ?? null,
                 'role' => $this->reporter->role?->value ?? null,
                 'profile_picture' => $this->reporter->profile_picture ?? null,
@@ -27,6 +30,9 @@ class GeneralReportResource extends JsonResource
             'resolved_by' => $this->whenLoaded('resolvedBy', function () {
                 return [
                     'id' => $this->resolvedBy->id,
+                    'first_name' => $this->resolvedBy->first_name,
+                    'last_name' => $this->resolvedBy->last_name,
+                    'sur_name' => $this->resolvedBy->sur_name ?? $this->resolvedBy->sure_name ?? null,
                     'full_name' => $this->resolvedBy->full_name,
                     'role' => $this->resolvedBy->role?->value,
                 ];
