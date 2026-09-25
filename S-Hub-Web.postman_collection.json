@@ -1,0 +1,2504 @@
+{
+  "info": {
+    "_postman_id": "c8cafdc8-d1af-4a64-9d66-00d02e67dca0",
+    "name": "S-Hub-Web",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "43894466"
+  },
+  "item": [
+    {
+      "name": "Admin",
+      "item": [
+        {
+          "name": "School",
+          "item": [
+            {
+              "name": "Category",
+              "item": [
+                {
+                  "name": "get-school-categories",
+                  "request": {
+                    "auth": {
+                      "type": "bearer",
+                      "bearer": [
+                        {
+                          "key": "token",
+                          "value": "{{token}}",
+                          "type": "string"
+                        }
+                      ]
+                    },
+                    "method": "GET",
+                    "header": [
+                      {
+                        "key": "Accept",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{base_url}}/v1/admin/categories",
+                      "host": [
+                        "{{base_url}}"
+                      ],
+                      "path": [
+                        "v1",
+                        "admin",
+                        "categories"
+                      ]
+                    }
+                  },
+                  "response": []
+                },
+                {
+                  "name": "add-school-categories",
+                  "request": {
+                    "auth": {
+                      "type": "bearer",
+                      "bearer": [
+                        {
+                          "key": "token",
+                          "value": "{{token}}",
+                          "type": "string"
+                        }
+                      ]
+                    },
+                    "method": "POST",
+                    "header": [
+                      {
+                        "key": "Accept",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ],
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{ \"name\": \"University\" }",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "url": {
+                      "raw": "{{base_url}}/v1/manager/categories",
+                      "host": [
+                        "{{base_url}}"
+                      ],
+                      "path": [
+                        "v1",
+                        "manager",
+                        "categories"
+                      ]
+                    }
+                  },
+                  "response": []
+                },
+                {
+                  "name": "delete-school-categories",
+                  "request": {
+                    "auth": {
+                      "type": "bearer",
+                      "bearer": [
+                        {
+                          "key": "token",
+                          "value": "{{token}}",
+                          "type": "string"
+                        }
+                      ]
+                    },
+                    "method": "DELETE",
+                    "header": [
+                      {
+                        "key": "Accept",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ],
+                    "body": {
+                      "mode": "raw",
+                      "raw": ""
+                    },
+                    "url": {
+                      "raw": "{{base_url}}/v1/admin/categories/4",
+                      "host": [
+                        "{{base_url}}"
+                      ],
+                      "path": [
+                        "v1",
+                        "admin",
+                        "categories",
+                        "4"
+                      ]
+                    }
+                  },
+                  "response": []
+                }
+              ]
+            },
+            {
+              "name": "Utility",
+              "item": [
+                {
+                  "name": "get-all-school-names-only",
+                  "request": {
+                    "auth": {
+                      "type": "bearer",
+                      "bearer": [
+                        {
+                          "key": "token",
+                          "value": "{{token}}",
+                          "type": "string"
+                        }
+                      ]
+                    },
+                    "method": "GET",
+                    "header": [
+                      {
+                        "key": "Accept",
+                        "value": "application/json"
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{base_url}}/v1/admin/schools/names",
+                      "host": [
+                        "{{base_url}}"
+                      ],
+                      "path": [
+                        "v1",
+                        "admin",
+                        "schools",
+                        "names"
+                      ]
+                    }
+                  },
+                  "response": []
+                },
+                {
+                  "name": "get-classroom-names-only-by-institute-id",
+                  "request": {
+                    "auth": {
+                      "type": "bearer",
+                      "bearer": [
+                        {
+                          "key": "token",
+                          "value": "{{token}}",
+                          "type": "string"
+                        }
+                      ]
+                    },
+                    "method": "GET",
+                    "header": [
+                      {
+                        "key": "Accept",
+                        "value": "application/json"
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{base_url}}/v1/admin/schools/3/classrooms",
+                      "host": [
+                        "{{base_url}}"
+                      ],
+                      "path": [
+                        "v1",
+                        "admin",
+                        "schools",
+                        "3",
+                        "classrooms"
+                      ]
+                    }
+                  },
+                  "response": []
+                }
+              ]
+            },
+            {
+              "name": "get-all-schools",
+              "protocolProfileBehavior": {
+                "disableBodyPruning": true
+              },
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": ""
+                },
+                "url": {
+                  "raw": "{{base_url}}/v1/admin/schools",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "admin",
+                    "schools"
+                  ],
+                  "query": [
+                    {
+                      "key": "name",
+                      "value": "Sunrise Academy",
+                      "type": "text",
+                      "disabled": true
+                    },
+                    {
+                      "key": "email",
+                      "value": "sunrise.shub@yopmail.com",
+                      "type": "text",
+                      "disabled": true
+                    },
+                    {
+                      "key": "manager_id",
+                      "value": "2",
+                      "type": "text",
+                      "disabled": true
+                    },
+                    {
+                      "key": "category_id",
+                      "value": "2",
+                      "type": "text",
+                      "disabled": true
+                    },
+                    {
+                      "key": "status",
+                      "value": "approved",
+                      "type": "text",
+                      "disabled": true
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "get-school-by-id",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/v1/admin/schools/1",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "admin",
+                    "schools",
+                    "1"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "update-school",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Sunrise Academy\",\n  \"slogan\": \"Excellent Education Experience Ever\",\n  \"academic_year\": \"2025\",\n  \"examination_system\": \"Semester System\",\n  \"physical_address\": \"10 Sunrise Boulevard\",\n  \"region\": \"Islamabad\",\n\n  \"email\": \"sunrise.shub@yopmail.com\",\n  \"alternate_email\": \"contact@sunrise.edu\",\n  \"phone_number\": \"+1234560001\",\n  \"alternate_phone\": \"+912803\",\n  \"telephone\": \"1123123\",\n  \"email_verified\": true,\n  \"phone_verified\": true,\n\n  \"manager_id\": 2,\n  \"subadmin_id\": null,\n  \"category_id\": 2,\n\n  \"status\": \"approved\",\n  \"is_blocked\": false,\n\n  \"latitude\": 30.6995251,\n  \"longitude\": 73.0813853,\n  \"timezone\": \"Asia/Karachi\",\n\n  \"subjects\": [\"Math\", \"Science\", \"English\"],\n\n  \"alert_feature_enabled\": true,\n  \"allowed_alert_types\": [\"abduction\", \"emergency\"],\n  \"mock_exam_classroom_ids\": [20, 21, 22]\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{base_url}}/v1/admin/schools/1",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "admin",
+                    "schools",
+                    "1"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "add-school",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"test Academy\",\n  \"manager_id\": 2,\n  \"email\": \"test.shub@yopmail.com\",\n  \"phone_number\": \"+1234564501\",\n\n  \"slogan\": \"Excellent Education Experience\",\n  \"academic_year\": \"2025\",\n  \"examination_system\": \"Semester System\",\n  \"physical_address\": \"10 Sunrise Boulevard\",\n  \"region\": \"Islamabad\",\n\n  \"alternate_email\": \"contact@sunrise.edu\",\n  \"alternate_phone\": \"+912803733\",\n  \"telephone\": \"1123123345\",\n  \"email_verified\": false,\n  \"phone_verified\": false,\n\n  \"subadmin_id\": null,\n  \"category_id\": 2,\n\n  \"status\": \"pending\",\n  \"is_blocked\": false,\n\n  \"latitude\": 30.6995251,\n  \"longitude\": 73.0813853,\n  \"timezone\": \"Asia/Karachi\",\n\n  \"subjects\": [\"Math\", \"Science\", \"English\"],\n\n  \"alert_feature_enabled\": true,\n  \"allowed_alert_types\": [\"abduction\", \"emergency\"]\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{base_url}}/v1/admin/schools",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "admin",
+                    "schools"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "delete-school",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/v1/admin/schools/8",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "admin",
+                    "schools",
+                    "8"
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Dashboard",
+          "item": [
+            {
+              "name": "admin-dashboard",
+              "protocolProfileBehavior": {
+                "disableBodyPruning": true
+              },
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": ""
+                },
+                "url": {
+                  "raw": "{{base_url}}/v1/admin/dashboard",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "admin",
+                    "dashboard"
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Manager",
+          "item": [
+            {
+              "name": "Invoice",
+              "item": [
+                {
+                  "name": "generate-manager-invoice",
+                  "request": {
+                    "auth": {
+                      "type": "bearer",
+                      "bearer": [
+                        {
+                          "key": "token",
+                          "value": "{{token}}",
+                          "type": "string"
+                        }
+                      ]
+                    },
+                    "method": "POST",
+                    "header": [
+                      {
+                        "key": "Accept",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ],
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"manager_id\": 2,\n  \"number_of_instutes\": 3,\n  \"price_per_instute\": 150.50,\n  \"currency\": \"USD\",\n  \"due_date\": \"2026-10-02\",\n  \"status\": \"pending\"\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "url": {
+                      "raw": "{{base_url}}/v1/admin/manager-invoices",
+                      "host": [
+                        "{{base_url}}"
+                      ],
+                      "path": [
+                        "v1",
+                        "admin",
+                        "manager-invoices"
+                      ]
+                    }
+                  },
+                  "response": []
+                },
+                {
+                  "name": "get-all-managers-invoices",
+                  "protocolProfileBehavior": {
+                    "disableBodyPruning": true
+                  },
+                  "request": {
+                    "auth": {
+                      "type": "bearer",
+                      "bearer": [
+                        {
+                          "key": "token",
+                          "value": "{{token}}",
+                          "type": "string"
+                        }
+                      ]
+                    },
+                    "method": "GET",
+                    "header": [
+                      {
+                        "key": "Accept",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ],
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"manager_id\": 2,\n  \"number_of_instutes\": 3,\n  \"price_per_instute\": 150.50,\n  \"currency\": \"USD\",\n  \"due_date\": \"2026-10-02\",\n  \"status\": \"pending\"\n}"
+                    },
+                    "url": {
+                      "raw": "{{base_url}}/v1/admin/manager-invoices?manager_id=2",
+                      "host": [
+                        "{{base_url}}"
+                      ],
+                      "path": [
+                        "v1",
+                        "admin",
+                        "manager-invoices"
+                      ],
+                      "query": [
+                        {
+                          "key": "manager_id",
+                          "value": "2"
+                        },
+                        {
+                          "key": "status",
+                          "value": "paid",
+                          "disabled": true
+                        },
+                        {
+                          "key": "per_page",
+                          "value": "20",
+                          "disabled": true
+                        }
+                      ]
+                    }
+                  },
+                  "response": []
+                },
+                {
+                  "name": "get-invoice-by-id",
+                  "protocolProfileBehavior": {
+                    "disableBodyPruning": true
+                  },
+                  "request": {
+                    "auth": {
+                      "type": "bearer",
+                      "bearer": [
+                        {
+                          "key": "token",
+                          "value": "{{token}}",
+                          "type": "string"
+                        }
+                      ]
+                    },
+                    "method": "GET",
+                    "header": [
+                      {
+                        "key": "Accept",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ],
+                    "body": {
+                      "mode": "raw",
+                      "raw": ""
+                    },
+                    "url": {
+                      "raw": "{{base_url}}/v1/admin/manager-invoices/2",
+                      "host": [
+                        "{{base_url}}"
+                      ],
+                      "path": [
+                        "v1",
+                        "admin",
+                        "manager-invoices",
+                        "2"
+                      ]
+                    }
+                  },
+                  "response": []
+                },
+                {
+                  "name": "update-manager-invoice",
+                  "request": {
+                    "auth": {
+                      "type": "bearer",
+                      "bearer": [
+                        {
+                          "key": "token",
+                          "value": "{{token}}",
+                          "type": "string"
+                        }
+                      ]
+                    },
+                    "method": "PUT",
+                    "header": [
+                      {
+                        "key": "Accept",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ],
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n//   \"number_of_instutes\": 3,\n//   \"price_per_instute\": 150.50,\n  \"currency\": \"USD\",\n//   \"due_date\": \"2026-10-02\",\n  \"status\": \"paid\"\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "url": {
+                      "raw": "{{base_url}}/v1/admin/manager-invoices/2",
+                      "host": [
+                        "{{base_url}}"
+                      ],
+                      "path": [
+                        "v1",
+                        "admin",
+                        "manager-invoices",
+                        "2"
+                      ]
+                    }
+                  },
+                  "response": []
+                },
+                {
+                  "name": "delete-manager-invoice",
+                  "request": {
+                    "auth": {
+                      "type": "bearer",
+                      "bearer": [
+                        {
+                          "key": "token",
+                          "value": "{{token}}",
+                          "type": "string"
+                        }
+                      ]
+                    },
+                    "method": "DELETE",
+                    "header": [
+                      {
+                        "key": "Accept",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{base_url}}/v1/admin/manager-invoices/2",
+                      "host": [
+                        "{{base_url}}"
+                      ],
+                      "path": [
+                        "v1",
+                        "admin",
+                        "manager-invoices",
+                        "2"
+                      ]
+                    }
+                  },
+                  "response": []
+                }
+              ]
+            },
+            {
+              "name": "get-manager-by-id",
+              "protocolProfileBehavior": {
+                "disableBodyPruning": true
+              },
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "formdata",
+                  "formdata": []
+                },
+                "url": {
+                  "raw": "{{base_url}}/v1/admin/managers/2",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "admin",
+                    "managers",
+                    "2"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "get-all-managers",
+              "protocolProfileBehavior": {
+                "disableBodyPruning": true
+              },
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "formdata",
+                  "formdata": []
+                },
+                "url": {
+                  "raw": "{{base_url}}/v1/admin/managers",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "admin",
+                    "managers"
+                  ],
+                  "query": [
+                    {
+                      "key": "name",
+                      "value": "Robert",
+                      "disabled": true
+                    },
+                    {
+                      "key": "email",
+                      "value": "robert@mail.com",
+                      "disabled": true
+                    },
+                    {
+                      "key": "page",
+                      "value": "1",
+                      "type": "text",
+                      "disabled": true
+                    },
+                    {
+                      "key": "per_page",
+                      "value": "20",
+                      "type": "text",
+                      "disabled": true
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "add-manager",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"first_name\": \"Robert\",\n  \"sure_name\": \"Williams\",\n  \"last_name\": \"Smith\",\n  \"email\": \"robert@mail.com\",\n  \"phone_number\": \"+1234567890\",\n  \"password\": \"admin123@\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{base_url}}/v1/admin/managers",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "admin",
+                    "managers"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "update-manager",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n//   \"first_name\": \"Robert\",\n//   \"sure_name\": \"Williams\",\n  \"last_name\": \"Smith\"\n//   \"email\": \"manager@example.com\",\n//   \"phone_number\": \"+1234567890\",\n//   \"password\": \"NewSecurePass456\"\n}\n\n",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{base_url}}/v1/admin/managers/9",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "admin",
+                    "managers",
+                    "9"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "delete-manager",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": ""
+                },
+                "url": {
+                  "raw": "{{base_url}}/v1/admin/managers/9",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "admin",
+                    "managers",
+                    "9"
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Teacher",
+          "item": [
+            {
+              "name": "get-all-teachers",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/v1/admin/teachers",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "admin",
+                    "teachers"
+                  ],
+                  "query": [
+                    {
+                      "key": "name",
+                      "value": "John",
+                      "disabled": true
+                    },
+                    {
+                      "key": "email",
+                      "value": "john@example.com",
+                      "disabled": true
+                    },
+                    {
+                      "key": "phone_number",
+                      "value": "+123456",
+                      "disabled": true
+                    },
+                    {
+                      "key": "institution_id",
+                      "value": "1",
+                      "disabled": true
+                    },
+                    {
+                      "key": "manager_id",
+                      "value": "2",
+                      "disabled": true
+                    },
+                    {
+                      "key": "status",
+                      "value": "true",
+                      "disabled": true
+                    },
+                    {
+                      "key": "per_page",
+                      "value": "20",
+                      "disabled": true
+                    },
+                    {
+                      "key": "page",
+                      "value": "1",
+                      "disabled": true
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "get-teacher-by-id",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/v1/admin/teachers/12",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "admin",
+                    "teachers",
+                    "12"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "update-teacher",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n//   \"first_name\": \"John\",\n  \"last_name\": \"Doen\"\n//   \"sur_name\": \"Smith\",\n//   \"email\": \"john@example.com\",\n//   \"phone_number\": \"+1234567890\",\n//   \"institution_id\": 1,\n//   \"status\": 1\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{base_url}}/v1/admin/teachers/12",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "admin",
+                    "teachers",
+                    "12"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "delete-teacher (soft-delete)",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/v1/admin/teachers/12",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "admin",
+                    "teachers",
+                    "12"
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Country Admins",
+          "item": [
+            {
+              "name": "Utility",
+              "item": [
+                {
+                  "name": "get-sub-admins-permissions-list",
+                  "request": {
+                    "auth": {
+                      "type": "bearer",
+                      "bearer": [
+                        {
+                          "key": "token",
+                          "value": "{{token}}",
+                          "type": "string"
+                        }
+                      ]
+                    },
+                    "method": "GET",
+                    "header": [],
+                    "url": {
+                      "raw": "{{base_url}}/v1/admin/sub-admins/permissions",
+                      "host": [
+                        "{{base_url}}"
+                      ],
+                      "path": [
+                        "v1",
+                        "admin",
+                        "sub-admins",
+                        "permissions"
+                      ]
+                    }
+                  },
+                  "response": []
+                },
+                {
+                  "name": "get-all-school-names-only",
+                  "request": {
+                    "auth": {
+                      "type": "bearer",
+                      "bearer": [
+                        {
+                          "key": "token",
+                          "value": "{{token}}",
+                          "type": "string"
+                        }
+                      ]
+                    },
+                    "method": "GET",
+                    "header": [
+                      {
+                        "key": "Accept",
+                        "value": "application/json"
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{base_url}}/v1/admin/schools/names",
+                      "host": [
+                        "{{base_url}}"
+                      ],
+                      "path": [
+                        "v1",
+                        "admin",
+                        "schools",
+                        "names"
+                      ]
+                    }
+                  },
+                  "response": []
+                }
+              ]
+            },
+            {
+              "name": "list-all-sub-admins",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/v1/admin/sub-admins",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "admin",
+                    "sub-admins"
+                  ],
+                  "query": [
+                    {
+                      "key": "name",
+                      "value": "Jhon",
+                      "disabled": true
+                    },
+                    {
+                      "key": "email",
+                      "value": "jhon@mail.com",
+                      "disabled": true
+                    },
+                    {
+                      "key": "region",
+                      "value": "Banjul",
+                      "disabled": true
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "add-sub-admin",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": " {\n  \"first_name\": \"John\",\n  \"sure_name\": \"Doe\",\n  \"last_name\": \"Smith\",\n  \"email\": \"john.doe@example.com\",\n  \"phone_number\": \"+1234567890\",\n  \"password\": \"SecurePass123\",\n  \"region\": [\"Banjul\", \"Kanifing\"],\n  \"permissions\": [\"School\", \"Teachers\", \"Students\"],\n  \"school_ids\": [1, 3]\n }\n",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{base_url}}/v1/admin/sub-admins",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "admin",
+                    "sub-admins"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "get-sub-admin-by-id",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/v1/admin/sub-admins/10",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "admin",
+                    "sub-admins",
+                    "10"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "edit-sub-admin",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"first_name\": \"John\",\n  \"sure_name\": \"Doe\",\n  \"last_name\": \"Smith\",\n  \"email\": \"john@mail.com\",\n  \"phone_number\": \"+1234567890\",\n  \"password\": \"NewSecurePass456\",\n  \"region\": [\"Banjul\", \"Kanifing\"],\n  \"permissions\": [\"School\", \"Teachers\", \"Students\"],\n  \"school_ids\": [1, 3]\n}\n",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{base_url}}/v1/admin/sub-admins/10",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "admin",
+                    "sub-admins",
+                    "10"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "delete-sub-admin",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "DELETE",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/v1/admin/sub-admins/10",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "admin",
+                    "sub-admins",
+                    "10"
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Reports",
+          "item": [
+            {
+              "name": "Utility",
+              "item": [
+                {
+                  "name": "get-report-statuses",
+                  "request": {
+                    "auth": {
+                      "type": "bearer",
+                      "bearer": [
+                        {
+                          "key": "token",
+                          "value": "{{token}}",
+                          "type": "string"
+                        }
+                      ]
+                    },
+                    "method": "GET",
+                    "header": [
+                      {
+                        "key": "Accept",
+                        "value": "application/json",
+                        "disabled": true
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{base_url}}/v1/general-reports/statuses",
+                      "host": [
+                        "{{base_url}}"
+                      ],
+                      "path": [
+                        "v1",
+                        "general-reports",
+                        "statuses"
+                      ]
+                    }
+                  },
+                  "response": []
+                }
+              ]
+            },
+            {
+              "name": "get-all-manager-reports",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/v1/general-reports?page=1",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "general-reports"
+                  ],
+                  "query": [
+                    {
+                      "key": "manager_id",
+                      "value": "2",
+                      "disabled": true
+                    },
+                    {
+                      "key": "status",
+                      "value": "pending",
+                      "disabled": true
+                    },
+                    {
+                      "key": "month",
+                      "value": "2026-09",
+                      "disabled": true
+                    },
+                    {
+                      "key": "per_page",
+                      "value": "20",
+                      "disabled": true
+                    },
+                    {
+                      "key": "page",
+                      "value": "1"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "get-manager-report-by-id",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/v1/general-reports/12",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "general-reports",
+                    "12"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "update-report-status",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"status\": \"resolved\",\n  \"response\": \"Reviewed and approved.\"\n}\n",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{base_url}}/v1/general-reports/12/status",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "general-reports",
+                    "12",
+                    "status"
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Settings",
+          "item": [
+            {
+              "name": "get-settings",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/v1/settings",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "settings"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "update-settings",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"about_us\": \"Tempora iusto, accusamus a possimus, aut sapiente facilis assumenda facere nulla perspiciatis officia dolor? Ab quasi modi necessitatibus quas laborum earum, in vel tenetur sint, porro, quod sunt dolore. Vel, consectetur labore minus ipsa in magnam molestiae ex, assumenda quisquam odit repudiandae aliquid! Quo necessitatibus commodi impedit vitae rem atque earum consequuntur exercitationem obcaecati quae dolorem ea fugiat animi adipisci sit, minima et, dignissimos a ipsa totam in ex repellat asperiores libero. Optio ad quisquam ipsum doloribus, hic magni odit dolores ex numquam sint necessitatibus at dolorem, tempore excepturi voluptatum ab atque a quidem blanditiis aliquam ullam.\",\n  \"privacy_policy\": \"Quo iste quae odio perferendis. Praesentium aut ex, aspernatur distinctio quod odit non sed atque cumque provident dolore, nulla excepturi fugiat pariatur tempora quos quam. Consequuntur accusantium, quos expedita dolore modi itaque laudantium quasi voluptatem explicabo in quia deserunt eos, quas alias perferendis dolorum maxime, nisi vitae molestias officia! Tempora iusto, accusamus a possimus, aut sapiente facilis assumenda facere nulla perspiciatis officia dolor? Ab quasi modi necessitatibus quas laborum earum, in vel tenetur sint, porro, quod sunt dolore.\",\n  \"terms_conditions\": \"Lorem ipsum dolor, sit amet consectetur adipisicing elit. Cum tempora suscipit est mollitia fugiat quod impedit odio nesciunt saepe minima? Magni modi temporibus vero ducimus? Ex quos voluptate incidunt sint ea tempora illo delectus id excepturi nihil, impedit natus iusto iure architecto praesentium laudantium quisquam velit, ratione omnis perferendis adipisci doloremque repellendus fugiat quasi! Quo iste quae odio perferendis. Praesentium aut ex, aspernatur distinctio quod odit non sed atque cumque provident dolore, nulla excepturi fugiat pariatur tempora quos quam.\"\n}\n",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{base_url}}/v1/admin/settings",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "admin",
+                    "settings"
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "School Requests",
+          "item": [
+            {
+              "name": "get-manager-school-requests",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "",
+                    "value": ""
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/v1/admin/schools/pending",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "admin",
+                    "schools",
+                    "pending"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "approve-requests",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "PATCH",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{base_url}}/v1/admin/schools/3/approve",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "admin",
+                    "schools",
+                    "3",
+                    "approve"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "reject-request",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "PATCH",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{base_url}}/v1/admin/schools/3/reject",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "admin",
+                    "schools",
+                    "3",
+                    "reject"
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "login",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"login\": \"admin@admin.com\",\n  \"password\": \"admin123@\",\n  \"fcm_token\": \"optional-device-fcm-token\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/web/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "web",
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "logout",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/logout",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "logout"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Manager",
+      "item": [
+        {
+          "name": "School",
+          "item": [
+            {
+              "name": "Utility",
+              "item": [
+                {
+                  "name": "get-classroom-names-only-by-institute-id",
+                  "request": {
+                    "auth": {
+                      "type": "bearer",
+                      "bearer": [
+                        {
+                          "key": "token",
+                          "value": "{{token}}",
+                          "type": "string"
+                        }
+                      ]
+                    },
+                    "method": "GET",
+                    "header": [
+                      {
+                        "key": "Accept",
+                        "value": "application/json"
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{base_url}}/v1/manager/schools/3/classrooms",
+                      "host": [
+                        "{{base_url}}"
+                      ],
+                      "path": [
+                        "v1",
+                        "manager",
+                        "schools",
+                        "3",
+                        "classrooms"
+                      ]
+                    }
+                  },
+                  "response": []
+                },
+                {
+                  "name": "get-all-school-names-only Copy",
+                  "request": {
+                    "auth": {
+                      "type": "bearer",
+                      "bearer": [
+                        {
+                          "key": "token",
+                          "value": "{{token}}",
+                          "type": "string"
+                        }
+                      ]
+                    },
+                    "method": "GET",
+                    "header": [
+                      {
+                        "key": "Accept",
+                        "value": "application/json"
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{base_url}}/v1/manager/schools/names",
+                      "host": [
+                        "{{base_url}}"
+                      ],
+                      "path": [
+                        "v1",
+                        "manager",
+                        "schools",
+                        "names"
+                      ]
+                    }
+                  },
+                  "response": []
+                }
+              ]
+            },
+            {
+              "name": "add-school-categories",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{ \"name\": \"University\" }",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{base_url}}/v1/manager/categories",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "manager",
+                    "categories"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "get-school-categories",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/v1/manager/categories",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "manager",
+                    "categories"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "delete-school-categories",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": ""
+                },
+                "url": {
+                  "raw": "{{base_url}}/v1/manager/categories/5",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "manager",
+                    "categories",
+                    "5"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "add-school",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"test Academy\",\n  \"manager_id\": 2,\n  \"email\": \"test.shub@yopmail.com\",\n  \"phone_number\": \"+1234564501\",\n\n  \"slogan\": \"Excellent Education Experience\",\n  \"academic_year\": \"2025\",\n  \"examination_system\": \"Semester System\",\n  \"physical_address\": \"10 Sunrise Boulevard\",\n  \"region\": \"Islamabad\",\n\n  \"alternate_email\": \"contact@sunrise.edu\",\n  \"alternate_phone\": \"+912803733\",\n  \"telephone\": \"1123123345\",\n  \"email_verified\": false,\n  \"phone_verified\": false,\n\n  \"subadmin_id\": null,\n  \"category_id\": 2,\n\n  \"status\": \"pending\",\n  \"is_blocked\": false,\n\n  \"latitude\": 30.6995251,\n  \"longitude\": 73.0813853,\n  \"timezone\": \"Asia/Karachi\",\n\n  \"subjects\": [\"Math\", \"Science\", \"English\"],\n\n  \"alert_feature_enabled\": true,\n  \"allowed_alert_types\": [\"abduction\", \"emergency\"]\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{base_url}}/v1/manager/schools",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "manager",
+                    "schools"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "get-all-schools",
+              "protocolProfileBehavior": {
+                "disableBodyPruning": true
+              },
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": ""
+                },
+                "url": {
+                  "raw": "{{base_url}}/v1/manager/schools",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "manager",
+                    "schools"
+                  ],
+                  "query": [
+                    {
+                      "key": "name",
+                      "value": "Sunrise Academy",
+                      "type": "text",
+                      "disabled": true
+                    },
+                    {
+                      "key": "email",
+                      "value": "sunrise.shub@yopmail.com",
+                      "type": "text",
+                      "disabled": true
+                    },
+                    {
+                      "key": "manager_id",
+                      "value": "2",
+                      "type": "text",
+                      "disabled": true
+                    },
+                    {
+                      "key": "category_id",
+                      "value": "2",
+                      "type": "text",
+                      "disabled": true
+                    },
+                    {
+                      "key": "status",
+                      "value": "approved",
+                      "type": "text",
+                      "disabled": true
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "delete-school",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/v1/manager/schools/8",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "manager",
+                    "schools",
+                    "8"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "update-school",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Sunrise Academy\",\n  \"slogan\": \"Excellent Education Experience Ever\",\n  \"academic_year\": \"2025\",\n  \"examination_system\": \"Semester System\",\n  \"physical_address\": \"10 Sunrise Boulevard\",\n  \"region\": \"Islamabad\",\n\n  \"email\": \"sunrise.shub@yopmail.com\",\n  \"alternate_email\": \"contact@sunrise.edu\",\n  \"phone_number\": \"+1234560001\",\n  \"alternate_phone\": \"+912803\",\n  \"telephone\": \"1123123\",\n  \"email_verified\": true,\n  \"phone_verified\": true,\n\n  \"subadmin_id\": null,\n  \"category_id\": 2,\n\n  \"is_blocked\": false,\n\n  \"latitude\": 30.6995251,\n  \"longitude\": 73.0813853,\n  \"timezone\": \"Asia/Karachi\",\n\n  \"subjects\": [\"Math\", \"Science\", \"English\"],\n\n  \"alert_feature_enabled\": true,\n  \"allowed_alert_types\": [\"abduction\", \"emergency\"],\n  \"mock_exam_classroom_ids\": [20, 21, 22]\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{base_url}}/v1/manager/schools/1",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "manager",
+                    "schools",
+                    "1"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "get-school-by-id",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/v1/manager/schools/1",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "manager",
+                    "schools",
+                    "1"
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Reports",
+          "item": [
+            {
+              "name": "add-report",
+              "request": {
+                "auth": {
+                  "type": "bearer"
+                },
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"title\": \"Payment discrepancy\",\n  \"description\": \"Details describing the issue...\"\n}\n",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{base_url}}/v1/general-reports",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "general-reports"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "edit-report",
+              "request": {
+                "auth": {
+                  "type": "bearer"
+                },
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"title\": \"Updated title\",\n  \"description\": \"Updated description\"\n}\n",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{base_url}}/v1/general-reports/{id}",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "general-reports",
+                    "{id}"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "get-report-by-id",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/v1/general-reports/12",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "general-reports",
+                    "12"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "delete-report",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "DELETE",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/v1/general-reports/12",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "general-reports",
+                    "12"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "get-all-reports",
+              "request": {
+                "auth": {
+                  "type": "bearer"
+                },
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json",
+                    "disabled": true
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/v1/general-reports?page=1",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "general-reports"
+                  ],
+                  "query": [
+                    {
+                      "key": "status",
+                      "value": "pending",
+                      "disabled": true
+                    },
+                    {
+                      "key": "month",
+                      "value": "2026-09",
+                      "disabled": true
+                    },
+                    {
+                      "key": "per_page",
+                      "value": "20",
+                      "disabled": true
+                    },
+                    {
+                      "key": "page",
+                      "value": "1"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

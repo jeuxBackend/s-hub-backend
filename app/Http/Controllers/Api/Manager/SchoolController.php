@@ -7,6 +7,7 @@ use App\Actions\Institution\DeleteSchoolAction;
 use App\Actions\Institution\GetSchoolsAction;
 use App\Actions\Institution\UpdateSchoolAction;
 use App\Http\Controllers\Controller;
+use App\Models\Classroom;
 use App\Models\Institution;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -28,6 +29,19 @@ class SchoolController extends Controller
 
         $schools = $this->getSchoolsAction->handle($data);
         return $this->successResponse($schools, 'Schools retrieved successfully');
+    }
+
+    /**
+     * Lightweight list of this manager's own schools' id + name, for dropdowns etc.
+     */
+    public function names()
+    {
+        $schools = Institution::where('manager_id', auth()->id())
+            ->select(['id', 'name'])
+            ->orderBy('name')
+            ->get();
+
+        return $this->successResponse($schools, 'School names retrieved successfully');
     }
 
     public function store(Request $request)
@@ -54,6 +68,22 @@ class SchoolController extends Controller
             ->where('manager_id', auth()->id())
             ->findOrFail($id);
         return $this->successResponse($school, 'School retrieved successfully');
+    }
+
+    /**
+     * Id + name of every classroom in one of this manager's own schools —
+     * the source list for picking mock_exam_classroom_ids when editing it.
+     */
+    public function classrooms($id)
+    {
+        Institution::where('manager_id', auth()->id())->findOrFail($id);
+
+        $classrooms = Classroom::where('institution_id', $id)
+            ->select(['id', 'name'])
+            ->orderBy('name')
+            ->get();
+
+        return $this->successResponse($classrooms, 'School classrooms retrieved successfully');
     }
 
     public function update(Request $request, $id)

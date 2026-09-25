@@ -9,6 +9,7 @@ use App\Actions\Admin\DeleteSubAdminAction;
 use App\Http\Controllers\Controller;
 use App\Models\Admin;
 use App\Enums\AdminRole;
+use App\Enums\SubAdminPermission;
 use Illuminate\Http\Request;
 
 class SubAdminController extends Controller
@@ -24,6 +25,15 @@ class SubAdminController extends Controller
     {
         $subAdmins = $this->getSubAdminAction->handle($request->all());
         return $this->successResponse($subAdmins, 'Admin sub-admins list retrieved successfully');
+    }
+
+    /**
+     * Available sub-admin permission values, for populating the
+     * permissions field when creating/editing a sub-admin.
+     */
+    public function permissions()
+    {
+        return $this->successResponse(SubAdminPermission::options(), 'Sub-admin permissions retrieved successfully');
     }
 
     public function store(Request $request)

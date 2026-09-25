@@ -2,12 +2,13 @@
 
 namespace App\Actions\Setting;
 
+use App\Models\Admin;
 use App\Models\Setting;
 use App\Models\User;
 
 class GetSettingAction
 {
-    public function handle(User $requester): ?Setting
+    public function handle(User|Admin $requester): ?Setting
     {
         
         // return Setting::query()

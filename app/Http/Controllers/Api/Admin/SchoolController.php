@@ -7,6 +7,7 @@ use App\Actions\Institution\DeleteSchoolAction;
 use App\Actions\Institution\GetSchoolsAction;
 use App\Actions\Institution\UpdateSchoolAction;
 use App\Http\Controllers\Controller;
+use App\Models\Classroom;
 use App\Models\Institution;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -25,6 +26,40 @@ class SchoolController extends Controller
     {
         $schools = $this->getSchoolsAction->handle($request->all());
         return $this->successResponse($schools, 'Schools retrieved successfully');
+    }
+
+    /**
+     * Lightweight list of every school's id + name, for dropdowns etc.
+     */
+    public function names()
+    {
+        $schools = Institution::select(['id', 'name'])->orderBy('name')->get();
+        return $this->successResponse($schools, 'School names retrieved successfully');
+    }
+
+    /**
+     * Schools awaiting approval (e.g. created by a manager, which always
+     * start out pending). Same filters/pagination as index(), status forced.
+     */
+    public function pending(Request $request)
+    {
+        $data = $request->all();
+        $data['status'] = 'pending';
+
+        $schools = $this->getSchoolsAction->handle($data);
+        return $this->successResponse($schools, 'Pending schools retrieved successfully');
+    }
+
+    public function approve(string $id)
+    {
+        $school = $this->updateSchoolAction->handle(['status' => 'approved'], $id);
+        return $this->successResponse($school, 'School approved successfully');
+    }
+
+    public function reject(string $id)
+    {
+        $school = $this->updateSchoolAction->handle(['status' => 'rejected'], $id);
+        return $this->successResponse($school, 'School rejected successfully');
     }
 
     public function store(Request $request)
@@ -73,6 +108,22 @@ class SchoolController extends Controller
     {
         $school = Institution::with(['manager', 'category', 'principal'])->findOrFail($id);
         return $this->successResponse($school, 'School retrieved successfully');
+    }
+
+    /**
+     * Id + name of every classroom in this school — the source list for
+     * picking mock_exam_classroom_ids when editing the school.
+     */
+    public function classrooms(string $id)
+    {
+        Institution::findOrFail($id);
+
+        $classrooms = Classroom::where('institution_id', $id)
+            ->select(['id', 'name'])
+            ->orderBy('name')
+            ->get();
+
+        return $this->successResponse($classrooms, 'School classrooms retrieved successfully');
     }
 
     public function update(Request $request, string $id)
