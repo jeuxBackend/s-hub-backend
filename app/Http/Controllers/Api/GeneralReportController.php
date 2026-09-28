@@ -7,6 +7,7 @@ use App\Enums\ReportStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Admin;
 use App\Models\GeneralReport;
+use App\Models\User;
 use App\Http\Resources\GeneralReportResource;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -46,13 +47,15 @@ class GeneralReportController extends Controller
             'status' => ['nullable', Rule::in(ReportStatus::values())],
             'month' => 'nullable|date_format:Y-m',
             'per_page' => 'nullable|integer|min:1|max:100',
+            'institution_id' => 'nullable|integer|exists:institutions,id',
+            'reporter_role' => ['nullable', Rule::in([...UserRole::values(), ...AdminRole::values()])],
         ]);
 
         $user = auth()->user();
         $role = $user->role->value;
         $institutionId = $user->institution_id;
 
-        $query = GeneralReport::with(['reporter', 'resolvedBy'])
+        $query = GeneralReport::with(['reporter', 'resolvedBy', 'institution'])
             ->where(function ($q) use ($user, $role, $institutionId) {
                 // User can see reports they created
                 $q->where(function ($subQ) use ($user) {
@@ -91,6 +94,22 @@ class GeneralReportController extends Controller
                   ->whereMonth('created_at', $month->month);
         }
 
+        if ($request->filled('institution_id')) {
+            $query->where('institution_id', $request->input('institution_id'));
+        }
+
+        if ($request->filled('reporter_role')) {
+            $reporterRole = $request->input('reporter_role');
+
+            if (in_array($reporterRole, UserRole::values(), true)) {
+                $query->where('reporter_type', User::class)
+                      ->whereIn('reporter_id', User::where('role', $reporterRole)->pluck('id'));
+            } else {
+                $query->where('reporter_type', Admin::class)
+                      ->whereIn('reporter_id', Admin::where('role', $reporterRole)->pluck('id'));
+            }
+        }
+
         $query->latest();
 
         $reports = $query->paginate($request->input('per_page', 20));
@@ -121,6 +140,7 @@ class GeneralReportController extends Controller
                 UserRole::Teacher => [UserRole::Principal->value, AdminRole::Manager->value],
                 UserRole::Principal => [AdminRole::Admin->value, AdminRole::Manager->value, UserRole::SchoolAdmin->value],
                 UserRole::SchoolAdmin => [AdminRole::Admin->value, AdminRole::Manager->value, UserRole::Principal->value],
+                AdminRole::Admin, AdminRole::SubAdmin => [AdminRole::Manager->value],
                 default => []
             };
 
@@ -180,6 +200,7 @@ class GeneralReportController extends Controller
                 UserRole::Teacher => [UserRole::Principal->value, AdminRole::Manager->value],
                 UserRole::Principal => [AdminRole::Admin->value, AdminRole::Manager->value, UserRole::SchoolAdmin->value],
                 UserRole::SchoolAdmin => [AdminRole::Admin->value, AdminRole::Manager->value, UserRole::Principal->value],
+                AdminRole::Admin, AdminRole::SubAdmin => [AdminRole::Manager->value],
                 default => []
             };
 
@@ -247,7 +268,7 @@ class GeneralReportController extends Controller
     public function show($id)
     {
         $user = auth()->user();
-        $report = GeneralReport::with(['reporter', 'resolvedBy'])->findOrFail($id);
+        $report = GeneralReport::with(['reporter', 'resolvedBy', 'institution'])->findOrFail($id);
 
         $canView = ($report->reporter_id === $user->id && $report->reporter_type === get_class($user))
             || in_array($report->reported_to_role, $this->visibleRolesFor($user->role->value), true);
@@ -262,6 +283,31 @@ class GeneralReportController extends Controller
     }
 
     /**
+     * Mark the report as read by its assignee. Idempotent — a second call
+     * on an already-read report is a no-op, not an error.
+     */
+    public function markAsRead($id)
+    {
+        $user = auth()->user();
+        $report = GeneralReport::findOrFail($id);
+
+        $isAssignee = in_array($report->reported_to_role, $this->visibleRolesFor($user->role->value), true);
+
+        if (!$isAssignee) {
+            return $this->errorResponse('Unauthorized. Only the assigned role can mark this report read.', 403);
+        }
+
+        if ($report->read_at === null) {
+            $report->update(['read_at' => now()]);
+        }
+
+        return $this->successResponse(
+            new GeneralReportResource($report->load(['reporter', 'resolvedBy', 'institution'])),
+            'Report marked as read.'
+        );
+    }
+
+    /**
      * Remove the specified report.
      */
     public function destroy($id)
@@ -270,8 +316,9 @@ class GeneralReportController extends Controller
         $report = GeneralReport::findOrFail($id);
 
         $isReporter = $report->reporter_id === $user->id && $report->reporter_type === get_class($user);
+        $isAdmin = $user->role === AdminRole::Admin;
 
-        if (!$isReporter) {
+        if (!$isReporter && !$isAdmin) {
             return $this->errorResponse('Only the original reporter can delete this report.', 403);
         }
 

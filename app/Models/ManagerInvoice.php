@@ -11,6 +11,7 @@ class ManagerInvoice extends Model
 
     protected $fillable = [
         'manager_id',
+        'institution_id',
         'created_by',
         'invoice_number',
         'number_of_instutes',
@@ -24,6 +25,11 @@ class ManagerInvoice extends Model
     public function manager()
     {
         return $this->belongsTo(Admin::class, 'manager_id');
+    }
+
+    public function institution()
+    {
+        return $this->belongsTo(Institution::class, 'institution_id');
     }
 
     public function creator()

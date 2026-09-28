@@ -25,6 +25,9 @@ class GetGlobalTeachersAction
         if (!empty($data['phone_number'])) {
             $query->where('phone_number', 'like', '%' . $data['phone_number'] . '%');
         }
+        if (!empty($data['role']) && in_array($data['role'], [UserRole::Teacher->value, UserRole::SchoolAdmin->value], true)) {
+            $query->where('role', $data['role']);
+        }
         if (!empty($data['institution_id'])) {
             $query->where('institution_id', $data['institution_id']);
         }
@@ -33,8 +36,11 @@ class GetGlobalTeachersAction
                 $q->where('manager_id', $data['manager_id']);
             });
         }
-        if (!empty($data['status'])) {
-            $query->where('status', $data['status']);
+        if (array_key_exists('status', $data) && $data['status'] !== null && $data['status'] !== '') {
+            $query->where('status', filter_var($data['status'], FILTER_VALIDATE_BOOLEAN));
+        }
+        if (array_key_exists('institution_ids', $data) && $data['institution_ids'] !== null) {
+            $query->whereIn('institution_id', $data['institution_ids']);
         }
 
         return $query->orderBy('id', 'desc')->paginate($data['per_page'] ?? 20);

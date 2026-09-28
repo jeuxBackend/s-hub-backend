@@ -9,13 +9,35 @@ class StudentWithInvoicesResource extends JsonResource
 {
     public function toArray(Request $request): array
     {
+        $yearMarks = $this->relationLoaded('studentGrades') ? $this->studentGrades->where('type', 'years_marks') : collect();
+        $perfScore = $yearMarks->sum('score');
+        $perfTotal = $yearMarks->sum('total');
+        $performancePercentage = $perfTotal > 0 ? round(($perfScore / $perfTotal) * 100, 2) : 0;
+
+        $attendancePercentage = 0;
+        if ($this->relationLoaded('attendanceRecords')) {
+            $totalDays = $this->attendanceRecords->count();
+            if ($totalDays > 0) {
+                $presentDays = $this->attendanceRecords->filter(function ($record) {
+                    $val = $record->status instanceof \UnitEnum ? $record->status->value : $record->status;
+                    return in_array($val, ['present', 'late']);
+                })->count();
+                $attendancePercentage = round(($presentDays / $totalDays) * 100, 2);
+            }
+        }
+
         return [
+            'attendance_rate' => $attendancePercentage,
+            'performance_percentage' => $performancePercentage,
             'id' => $this->id,
             'first_name' => $this->first_name,
             'last_name' => $this->last_name,
             'sur_name' => $this->sur_name,
             'profile_picture' => $this->profile_picture,
             'student_phone_number' => $this->student_phone_number,
+            'email' => $this->email,
+            'alternate_phone' => $this->alternate_phone,
+            'alternate_email' => $this->alternate_email,
             'gender' => $this->gender->value ?? null,
             'dob' => $this->dob?->toDateString(),
             'age' => $this->age,
@@ -31,6 +53,7 @@ class StudentWithInvoicesResource extends JsonResource
             'classroom_id' => $this->classroom_id,
             'classroom' => new ClassroomResource($this->whenLoaded('classroom')),
             'institution' => new InstitutionResource($this->whenLoaded('institution')),
+            'subjects' => SubjectResource::collection($this->whenLoaded('classroomSubjects')),
 
             // Guardian/Parent Information
             'guardian' => [

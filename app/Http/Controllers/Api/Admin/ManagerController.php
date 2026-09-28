@@ -39,6 +39,9 @@ class ManagerController extends Controller
             'email' => 'required|email|unique:admins,email',
             'phone_number' => 'required|string|unique:admins,phone_number',
             'password' => 'required|string|min:8',
+            'emergency_contact_name' => 'nullable|string|max:255',
+            'emergency_contact_phone' => 'nullable|string|max:255',
+            'status' => 'nullable|in:active,inactive',
         ]);
 
         $manager = $this->createManagerAction->handle($data);
@@ -60,6 +63,9 @@ class ManagerController extends Controller
             'email' => 'sometimes|email|unique:admins,email,' . $id,
             'phone_number' => 'sometimes|string|unique:admins,phone_number,' . $id,
             'password' => 'nullable|string|min:8',
+            'emergency_contact_name' => 'sometimes|nullable|string|max:255',
+            'emergency_contact_phone' => 'sometimes|nullable|string|max:255',
+            'status' => 'sometimes|in:active,inactive',
         ]);
 
         $manager = $this->updateManagerAction->handle($data, $id);

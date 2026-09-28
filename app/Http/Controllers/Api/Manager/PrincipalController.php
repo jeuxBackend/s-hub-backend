@@ -9,6 +9,7 @@ use App\Models\Institution;
 use App\Models\User;
 use App\Enums\UserRole;
 use Illuminate\Http\Request;
+use Illuminate\Http\Resources\Json\JsonResource;
 
 class PrincipalController extends Controller
 {
@@ -18,7 +19,7 @@ class PrincipalController extends Controller
     ) {
     }
 
-    public function index()
+    public function index(Request $request)
     {
         $managerId = auth()->id();
         $principals = User::where('role', UserRole::Principal)
@@ -26,9 +27,13 @@ class PrincipalController extends Controller
                 $query->where('manager_id', $managerId);
             })
             ->with('institution')
-            ->get();
+            ->orderBy('id', 'desc')
+            ->paginate($request->input('per_page', 20));
 
-        return $this->successResponse($principals, 'Principals retrieved successfully');
+        return $this->paginatedResponse(
+            JsonResource::collection($principals),
+            'Principals retrieved successfully'
+        );
     }
 
     public function store(Request $request)

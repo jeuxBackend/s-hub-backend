@@ -25,7 +25,13 @@ class GetSchoolsAction
         if (!empty($data['status'])) {
             $query->where('status', $data['status']);
         }
+        if (array_key_exists('is_blocked', $data) && $data['is_blocked'] !== null && $data['is_blocked'] !== '') {
+            $query->where('is_blocked', filter_var($data['is_blocked'], FILTER_VALIDATE_BOOLEAN));
+        }
+        if (array_key_exists('institution_ids', $data) && $data['institution_ids'] !== null) {
+            $query->whereIn('id', $data['institution_ids']);
+        }
 
-        return $query->get();
+        return $query->orderBy('id', 'desc')->paginate($data['per_page'] ?? 20);
     }
 }

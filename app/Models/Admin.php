@@ -25,6 +25,8 @@ class Admin extends Authenticatable
         'role',
         'status',
         'permissions',
+        'emergency_contact_name',
+        'emergency_contact_phone',
         'fcm_token',
         'profile_image',
         'stripe_connect_account_id',
@@ -47,9 +49,49 @@ class Admin extends Authenticatable
         return trim($this->first_name . ' ' . $this->last_name . ' ' . $this->sure_name);
     }
 
+    /**
+     * The platform admin account can never be deleted, through any code
+     * path — this fires on every delete()/destroy() call regardless of
+     * which action/controller initiated it.
+     */
+    protected static function booted(): void
+    {
+        static::deleting(function (self $admin) {
+            if ($admin->role === \App\Enums\AdminRole::Admin) {
+                throw new \Illuminate\Auth\Access\AuthorizationException(
+                    'The platform admin account cannot be deleted.'
+                );
+            }
+        });
+    }
+
     public function institutions()
     {
         return $this->hasMany(Institution::class, 'manager_id');
+    }
+
+    /**
+     * Schools this sub-admin has been specifically assigned to manage.
+     */
+    public function assignedSchools()
+    {
+        return $this->hasMany(Institution::class, 'subadmin_id');
+    }
+
+    /**
+     * Institution IDs this sub-admin is restricted to, or null if
+     * unrestricted (sees everything within their granted permissions).
+     * Only ever restricts sub_admin — admin/manager are never limited here.
+     */
+    public function assignedInstitutionIds(): ?array
+    {
+        if ($this->role !== \App\Enums\AdminRole::SubAdmin) {
+            return null;
+        }
+
+        $ids = $this->assignedSchools()->pluck('id')->all();
+
+        return empty($ids) ? null : $ids;
     }
 
     public function students()

@@ -10,6 +10,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Classroom;
 use App\Models\Institution;
 use Illuminate\Http\Request;
+use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Validation\Rule;
 
 class SchoolController extends Controller
@@ -28,7 +29,7 @@ class SchoolController extends Controller
         $data['manager_id'] = auth()->id();
 
         $schools = $this->getSchoolsAction->handle($data);
-        return $this->successResponse($schools, 'Schools retrieved successfully');
+        return $this->paginatedResponse(JsonResource::collection($schools), 'Schools retrieved successfully');
     }
 
     /**

@@ -61,6 +61,27 @@ class Institution extends Model
         return $this->hasOne(User::class, 'institution_id')->where('role', \App\Enums\UserRole::Principal->value);
     }
 
+    public function students()
+    {
+        return $this->hasMany(Student::class, 'institution_id');
+    }
+
+    public function teachers()
+    {
+        return $this->hasMany(User::class, 'institution_id')
+            ->whereIn('role', [\App\Enums\UserRole::Teacher->value, \App\Enums\UserRole::SchoolAdmin->value]);
+    }
+
+    public function schoolAdmins()
+    {
+        return $this->hasMany(User::class, 'institution_id')->where('role', \App\Enums\UserRole::SchoolAdmin->value);
+    }
+
+    public function classrooms()
+    {
+        return $this->hasMany(Classroom::class, 'institution_id');
+    }
+
     public function manager(): BelongsTo
     {
         return $this->belongsTo(Admin::class, 'manager_id');

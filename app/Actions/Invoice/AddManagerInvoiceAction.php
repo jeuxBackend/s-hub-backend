@@ -10,6 +10,7 @@ class AddManagerInvoiceAction
     {
         return ManagerInvoice::create([
             'manager_id' => $data['manager_id'],
+            'institution_id' => $data['institution_id'] ?? null,
             'created_by' => $data['created_by'],
             'invoice_number' => $this->generateInvoiceNumber(),
             'number_of_instutes' => $data['number_of_instutes'],

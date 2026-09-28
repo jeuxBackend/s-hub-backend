@@ -41,6 +41,7 @@ class ManagerInvoiceController extends Controller
     {
         $data = $request->validate([
             'manager_id' => 'required|exists:admins,id',
+            'institution_id' => 'nullable|exists:institutions,id',
             'number_of_instutes' => 'required|integer|min:1',
             'price_per_instute' => 'required|numeric|min:0',
             'currency' => 'nullable|string|size:3',
@@ -60,7 +61,7 @@ class ManagerInvoiceController extends Controller
      */
     public function show(string $id)
     {
-        $invoice = ManagerInvoice::with(['manager', 'creator'])->findOrFail($id);
+        $invoice = ManagerInvoice::with(['manager', 'creator', 'institution'])->findOrFail($id);
         return $this->successResponse($invoice);
     }
 

@@ -11,7 +11,7 @@ class GetManagerAction
 {
     public function handle(array $data = [])
     {
-        $query = Admin::select(['id', 'first_name', 'last_name', 'sure_name', 'email', 'role', 'status'])
+        $query = Admin::select(['id', 'first_name', 'last_name', 'sure_name', 'email', 'phone_number', 'role', 'status', 'profile_image'])
             ->where('role', AdminRole::Manager)
             ->withCount([
                 'institutions as total_schools',
@@ -34,6 +34,16 @@ class GetManagerAction
         if (!empty($data['email'])) {
             $query->where('email', 'like', '%' . $data['email'] . '%');
         }
+        if (!empty($data['search'])) {
+            $search = $data['search'];
+            $query->where(function ($q) use ($search) {
+                $q->where('first_name', 'like', '%' . $search . '%')
+                    ->orWhere('last_name', 'like', '%' . $search . '%')
+                    ->orWhere('sure_name', 'like', '%' . $search . '%')
+                    ->orWhere('email', 'like', '%' . $search . '%')
+                    ->orWhere('phone_number', 'like', '%' . $search . '%');
+            });
+        }
         if (!empty($data['category_id'])) {
             $query->whereHas('institutions', function ($q) use ($data) {
                 $q->where('category_id', $data['category_id']);
@@ -41,7 +51,7 @@ class GetManagerAction
         }
         if (isset($data['status']) && $data['status'] !== '') {
             $isActive = in_array(strtolower((string) $data['status']), ['active', '1', 'true'], true);
-            $query->where('status', $isActive);
+            $query->where('status', $isActive ? 'active' : 'inactive');
         }
 
         return $query->orderBy('first_name', 'desc')->paginate($data['per_page'] ?? 20);

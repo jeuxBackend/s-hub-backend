@@ -10,6 +10,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Classroom;
 use App\Models\Institution;
 use Illuminate\Http\Request;
+use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Validation\Rule;
 
 class SchoolController extends Controller
@@ -24,8 +25,11 @@ class SchoolController extends Controller
 
     public function index(Request $request)
     {
-        $schools = $this->getSchoolsAction->handle($request->all());
-        return $this->successResponse($schools, 'Schools retrieved successfully');
+        $data = $request->all();
+        $data['institution_ids'] = auth()->user()->assignedInstitutionIds();
+
+        $schools = $this->getSchoolsAction->handle($data);
+        return $this->paginatedResponse(JsonResource::collection($schools), 'Schools retrieved successfully');
     }
 
     /**
@@ -33,7 +37,10 @@ class SchoolController extends Controller
      */
     public function names()
     {
-        $schools = Institution::select(['id', 'name'])->orderBy('name')->get();
+        $query = Institution::select(['id', 'name']);
+        $this->scopeToAssignedSchools($query);
+
+        $schools = $query->orderBy('name')->get();
         return $this->successResponse($schools, 'School names retrieved successfully');
     }
 
@@ -45,19 +52,24 @@ class SchoolController extends Controller
     {
         $data = $request->all();
         $data['status'] = 'pending';
+        $data['institution_ids'] = auth()->user()->assignedInstitutionIds();
 
         $schools = $this->getSchoolsAction->handle($data);
-        return $this->successResponse($schools, 'Pending schools retrieved successfully');
+        return $this->paginatedResponse(JsonResource::collection($schools), 'Pending schools retrieved successfully');
     }
 
     public function approve(string $id)
     {
+        $this->assertInScope($id);
+
         $school = $this->updateSchoolAction->handle(['status' => 'approved'], $id);
         return $this->successResponse($school, 'School approved successfully');
     }
 
     public function reject(string $id)
     {
+        $this->assertInScope($id);
+
         $school = $this->updateSchoolAction->handle(['status' => 'rejected'], $id);
         return $this->successResponse($school, 'School rejected successfully');
     }
@@ -106,7 +118,11 @@ class SchoolController extends Controller
 
     public function show(string $id)
     {
-        $school = Institution::with(['manager', 'category', 'principal'])->findOrFail($id);
+        $this->assertInScope($id);
+
+        $school = Institution::with(['manager', 'category', 'principal'])
+            ->withCount(['students', 'teachers', 'schoolAdmins', 'classrooms'])
+            ->findOrFail($id);
         return $this->successResponse($school, 'School retrieved successfully');
     }
 
@@ -116,10 +132,11 @@ class SchoolController extends Controller
      */
     public function classrooms(string $id)
     {
-        Institution::findOrFail($id);
+        $this->assertInScope($id);
 
         $classrooms = Classroom::where('institution_id', $id)
             ->select(['id', 'name'])
+            ->with('subjects:id,name,classroom_id')
             ->orderBy('name')
             ->get();
 
@@ -128,6 +145,8 @@ class SchoolController extends Controller
 
     public function update(Request $request, string $id)
     {
+        $this->assertInScope($id);
+
         $data = $request->validate([
             'name' => 'sometimes|string|max:255',
             'slogan' => 'sometimes|nullable|string|max:255',
@@ -174,6 +193,8 @@ class SchoolController extends Controller
 
     public function toggleAlertFeature(Request $request, string $id)
     {
+        $this->assertInScope($id);
+
         $data = $request->validate([
             'alert_feature_enabled' => 'required|boolean',
             'allowed_alert_types' => 'nullable|array',
@@ -191,7 +212,34 @@ class SchoolController extends Controller
 
     public function destroy(string $id)
     {
+        $this->assertInScope($id);
+
         $this->deleteSchoolAction->handle($id);
         return $this->successResponse(null, 'School deleted successfully');
+    }
+
+    /**
+     * Restrict a query to the acting sub-admin's assigned schools, if any.
+     */
+    private function scopeToAssignedSchools($query): void
+    {
+        $ids = auth()->user()->assignedInstitutionIds();
+
+        if ($ids !== null) {
+            $query->whereIn('id', $ids);
+        }
+    }
+
+    /**
+     * Abort with 404 if this institution isn't one the acting sub-admin is
+     * restricted to (no-op for admin, manager, or an unrestricted sub-admin).
+     */
+    private function assertInScope(string $institutionId): void
+    {
+        $ids = auth()->user()->assignedInstitutionIds();
+
+        if ($ids !== null && !in_array((int) $institutionId, $ids, true)) {
+            abort(404);
+        }
     }
 }

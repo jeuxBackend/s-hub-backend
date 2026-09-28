@@ -5,9 +5,9 @@ namespace App\Actions\Teacher;
 use App\Enums\UserRole;
 use App\Models\TeacherAttendance;
 use App\Models\TimetableEntry;
-use App\Models\User;
 use App\Support\TimetableEntryResolver;
 use Carbon\Carbon;
+use Illuminate\Foundation\Auth\User as Authenticatable;
 
 class GetOngoingClassAction
 {
@@ -18,7 +18,7 @@ class GetOngoingClassAction
     /**
      * Returns the teacher's currently signed-in (not yet signed-out) class, or null.
      */
-    public function handle(User $teacher): ?array
+    public function handle(Authenticatable $teacher): ?array
     {
         if ($teacher->role !== UserRole::Teacher) {
             return null;

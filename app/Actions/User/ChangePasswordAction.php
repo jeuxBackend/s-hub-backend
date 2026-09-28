@@ -2,12 +2,12 @@
 
 namespace App\Actions\User;
 
-use App\Models\User;
+use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Support\Facades\Hash;
 
 class ChangePasswordAction
 {
-    public function handle(array $data, User $user): void
+    public function handle(array $data, Authenticatable $user): void
     {
         // ✅ Check current password
         if (!Hash::check($data['current_password'], $user->password)) {

@@ -36,6 +36,9 @@ class Student extends Model
         'status',
         'address',
         'is_flag',
+        'email',
+        'alternate_phone',
+        'alternate_email',
     ];
 
     protected $casts = [
@@ -100,7 +103,7 @@ class Student extends Model
 
     public function classroomSubjects()
     {
-        return $this->belongsToMany(Subject::class, 'classroom_student_subject')
+        return $this->belongsToMany(Subject::class, 'classroom_student_subjects')
             ->withPivot(['classroom_id', 'term', 'academic_year'])
             ->withTimestamps();
     }

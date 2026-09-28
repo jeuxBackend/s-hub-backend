@@ -52,6 +52,7 @@ class SubAdminController extends Controller
             'permissions.*' => 'string',
             'school_ids' => 'nullable|array',
             'school_ids.*' => 'exists:institutions,id',
+            'status' => 'nullable|in:active,inactive',
         ]);
 
         $subAdmin = $this->createSubAdminAction->handle($data);
@@ -60,7 +61,9 @@ class SubAdminController extends Controller
 
     public function show($id)
     {
-        $subAdmin = Admin::where('role', AdminRole::SubAdmin)->findOrFail($id);
+        $subAdmin = Admin::where('role', AdminRole::SubAdmin)
+            ->with('assignedSchools:id,name,subadmin_id')
+            ->findOrFail($id);
         return $this->successResponse($subAdmin, 'Sub admin retrieved successfully');
     }
 
@@ -80,6 +83,7 @@ class SubAdminController extends Controller
             'permissions.*' => 'string',
             'school_ids' => 'nullable|array',
             'school_ids.*' => 'exists:institutions,id',
+            'status' => 'sometimes|in:active,inactive',
         ]);
 
         $subAdmin = $this->updateSubAdminAction->handle($data, $id);

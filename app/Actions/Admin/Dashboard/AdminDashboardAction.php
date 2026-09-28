@@ -2,6 +2,7 @@
 
 namespace App\Actions\Admin\Dashboard;
 
+use App\Enums\GenderType;
 use App\Enums\UserRole;
 use App\Models\Institution;
 use App\Models\Student;
@@ -52,6 +53,13 @@ class AdminDashboardAction
                     Student::where('status', true)->count(),
                     Student::where('status', false)->count()),
 
+                $this->countriesStats($asOfLastMonth),
+
+                [
+                    'students_by_gender' => $this->genderBreakdown(Student::class),
+                    'teachers_by_gender' => $this->genderBreakdown(User::class, [UserRole::Teacher->value, UserRole::SchoolAdmin->value]),
+                ],
+
                 ['last_updated' => now()->toDateTimeString()]
             );
         });
@@ -82,6 +90,45 @@ class AdminDashboardAction
             "active_{$prefix}_change_percent" => $this->percentChange($activeCount, $activeLastMonth),
             "blocked_{$prefix}" => $blockedCount,
             "blocked_{$prefix}_change_percent" => $this->percentChange($blockedCount, $blockedLastMonth),
+        ];
+    }
+
+    /**
+     * Distinct non-null institution regions, treated as "countries", plus
+     * the change vs. how many distinct regions existed as of last month.
+     */
+    private function countriesStats(Carbon $asOfLastMonth): array
+    {
+        $currentCount = Institution::whereNotNull('region')->distinct()->count('region');
+        $lastMonthCount = Institution::whereNotNull('region')
+            ->where('created_at', '<=', $asOfLastMonth)
+            ->distinct()
+            ->count('region');
+
+        return [
+            'total_countries' => $currentCount,
+            'total_countries_change_percent' => $this->percentChange($currentCount, $lastMonthCount),
+        ];
+    }
+
+    /**
+     * Count male/female/other for the given model, optionally restricted to
+     * a set of roles (for the shared `users` table).
+     */
+    private function genderBreakdown(string $modelClass, ?array $roles = null): array
+    {
+        $query = $modelClass::query();
+
+        if ($roles !== null) {
+            $query->whereIn('role', $roles);
+        }
+
+        $counts = (clone $query)->whereNotNull('gender')->groupBy('gender')->selectRaw('gender, count(*) as aggregate')->pluck('aggregate', 'gender');
+
+        return [
+            'male' => (int) ($counts[GenderType::Male->value] ?? 0),
+            'female' => (int) ($counts[GenderType::Female->value] ?? 0),
+            'other' => (int) ($counts[GenderType::Other->value] ?? 0),
         ];
     }
 

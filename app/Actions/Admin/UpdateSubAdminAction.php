@@ -14,6 +14,10 @@ class UpdateSubAdminAction
     {
         $subAdmin = Admin::where('role', AdminRole::SubAdmin)->findOrFail($id);
 
+        $schoolIdsProvided = array_key_exists('school_ids', $data);
+        $schoolIds = $data['school_ids'] ?? [];
+        unset($data['school_ids']);
+
         if (isset($data['password']) && !empty($data['password'])) {
             $data['password'] = Hash::make($data['password']);
         } else {
@@ -28,6 +32,18 @@ class UpdateSubAdminAction
         }
 
         $subAdmin->update($data);
+
+        if ($schoolIdsProvided) {
+            // Full sync: unassign anything no longer in the list, assign the rest.
+            Institution::where('subadmin_id', $subAdmin->id)
+                ->whereNotIn('id', $schoolIds)
+                ->update(['subadmin_id' => null]);
+
+            if (!empty($schoolIds)) {
+                Institution::whereIn('id', $schoolIds)->update(['subadmin_id' => $subAdmin->id]);
+            }
+        }
+
         return $subAdmin;
     }
 }

@@ -298,30 +298,32 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'active.user'])->group(function
 
     // ===================== GLOBAL ADMIN ONLY =====================
     Route::prefix('admin')->middleware('role:admin,sub_admin')->group(function () {
-        Route::get('dashboard', [ActivityControler::class, 'dashboard']);
+        Route::get('dashboard', [ActivityControler::class, 'dashboard'])->middleware('subadmin.permission:Dashboard');
 
-        Route::apiResource('managers', ManagerController::class);
-        Route::get('managers/{id}/schools', [ManagerController::class, 'getManagerSchools']);
+        Route::apiResource('managers', ManagerController::class)->middleware('subadmin.permission:Managers');
+        Route::get('managers/{id}/schools', [ManagerController::class, 'getManagerSchools'])->middleware('subadmin.permission:Managers');
 
         // Must come before the apiResource below, else {sub_admin} would swallow "permissions".
         Route::get('sub-admins/permissions', [SubAdminController::class, 'permissions'])->middleware('role:admin');
         Route::apiResource('sub-admins', SubAdminController::class);
-        Route::apiResource('manager-invoices', ManagerInvoiceController::class);
+        Route::apiResource('manager-invoices', ManagerInvoiceController::class)->middleware('subadmin.permission:Managers');
 
         // Read-only views for Admin
         // Must come before the apiResource below, else {school} would swallow "names"/"pending".
-        Route::get('schools/names', [SchoolController::class, 'names'])->middleware('subadmin.permission:School');
-        Route::get('schools/pending', [SchoolController::class, 'pending'])->middleware('subadmin.permission:School');
-        Route::apiResource('schools', SchoolController::class)->only(['index', 'show', 'store', 'update', 'destroy'])->middleware('subadmin.permission:School');
-        Route::patch('schools/{id}/approve', [SchoolController::class, 'approve'])->middleware('subadmin.permission:School');
-        Route::patch('schools/{id}/reject', [SchoolController::class, 'reject'])->middleware('subadmin.permission:School');
-        Route::apiResource('teachers', AdminTeacherController::class)->only(['index', 'show', 'update', 'destroy'])->middleware('subadmin.permission:Teachers');
-        Route::apiResource('students', AdminStudentController::class)->only(['index', 'show'])->middleware('subadmin.permission:Students');
-        Route::patch('schools/{id}/alert-feature', [SchoolController::class, 'toggleAlertFeature']);
-        Route::get('schools/{id}/classrooms', [SchoolController::class, 'classrooms'])->middleware('subadmin.permission:School');
-        Route::get('categories', [\App\Http\Controllers\Api\Admin\CategoryController::class, 'index'])->middleware('subadmin.permission:School');
-        Route::post('categories', [\App\Http\Controllers\Api\Admin\CategoryController::class, 'store'])->middleware('subadmin.permission:School');
-        Route::delete('categories/{category}', [\App\Http\Controllers\Api\Admin\CategoryController::class, 'destroy'])->middleware('subadmin.permission:School');
+        Route::get('schools/names', [SchoolController::class, 'names'])->middleware('subadmin.permission:Schools');
+        Route::get('schools/pending', [SchoolController::class, 'pending'])->middleware('subadmin.permission:School_Requests');
+        Route::apiResource('schools', SchoolController::class)->only(['index', 'show', 'store', 'update', 'destroy'])->middleware('subadmin.permission:Schools');
+        Route::patch('schools/{id}/approve', [SchoolController::class, 'approve'])->middleware('subadmin.permission:School_Requests');
+        Route::patch('schools/{id}/reject', [SchoolController::class, 'reject'])->middleware('subadmin.permission:School_Requests');
+        Route::apiResource('teachers', AdminTeacherController::class)->only(['index', 'show', 'store', 'update', 'destroy'])->middleware('subadmin.permission:Teachers');
+        // Must come before the apiResource below, else {student} would swallow "search".
+        Route::get('students/search', [AdminStudentController::class, 'search'])->middleware('subadmin.permission:Students');
+        Route::apiResource('students', AdminStudentController::class)->only(['index', 'show', 'update', 'destroy'])->middleware('subadmin.permission:Students');
+        Route::patch('schools/{id}/alert-feature', [SchoolController::class, 'toggleAlertFeature'])->middleware('subadmin.permission:Schools');
+        Route::get('schools/{id}/classrooms', [SchoolController::class, 'classrooms'])->middleware('subadmin.permission:Schools');
+        Route::get('categories', [\App\Http\Controllers\Api\Admin\CategoryController::class, 'index'])->middleware('subadmin.permission:Schools');
+        Route::post('categories', [\App\Http\Controllers\Api\Admin\CategoryController::class, 'store'])->middleware('subadmin.permission:Schools');
+        Route::delete('categories/{category}', [\App\Http\Controllers\Api\Admin\CategoryController::class, 'destroy'])->middleware('subadmin.permission:Schools');
         Route::post('settings', [SettingController::class, 'update'])->middleware('subadmin.permission:Settings');
         Route::put('settings', [SettingController::class, 'update'])->middleware('subadmin.permission:Settings');
     });
@@ -394,10 +396,12 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'active.user'])->group(function
 
     // ===================== GENERAL REPORTS =====================
     Route::middleware(['otp.verified'])->group(function () {
-        Route::patch('general-reports/{id}/status', [\App\Http\Controllers\Api\GeneralReportController::class, 'updateStatus']);
+        Route::patch('general-reports/{id}/status', [\App\Http\Controllers\Api\GeneralReportController::class, 'updateStatus'])->middleware('subadmin.permission:Reports');
+        Route::patch('general-reports/{id}/read', [\App\Http\Controllers\Api\GeneralReportController::class, 'markAsRead'])->middleware('subadmin.permission:Reports');
         // Must come before the apiResource below, else {general_report} would swallow "statuses".
         Route::get('general-reports/statuses', [\App\Http\Controllers\Api\GeneralReportController::class, 'statuses']);
-        Route::apiResource('general-reports', \App\Http\Controllers\Api\GeneralReportController::class)->only(['index', 'store', 'show', 'update', 'destroy']);
+        Route::apiResource('general-reports', \App\Http\Controllers\Api\GeneralReportController::class)->only(['index', 'show'])->middleware('subadmin.permission:Reports');
+        Route::apiResource('general-reports', \App\Http\Controllers\Api\GeneralReportController::class)->only(['store', 'update', 'destroy']);
     });
     Route::get('settings', [SettingController::class, 'show']);
     Route::put('change-password', [UserController::class, 'changePassword']);

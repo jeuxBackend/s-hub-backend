@@ -9,8 +9,9 @@ class GetSubAdminAction
 {
     public function handle(array $data = [])
     {
-        $query = Admin::select(['id', 'first_name', 'last_name', 'sure_name', 'email', 'role', 'status', 'region', 'profile_image'])
-            ->where('role', AdminRole::SubAdmin);
+        $query = Admin::select(['id', 'first_name', 'last_name', 'sure_name', 'email', 'phone_number', 'role', 'status', 'region', 'permissions', 'profile_image'])
+            ->where('role', AdminRole::SubAdmin)
+            ->with('assignedSchools:id,name,subadmin_id');
 
         if (!empty($data['name'])) {
             $query->where(function($q) use ($data) {

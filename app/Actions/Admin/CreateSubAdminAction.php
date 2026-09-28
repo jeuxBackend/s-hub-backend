@@ -13,6 +13,9 @@ class CreateSubAdminAction
 {
     public function handle(array $data)
     {
+        $schoolIds = $data['school_ids'] ?? [];
+        unset($data['school_ids']);
+
         $data['password'] = Hash::make($data['password']);
         $data['role'] = AdminRole::SubAdmin;
 
@@ -20,6 +23,12 @@ class CreateSubAdminAction
             $data['profile_image'] = $data['profile_image']->store('admin_profiles', 'public');
         }
 
-        return Admin::create($data);
+        $subAdmin = Admin::create($data);
+
+        if (!empty($schoolIds)) {
+            Institution::whereIn('id', $schoolIds)->update(['subadmin_id' => $subAdmin->id]);
+        }
+
+        return $subAdmin;
     }
 }

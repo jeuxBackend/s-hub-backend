@@ -16,6 +16,9 @@ class GetStudentWithInvoicesAction
             'feeRecords',
             'classroom',
             'institution',
+            'studentGrades',
+            'attendanceRecords',
+            'classroomSubjects',
         ])->findOrFail($studentId);
 
         return $student;

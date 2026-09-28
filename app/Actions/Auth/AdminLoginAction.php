@@ -45,7 +45,7 @@ class AdminLoginAction
             ]);
         }
 
-        if (!$admin->status) {
+        if ($admin->status !== 'active') {
             throw new AuthorizationException('Your account has been blocked.');
         }
 

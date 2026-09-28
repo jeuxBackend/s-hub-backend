@@ -16,7 +16,12 @@ class GeneralReport extends Model
         'status',
         'response',
         'resolved_by_id',
-        'resolved_by_type'
+        'resolved_by_type',
+        'read_at',
+    ];
+
+    protected $casts = [
+        'read_at' => 'datetime',
     ];
 
     public function reporter()
