@@ -23,7 +23,10 @@ class ManagerController extends Controller
 
     public function index(Request $request)
     {
-        $managers = $this->getManagerAction->handle($request->all());
+        $data = $request->all();
+        $data['institution_ids'] = auth()->user()->assignedInstitutionIds();
+
+        $managers = $this->getManagerAction->handle($data);
         return $this->paginatedResponse(
             \Illuminate\Http\Resources\Json\JsonResource::collection($managers),
             'Admin managers list'
@@ -51,6 +54,7 @@ class ManagerController extends Controller
     public function show($id)
     {
         $manager = Admin::where('role', \App\Enums\AdminRole::Manager)->findOrFail($id);
+        $this->assertInScope($manager);
         return $this->successResponse($manager, 'Manager retrieved successfully');
     }
 
@@ -80,7 +84,24 @@ class ManagerController extends Controller
 
     public function getManagerSchools($id)
     {
-        $schools = $this->getManagerSchoolsAction->handle($id);
+        $manager = Admin::where('role', \App\Enums\AdminRole::Manager)->findOrFail($id);
+        $this->assertInScope($manager);
+
+        $ids = auth()->user()->assignedInstitutionIds();
+        $schools = $this->getManagerSchoolsAction->handle($id, $ids);
         return $this->successResponse($schools, 'Manager schools list');
+    }
+
+    /**
+     * Abort with 404 if this manager owns none of the sub-admin's assigned
+     * schools (no-op for admin, manager, or an unrestricted sub-admin).
+     */
+    private function assertInScope(Admin $manager): void
+    {
+        $ids = auth()->user()->assignedInstitutionIds();
+
+        if ($ids !== null && !$manager->institutions()->whereIn('id', $ids)->exists()) {
+            abort(404);
+        }
     }
 }

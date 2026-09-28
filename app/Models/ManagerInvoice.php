@@ -20,6 +20,17 @@ class ManagerInvoice extends Model
         'total_amount',
         'due_date',
         'status',
+        'payment_note',
+        'payment_method',
+        'payment_proof',
+        'paid_submitted_at',
+        'confirmed_by',
+        'confirmed_at',
+    ];
+
+    protected $casts = [
+        'paid_submitted_at' => 'datetime',
+        'confirmed_at' => 'datetime',
     ];
 
     public function manager()
@@ -35,5 +46,10 @@ class ManagerInvoice extends Model
     public function creator()
     {
         return $this->belongsTo(Admin::class, 'created_by');
+    }
+
+    public function confirmedBy()
+    {
+        return $this->belongsTo(Admin::class, 'confirmed_by');
     }
 }

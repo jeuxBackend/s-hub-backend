@@ -112,6 +112,10 @@ class SchoolController extends Controller
             'school_logo' => 'nullable|image|max:5120',
         ]);
 
+        if (auth()->user()->role === \App\Enums\AdminRole::SubAdmin) {
+            $data['subadmin_id'] = auth()->id();
+        }
+
         $school = $this->createSchoolAction->handle($data);
         return $this->successResponse($school, 'School created successfully', 201);
     }

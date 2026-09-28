@@ -25,6 +25,9 @@ class GetSchoolsAction
         if (!empty($data['status'])) {
             $query->where('status', $data['status']);
         }
+        if (!empty($data['exclude_status'])) {
+            $query->whereNotIn('status', (array) $data['exclude_status']);
+        }
         if (array_key_exists('is_blocked', $data) && $data['is_blocked'] !== null && $data['is_blocked'] !== '') {
             $query->where('is_blocked', filter_var($data['is_blocked'], FILTER_VALIDATE_BOOLEAN));
         }

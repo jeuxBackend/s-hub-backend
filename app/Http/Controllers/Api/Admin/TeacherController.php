@@ -77,6 +77,7 @@ class TeacherController extends Controller
     public function update(Request $request, $id)
     {
         $this->assertInScope($id);
+        $ids = auth()->user()->assignedInstitutionIds();
 
         $data = $request->validate([
             'first_name' => 'sometimes|string|max:255',
@@ -85,7 +86,11 @@ class TeacherController extends Controller
             'email' => 'sometimes|email|unique:users,email,' . $id,
             'phone_number' => 'sometimes|string|unique:users,phone_number,' . $id,
             'password' => 'nullable|string|min:8',
-            'institution_id' => 'sometimes|exists:institutions,id',
+            'institution_id' => array_filter([
+                'sometimes',
+                'exists:institutions,id',
+                $ids !== null ? Rule::in($ids) : null,
+            ]),
             'status' => 'sometimes|boolean',
             'staff_number' => 'sometimes|nullable|string|max:255',
             'emergency_contact_name' => 'sometimes|nullable|string|max:255',

@@ -1,7 +1,8 @@
 # Admin panel: backend gaps & issues
 
 **For:** the S-Hub backend developer.
-**From:** the React admin panel integration (repo `s-hub`, `src/Admin/*`).
+**From:** the React admin and sub-admin panel integration (repo `s-hub`, `src/Admin/*`, `src/SubAdmin/*`).
+**Last updated:** 2026-09-28.
 
 The admin web panel is now wired to the existing `v1/admin/*` and `web/login` endpoints. **No backend code was changed.**
 
@@ -13,7 +14,66 @@ For each item the panel currently hides the feature, disables it, or shows "N/A"
 
 References are to `routes/api.php` and the controllers and actions in `app/`. Suggested shapes are only suggestions; any equivalent works.
 
-## Priority summary
+## Status after the 2026-09-28 backend update
+
+**Fix first (2026-09-28):**
+- **C1:** security: any sub-admin can create, edit and delete sub-admins, including giving itself more permissions.
+- **C8:** blocked accounts keep working until their token expires.
+- **C2:** a sub-admin with no assigned schools sees every school. Confirm this is intended.
+- **C3:** a sub-admin cannot load or edit its own profile (`v1/me`, `update-profile`).
+- **C14:** the Teachers and Students pages need `Schools` permission just for the school list.
+- **C4 / C5:** the dashboard, managers, invoices and reports are not limited to a sub-admin's assigned schools.
+
+
+The panel now uses every fixed item below. The status comes from reading the current backend code, since the fixes were not marked in this file.
+
+| Status | Items |
+|---|---|
+| **Fixed and used by the panel** | A1, A3, A4, A5, A8, A9, A10, A11, A12, B1–B6, B9, B11–B15, B17–B20, B23, B24, B26, B27, B29, B32 |
+| **Partly fixed** (details below) | A2, A6, B16, B21, B22, B28, B30, B31 |
+| **Still open** | A7 (school `timezone`, no column), B7 (school level), B8 (approve/reject notification and reject reason), B10 (price per school) |
+
+What is still missing from the partly fixed items:
+
+| # | Still missing |
+|---|---|
+| A2 | The `sub-admins` resource routes have no permission or role check (see **C1**). `general-reports` store, update and destroy have no permission check. |
+| A6 | `GET v1/me` no longer returns 500. But for an Admin-model user it wraps the account in `UserResource`, so `permissions`, `region`, `profile_image` and `sure_name` are missing, and `unread_notification_count` reads the users table with the admin id (see **C3**). |
+| B16 | `profile_image` is now in the managers list, but managers have no upload field on store/update. |
+| B21 | `attendance_rate` and `performance_percentage` are on the student detail. The drill-down data (attendance by month, grades by subject) is still missing, so those two cards are not clickable. |
+| B22 | `GET v1/admin/students/search` is paginated and is used by the Students page. `GET v1/admin/students` (with `total_paid`, `total_due`, `performance_percentage`) is still unpaginated. |
+| B28 | The sub-admin portal is now built on the `v1/admin/*` endpoints. See section C for what still blocks it. |
+| B30 | Role `admin` can delete any report. A sub-admin still gets 403, so the panel hides "Remove Report" for sub-admins. |
+| B31 | `read_at`, `is_read` and `PATCH …/{id}/read` exist. There is no `is_read` filter on the list, so the Unread/Read split only works on the current page. `read_at` is global, not per viewer. |
+
+---
+
+## C. New issues found while building the Sub-Admin portal
+
+| # | Where | Problem | Effect / suggestion |
+|---|---|---|---|
+| **C1** | `routes/api.php`, `Route::apiResource('sub-admins', …)` | **Security.** No `role:admin` or permission middleware. Any sub-admin can list, create, edit and delete sub-admins, including giving itself more `permissions` or `school_ids`. Only `sub-admins/permissions` is admin-only. | Put the sub-admins resource under `role:admin`. The panel never shows Country Admins to sub-admins, but the API is open. |
+| **C2** | `Admin::assignedInstitutionIds()` | A sub-admin with **no** assigned schools is unrestricted: it sees every school, teacher and student. | If "no schools" should mean "no access", return `[]` instead of `null`. Confirm the intended rule. |
+| **C3** | `GET v1/me`, `PUT v1/update-profile` | Neither works for Admin-model accounts: `/me` returns an incomplete `UserResource`, and `update-profile` calls `User::findOrFail(adminId)`. | A sub-admin cannot refresh or edit its own profile. The panel shows the profile read-only (from the login response) and only allows changing the password. Suggest: return `AdminResource` from `/me` for Admin models, and add an own-profile update for admins. |
+| **C4** | `AdminDashboardAction` | The dashboard is global: not scoped to the sub-admin's assigned schools, and cached under one key for 5 minutes. | A restricted sub-admin sees platform-wide totals. Scope it (and the cache key) per sub-admin if it should only show its own schools. |
+| **C5** | managers, `managers/{id}/schools`, manager-invoices, categories, general-reports, classnames | Not scoped to the sub-admin's assigned schools. | A restricted sub-admin with `Managers` or `Reports` sees all managers, invoices and reports. |
+| **C6** | `POST v1/admin/schools` | `subadmin_id` is taken from the request and not forced for sub-admins. A restricted sub-admin creating a school cannot see it afterwards, and can set any admin id. | Force `subadmin_id = auth id` when the creator is a sub-admin. |
+| **C7** | `PUT v1/admin/teachers/{id}` (`institution_id`), `PUT v1/admin/students/{id}` (`classroom_id`) | The new value is not checked against the sub-admin's assigned schools (store does check `institution_id`). | A restricted sub-admin can move a teacher or student into a school it does not manage. |
+| **C8** | `EnsureActiveUser` middleware | It is a no-op. Blocking a manager or sub-admin only stops the **next** login; existing tokens keep working. | Check `status` on each request, or revoke tokens when an account is set to inactive. |
+| **C9** | Notifications (`get-noticeboard`, `notifications/unread-count`, …) | They filter `notification_logs.user_id` with the admin id, which belongs to the users table, so the counts are wrong or collide. | The admin and sub-admin panels do not use notifications. |
+| **C10** | `GET v1/admin/schools/{id}` | `teachers_count` includes school-admins. | The panel shows teachers as `teachers_count - school_admins_count`. A separate count would be clearer. |
+| **C11** | Error responses | A 403 from `subadmin.permission` has only `{message}`, with no `success`. With `APP_DEBUG` off, validation errors thrown inside actions come back as 422 "Something went wrong" (for example a wrong login password, or deleting a school that still has users). | The panel shows the message it gets. Specific messages would help users. |
+| **C12** | `POST v1/general-reports` from admin / sub-admin | Only `reported_to_role: "manager"` is allowed, with no target manager, so every manager sees the report. | Add an optional `manager_id` / `institution_id` target if reports should go to one manager. |
+| **C13** | `GET v1/admin/schools` | There is no way to exclude pending schools in one call (no `status[]` or `status!=pending`). | The Schools page "All" filter drops pending schools from the loaded page on the client, so a page can show fewer than 20 rows and the total includes pending schools. Suggest `exclude_pending=1` or `status[]=approved&status[]=rejected`. |
+| **C14** | `schools/names`, `schools/{id}/classrooms`, `managers*` behind other pages | The Teachers, Students and School Requests pages need lookups guarded by other permissions: the school list and classrooms need `Schools`, and manager stats and invoices need `Managers`. | A sub-admin with only `Teachers` cannot choose a school, so cannot add a teacher or filter by school. A sub-admin with only `Students` cannot change a student's class. Suggest allowing `schools/names` and `schools/{id}/classrooms` for `Teachers` and `Students` too, limited to the assigned schools. |
+
+---
+
+## Original list (2026-09-25)
+
+Kept for reference. See the status table above for what is now fixed.
+
+### Priority summary (2026-09-25, mostly fixed now)
 
 **Fix first:** security and correctness.
 - **A3:** inactive admin accounts can still log in.

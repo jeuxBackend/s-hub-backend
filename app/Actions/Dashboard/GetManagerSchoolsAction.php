@@ -6,8 +6,14 @@ use App\Models\Institution;
 
 class GetManagerSchoolsAction
 {
-    public function handle($managerId)
+    public function handle($managerId, ?array $institutionIds = null)
     {
-        return Institution::where('manager_id', $managerId)->get();
+        $query = Institution::where('manager_id', $managerId);
+
+        if ($institutionIds !== null) {
+            $query->whereIn('id', $institutionIds);
+        }
+
+        return $query->get();
     }
 }

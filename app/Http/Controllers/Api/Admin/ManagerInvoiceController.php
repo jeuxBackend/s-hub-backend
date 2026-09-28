@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Admin;
 
 use App\Actions\Invoice\AddManagerInvoiceAction;
+use App\Actions\Invoice\ConfirmManagerInvoicePaymentAction;
 use App\Actions\Invoice\DeleteInvoiceAction;
 use App\Actions\Invoice\GetManagerInvoicesAction;
 use App\Actions\Invoice\UpdateInvoiceAction;
@@ -10,6 +11,7 @@ use App\Http\Controllers\Controller;
 use App\Models\ManagerInvoice;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Validation\ValidationException;
 
 class ManagerInvoiceController extends Controller
 {
@@ -18,6 +20,7 @@ class ManagerInvoiceController extends Controller
         protected AddManagerInvoiceAction $createInvoiceAction,
         protected UpdateInvoiceAction $updateInvoiceAction,
         protected DeleteInvoiceAction $deleteInvoiceAction,
+        protected ConfirmManagerInvoicePaymentAction $confirmPaymentAction,
     ) {
     }
 
@@ -26,7 +29,10 @@ class ManagerInvoiceController extends Controller
      */
     public function index(Request $request)
     {
-        $invoices = $this->getInvoicesAction->handle($request->all());
+        $data = $request->all();
+        $data['institution_ids'] = auth()->user()->assignedInstitutionIds();
+
+        $invoices = $this->getInvoicesAction->handle($data);
 
         return $this->paginatedResponse(
             JsonResource::collection($invoices),
@@ -46,7 +52,7 @@ class ManagerInvoiceController extends Controller
             'price_per_instute' => 'required|numeric|min:0',
             'currency' => 'nullable|string|size:3',
             'due_date' => 'required|date|after:today',
-            'status' => 'nullable|in:pending,paid,overdue',
+            'status' => 'nullable|in:pending,pending_confirmation,paid,overdue',
         ]);
 
         $data['created_by'] = auth()->id();
@@ -62,6 +68,17 @@ class ManagerInvoiceController extends Controller
     public function show(string $id)
     {
         $invoice = ManagerInvoice::with(['manager', 'creator', 'institution'])->findOrFail($id);
+
+        $ids = auth()->user()->assignedInstitutionIds();
+        if ($ids !== null) {
+            $inScope = ($invoice->institution_id !== null && in_array($invoice->institution_id, $ids, true))
+                || $invoice->manager->institutions()->whereIn('id', $ids)->exists();
+
+            if (!$inScope) {
+                abort(404);
+            }
+        }
+
         return $this->successResponse($invoice);
     }
 
@@ -75,7 +92,7 @@ class ManagerInvoiceController extends Controller
             'price_per_instute' => 'sometimes|numeric|min:0',
             'currency' => 'sometimes|nullable|string|size:3',
             'due_date' => 'sometimes|date',
-            'status' => 'sometimes|in:pending,paid,overdue',
+            'status' => 'sometimes|in:pending,pending_confirmation,paid,overdue',
         ]);
 
         $invoice = $this->updateInvoiceAction->handle($data, $id);
@@ -91,5 +108,21 @@ class ManagerInvoiceController extends Controller
         $this->deleteInvoiceAction->handle($id);
 
         return $this->successResponse(null, 'Invoice deleted successfully');
+    }
+
+    /**
+     * Confirm a manager's submitted payment, marking the invoice paid.
+     */
+    public function confirm(string $id)
+    {
+        try {
+            $invoice = $this->confirmPaymentAction->handle($id, auth()->id());
+            return $this->successResponse(
+                $invoice->load(['manager', 'creator', 'institution', 'confirmedBy']),
+                'Payment confirmed, invoice marked as paid'
+            );
+        } catch (ValidationException $e) {
+            return $this->errorResponse(collect($e->errors())->flatten()->first(), 422);
+        }
     }
 }

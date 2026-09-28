@@ -77,6 +77,24 @@ class GeneralReportController extends Controller
                 });
             });
 
+        // A restricted sub-admin only sees reports for its assigned schools
+        // (plus school-less/manager reports, and its own reports regardless
+        // of scope). No-op for admin, manager, or an unrestricted sub-admin.
+        if ($user instanceof Admin && $user->role === AdminRole::SubAdmin) {
+            $scopedIds = $user->assignedInstitutionIds();
+
+            if ($scopedIds !== null) {
+                $query->where(function ($q) use ($scopedIds, $user) {
+                    $q->whereIn('institution_id', $scopedIds)
+                        ->orWhereNull('institution_id')
+                        ->orWhere(function ($subQ) use ($user) {
+                            $subQ->where('reporter_id', $user->id)
+                                 ->where('reporter_type', get_class($user));
+                        });
+                });
+            }
+        }
+
         // Filter to reports created by a specific manager.
         if ($request->filled('manager_id')) {
             $query->where('reporter_id', $request->input('manager_id'))

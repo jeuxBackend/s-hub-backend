@@ -77,6 +77,12 @@ class StudentController extends Controller
     {
         try {
             $this->assertInScope($id);
+            $ids = auth()->user()->assignedInstitutionIds();
+
+            $classroomRule = Rule::exists('classrooms', 'id');
+            if ($ids !== null) {
+                $classroomRule->where(fn($q) => $q->whereIn('institution_id', $ids));
+            }
 
             $data = $request->validate([
                 'first_name' => 'sometimes|string|max:255',
@@ -86,7 +92,7 @@ class StudentController extends Controller
                 'email' => 'sometimes|nullable|email|max:255',
                 'alternate_phone' => 'sometimes|nullable|string|max:255',
                 'alternate_email' => 'sometimes|nullable|email|max:255',
-                'classroom_id' => 'sometimes|exists:classrooms,id',
+                'classroom_id' => ['sometimes', $classroomRule],
                 'status' => 'sometimes|boolean',
             ]);
 

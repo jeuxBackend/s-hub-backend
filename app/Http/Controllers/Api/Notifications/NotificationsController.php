@@ -125,6 +125,11 @@ class NotificationsController extends Controller
     public function getUserNotifications(Request $request)
     {
         $user = auth()->user();
+
+        if ($user instanceof \App\Models\Admin) {
+            return $this->successResponse([], 'Notifications fetched successfully');
+        }
+
         $notifications = NotificationLog::where('user_id', $user->id)
             ->orderByDesc('created_at')
             ->get();
@@ -180,6 +185,11 @@ class NotificationsController extends Controller
     public function readNotification(Request $request, $id)
     {
         $user = auth()->user();
+
+        if ($user instanceof \App\Models\Admin) {
+            return $this->errorResponse('Notification not found', 404);
+        }
+
         $notification = NotificationLog::where('user_id', $user->id)->where('id', $id)->first();
         if (!$notification) {
             return $this->errorResponse('Notification not found', 404);
@@ -195,6 +205,10 @@ class NotificationsController extends Controller
     {
         try {
             $user = auth()->user();
+
+            if ($user instanceof \App\Models\Admin) {
+                return $this->successResponse(['marked_count' => 0], 'All notifications marked as read successfully');
+            }
 
             $updated = NotificationLog::where('user_id', $user->id)
                 ->where('is_read', false)
@@ -216,6 +230,10 @@ class NotificationsController extends Controller
     {
         try {
             $user = auth()->user();
+
+            if ($user instanceof \App\Models\Admin) {
+                return $this->successResponse(['unread_count' => 0], 'Unread notification count retrieved successfully');
+            }
 
             $count = NotificationLog::where('user_id', $user->id)
                 ->where('is_read', false)

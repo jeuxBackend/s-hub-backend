@@ -305,12 +305,13 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'active.user'])->group(function
 
         // Must come before the apiResource below, else {sub_admin} would swallow "permissions".
         Route::get('sub-admins/permissions', [SubAdminController::class, 'permissions'])->middleware('role:admin');
-        Route::apiResource('sub-admins', SubAdminController::class);
+        Route::apiResource('sub-admins', SubAdminController::class)->middleware('role:admin');
         Route::apiResource('manager-invoices', ManagerInvoiceController::class)->middleware('subadmin.permission:Managers');
+        Route::patch('manager-invoices/{id}/confirm', [ManagerInvoiceController::class, 'confirm'])->middleware('subadmin.permission:Managers');
 
         // Read-only views for Admin
         // Must come before the apiResource below, else {school} would swallow "names"/"pending".
-        Route::get('schools/names', [SchoolController::class, 'names'])->middleware('subadmin.permission:Schools');
+        Route::get('schools/names', [SchoolController::class, 'names'])->middleware('subadmin.permission:Schools,Teachers,Students');
         Route::get('schools/pending', [SchoolController::class, 'pending'])->middleware('subadmin.permission:School_Requests');
         Route::apiResource('schools', SchoolController::class)->only(['index', 'show', 'store', 'update', 'destroy'])->middleware('subadmin.permission:Schools');
         Route::patch('schools/{id}/approve', [SchoolController::class, 'approve'])->middleware('subadmin.permission:School_Requests');
@@ -320,7 +321,7 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'active.user'])->group(function
         Route::get('students/search', [AdminStudentController::class, 'search'])->middleware('subadmin.permission:Students');
         Route::apiResource('students', AdminStudentController::class)->only(['index', 'show', 'update', 'destroy'])->middleware('subadmin.permission:Students');
         Route::patch('schools/{id}/alert-feature', [SchoolController::class, 'toggleAlertFeature'])->middleware('subadmin.permission:Schools');
-        Route::get('schools/{id}/classrooms', [SchoolController::class, 'classrooms'])->middleware('subadmin.permission:Schools');
+        Route::get('schools/{id}/classrooms', [SchoolController::class, 'classrooms'])->middleware('subadmin.permission:Schools,Teachers,Students');
         Route::get('categories', [\App\Http\Controllers\Api\Admin\CategoryController::class, 'index'])->middleware('subadmin.permission:Schools');
         Route::post('categories', [\App\Http\Controllers\Api\Admin\CategoryController::class, 'store'])->middleware('subadmin.permission:Schools');
         Route::delete('categories/{category}', [\App\Http\Controllers\Api\Admin\CategoryController::class, 'destroy'])->middleware('subadmin.permission:Schools');
@@ -346,6 +347,8 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'active.user'])->group(function
 
         Route::get('dashboard-stats', [ManagerDashboardController::class, 'stats']);
         Route::get('my-invoices', [ActivitiesController::class, 'getInvoices']);
+        Route::get('my-invoices/{id}', [ActivitiesController::class, 'showInvoice']);
+        Route::post('my-invoices/{id}/submit-payment', [ActivitiesController::class, 'submitPayment']);
         Route::get('categories', [\App\Http\Controllers\Api\Admin\CategoryController::class, 'index']);
         Route::post('categories', [\App\Http\Controllers\Api\Admin\CategoryController::class, 'store']);
         Route::delete('categories/{category}', [\App\Http\Controllers\Api\Admin\CategoryController::class, 'destroy']);

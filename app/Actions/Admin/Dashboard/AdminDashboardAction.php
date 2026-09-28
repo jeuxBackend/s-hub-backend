@@ -14,50 +14,77 @@ use Illuminate\Support\Facades\Cache;
 class AdminDashboardAction
 {
     /**
-     * Get Admin Dashboard Statistics
+     * Get Admin Dashboard Statistics, scoped to $institutionIds when given
+     * (a restricted sub-admin's assigned schools), or platform-wide when
+     * null (admin, manager, or an unrestricted sub-admin).
      */
-    public function handle(): array
+    public function handle(?array $institutionIds = null): array
     {
-        return Cache::remember('admin_dashboard_stats', now()->addMinutes(5), function () {
+        $cacheKey = 'admin_dashboard_stats_' . ($institutionIds === null ? 'all' : md5(implode(',', $institutionIds)));
+
+        return Cache::remember($cacheKey, now()->addMinutes(5), function () use ($institutionIds) {
             $asOfLastMonth = now()->subMonth();
 
-            $parentIds = User::where('role', UserRole::Parent->value)->pluck('id')->all();
-            $teacherSchoolAdminIds = User::whereIn('role', [UserRole::Teacher->value, UserRole::SchoolAdmin->value])->pluck('id')->all();
-            $principalIds = User::where('role', UserRole::Principal->value)->pluck('id')->all();
+            $parentQuery = User::where('role', UserRole::Parent->value);
+            $teacherQuery = User::whereIn('role', [UserRole::Teacher->value, UserRole::SchoolAdmin->value]);
+            $principalQuery = User::where('role', UserRole::Principal->value);
+            $studentQuery = Student::query();
+            $institutionQuery = Institution::query();
+
+            if ($institutionIds !== null) {
+                $parentQuery->whereHas('guardianStudents', fn($q) => $q->whereIn('institution_id', $institutionIds));
+                $teacherQuery->whereIn('institution_id', $institutionIds);
+                $principalQuery->whereIn('institution_id', $institutionIds);
+                $studentQuery->whereIn('institution_id', $institutionIds);
+                $institutionQuery->whereIn('id', $institutionIds);
+            }
+
+            $parentIds = (clone $parentQuery)->pluck('id')->all();
+            $teacherSchoolAdminIds = (clone $teacherQuery)->pluck('id')->all();
+            $principalIds = (clone $principalQuery)->pluck('id')->all();
+            $studentIds = (clone $studentQuery)->pluck('id')->all();
+            $scopedInstitutionIds = $institutionIds ?? (clone $institutionQuery)->pluck('id')->all();
+
+            $userIdsInScope = $institutionIds === null
+                ? null
+                : array_values(array_unique(array_merge($parentIds, $teacherSchoolAdminIds, $principalIds)));
 
             return array_merge(
                 $this->bucket('users', User::class, $asOfLastMonth,
-                    User::where('status', true)->count(),
-                    User::where('status', false)->count()),
+                    $institutionIds === null ? User::where('status', true)->count() : User::whereIn('id', $userIdsInScope)->where('status', true)->count(),
+                    $institutionIds === null ? User::where('status', false)->count() : User::whereIn('id', $userIdsInScope)->where('status', false)->count(),
+                    $userIdsInScope),
 
                 $this->bucket('institutions', Institution::class, $asOfLastMonth,
-                    Institution::where('is_blocked', false)->count(),
-                    Institution::where('is_blocked', true)->count()),
+                    (clone $institutionQuery)->where('is_blocked', false)->count(),
+                    (clone $institutionQuery)->where('is_blocked', true)->count(),
+                    $institutionIds === null ? null : $scopedInstitutionIds),
 
                 $this->bucket('parents', User::class, $asOfLastMonth,
-                    User::where('role', UserRole::Parent->value)->where('status', true)->count(),
-                    User::where('role', UserRole::Parent->value)->where('status', false)->count(),
+                    (clone $parentQuery)->where('status', true)->count(),
+                    (clone $parentQuery)->where('status', false)->count(),
                     $parentIds),
 
                 $this->bucket('teachers', User::class, $asOfLastMonth,
-                    User::whereIn('role', [UserRole::Teacher->value, UserRole::SchoolAdmin->value])->where('status', true)->count(),
-                    User::whereIn('role', [UserRole::Teacher->value, UserRole::SchoolAdmin->value])->where('status', false)->count(),
+                    (clone $teacherQuery)->where('status', true)->count(),
+                    (clone $teacherQuery)->where('status', false)->count(),
                     $teacherSchoolAdminIds),
 
                 $this->bucket('principals', User::class, $asOfLastMonth,
-                    User::where('role', UserRole::Principal->value)->where('status', true)->count(),
-                    User::where('role', UserRole::Principal->value)->where('status', false)->count(),
+                    (clone $principalQuery)->where('status', true)->count(),
+                    (clone $principalQuery)->where('status', false)->count(),
                     $principalIds),
 
                 $this->bucket('students', Student::class, $asOfLastMonth,
-                    Student::where('status', true)->count(),
-                    Student::where('status', false)->count()),
+                    (clone $studentQuery)->where('status', true)->count(),
+                    (clone $studentQuery)->where('status', false)->count(),
+                    $institutionIds === null ? null : $studentIds),
 
-                $this->countriesStats($asOfLastMonth),
+                $this->countriesStats($asOfLastMonth, $institutionIds),
 
                 [
-                    'students_by_gender' => $this->genderBreakdown(Student::class),
-                    'teachers_by_gender' => $this->genderBreakdown(User::class, [UserRole::Teacher->value, UserRole::SchoolAdmin->value]),
+                    'students_by_gender' => $this->genderBreakdown(Student::class, null, $institutionIds),
+                    'teachers_by_gender' => $this->genderBreakdown(User::class, [UserRole::Teacher->value, UserRole::SchoolAdmin->value], $institutionIds),
                 ],
 
                 ['last_updated' => now()->toDateTimeString()]
@@ -96,14 +123,17 @@ class AdminDashboardAction
     /**
      * Distinct non-null institution regions, treated as "countries", plus
      * the change vs. how many distinct regions existed as of last month.
+     * Scoped to $institutionIds when given.
      */
-    private function countriesStats(Carbon $asOfLastMonth): array
+    private function countriesStats(Carbon $asOfLastMonth, ?array $institutionIds): array
     {
-        $currentCount = Institution::whereNotNull('region')->distinct()->count('region');
-        $lastMonthCount = Institution::whereNotNull('region')
-            ->where('created_at', '<=', $asOfLastMonth)
-            ->distinct()
-            ->count('region');
+        $base = Institution::whereNotNull('region');
+        if ($institutionIds !== null) {
+            $base->whereIn('id', $institutionIds);
+        }
+
+        $currentCount = (clone $base)->distinct()->count('region');
+        $lastMonthCount = (clone $base)->where('created_at', '<=', $asOfLastMonth)->distinct()->count('region');
 
         return [
             'total_countries' => $currentCount,
@@ -113,14 +143,19 @@ class AdminDashboardAction
 
     /**
      * Count male/female/other for the given model, optionally restricted to
-     * a set of roles (for the shared `users` table).
+     * a set of roles (for the shared `users` table) and/or a set of
+     * institution ids.
      */
-    private function genderBreakdown(string $modelClass, ?array $roles = null): array
+    private function genderBreakdown(string $modelClass, ?array $roles = null, ?array $institutionIds = null): array
     {
         $query = $modelClass::query();
 
         if ($roles !== null) {
             $query->whereIn('role', $roles);
+        }
+
+        if ($institutionIds !== null) {
+            $query->whereIn('institution_id', $institutionIds);
         }
 
         $counts = (clone $query)->whereNotNull('gender')->groupBy('gender')->selectRaw('gender, count(*) as aggregate')->pluck('aggregate', 'gender');

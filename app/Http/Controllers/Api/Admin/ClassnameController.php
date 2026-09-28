@@ -96,8 +96,9 @@ class ClassnameController extends Controller
     }
 
     /**
-     * Admins/sub-admins manage class names for any institution. Managers are
-     * restricted to institutions they own (Institution.manager_id).
+     * Admins manage class names for any institution. Managers are
+     * restricted to institutions they own (Institution.manager_id). A
+     * restricted sub-admin is limited to its assigned schools.
      */
     private function authorizeInstitution(int $institutionId): void
     {
@@ -111,6 +112,13 @@ class ClassnameController extends Controller
             if (!$owns) {
                 throw new AuthorizationException('You do not manage this institution.');
             }
+
+            return;
+        }
+
+        $ids = $admin->assignedInstitutionIds();
+        if ($ids !== null && !in_array($institutionId, $ids, true)) {
+            throw new AuthorizationException('You do not manage this institution.');
         }
     }
 }

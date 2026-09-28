@@ -63,11 +63,11 @@ trait ResponsesTrait
             ]);
         }
 
-        return $this->errorResponse(
-            $message,
-            $code,
-            config('app.debug') ? ['trace' => $e->getMessage()] : null
-        );
+        $errors = $e instanceof ValidationException
+            ? $e->errors()
+            : (config('app.debug') ? ['trace' => $e->getMessage()] : null);
+
+        return $this->errorResponse($message, $code, $errors);
     }
 
     private function getPaginationMeta(LengthAwarePaginator $paginator): array
@@ -95,6 +95,10 @@ trait ResponsesTrait
 
     private function getExceptionMessage(Throwable $e): string
     {
+        if ($e instanceof ValidationException) {
+            return collect($e->errors())->flatten()->first() ?? 'Validation failed';
+        }
+
         if (config('app.debug')) {
             return $e->getMessage();
         }

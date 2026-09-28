@@ -10,7 +10,7 @@ class ActivityControler extends Controller
 {
     public function dashboard(AdminDashboardAction $action)
     {
-        $dashboardData = $action->handle();
+        $dashboardData = $action->handle(auth()->user()->assignedInstitutionIds());
         return $this->successResponse($dashboardData, 'Admin dashboard data');
     }
 }

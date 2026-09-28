@@ -76,11 +76,23 @@ class UserController extends Controller
     {
         try {
             $user = auth()->user();
-            
+
             if (!$user) {
                 return $this->errorResponse('User not authenticated', 401);
             }
-            
+
+            if ($user instanceof \App\Models\Admin) {
+                $user->load('assignedSchools:id,name,subadmin_id');
+
+                return $this->successResponse([
+                    'user' => new \App\Http\Resources\AdminResource($user),
+                    'role' => $user->role->value,
+                    'is_registered' => !is_null($user->password),
+                    'unread_notification_count' => 0,
+                    'ongoing_class' => null,
+                ], 'Authenticated user data retrieved successfully');
+            }
+
             // Load relationships based on user role similar to login action
             if (in_array($user->role, [\App\Enums\UserRole::Principal, \App\Enums\UserRole::Teacher, \App\Enums\UserRole::SchoolAdmin, \App\Enums\UserRole::Parent], true)) {
                 $user->load(['institution']);
@@ -154,7 +166,17 @@ class UserController extends Controller
                 $data['profile_picture'] = $this->handleUserFileUpload($request, 'profile_picture', 'profile_pictures');
             }
 
-            $updated = $updateUser->handle(auth()->user()->id, $data, auth()->user());
+            $authUser = auth()->user();
+
+            if ($authUser instanceof \App\Models\Admin) {
+                $updated = $this->updateAdminOwnProfile($authUser, $data);
+                return $this->successResponse(
+                    ['user' => new \App\Http\Resources\AdminResource($updated)],
+                    'Profile updated successfully'
+                );
+            }
+
+            $updated = $updateUser->handle($authUser->id, $data, $authUser);
             return $this->successResponse(
                 [
                     'user' => new UserResource($updated),
@@ -164,6 +186,28 @@ class UserController extends Controller
         } catch (Throwable $e) {
             return $this->exceptionResponse($e);
         }
+    }
+
+    /**
+     * Admin/sub-admin/manager updating their own profile via the shared
+     * update-profile endpoint. Only maps the fields UpdateUserRequest
+     * actually validates onto the Admin model's own column names.
+     */
+    private function updateAdminOwnProfile(\App\Models\Admin $admin, array $data): \App\Models\Admin
+    {
+        $allowed = array_intersect_key($data, array_flip(['first_name', 'sure_name', 'last_name']));
+
+        if (!empty($data['profile_picture'])) {
+            $allowed['profile_image'] = $data['profile_picture'];
+        }
+
+        if (!empty($data['password'])) {
+            $allowed['password'] = \Illuminate\Support\Facades\Hash::make($data['password']);
+        }
+
+        $admin->update($allowed);
+
+        return $admin;
     }
 
     public function destroy(User $user, DeleteAccountAction $deleteAccount)

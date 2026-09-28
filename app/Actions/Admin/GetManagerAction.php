@@ -53,6 +53,11 @@ class GetManagerAction
             $isActive = in_array(strtolower((string) $data['status']), ['active', '1', 'true'], true);
             $query->where('status', $isActive ? 'active' : 'inactive');
         }
+        if (array_key_exists('institution_ids', $data) && $data['institution_ids'] !== null) {
+            $query->whereHas('institutions', function ($q) use ($data) {
+                $q->whereIn('id', $data['institution_ids']);
+            });
+        }
 
         return $query->orderBy('first_name', 'desc')->paginate($data['per_page'] ?? 20);
     }

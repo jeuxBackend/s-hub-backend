@@ -10,9 +10,16 @@ class CategoryController extends Controller
 {
     public function index()
     {
-        $categories = Category::orderBy('name')->get();
+        $query = Category::orderBy('name');
 
-        return $this->successResponse($categories, 'Institution categories retrieved successfully');
+        $ids = auth()->user()->assignedInstitutionIds();
+        if ($ids !== null) {
+            $query->whereHas('institutions', function ($q) use ($ids) {
+                $q->whereIn('id', $ids);
+            });
+        }
+
+        return $this->successResponse($query->get(), 'Institution categories retrieved successfully');
     }
 
     public function store(Request $request)
