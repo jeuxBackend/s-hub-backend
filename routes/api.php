@@ -14,6 +14,7 @@ use App\Http\Controllers\Api\Manager\SchoolController as ManagerSchoolController
 use App\Http\Controllers\Api\Manager\PrincipalController as ManagerPrincipalController;
 use App\Http\Controllers\Api\Manager\StudentController as ManagerStudentController;
 use App\Http\Controllers\Api\Manager\ManagerDashboardController;
+use App\Http\Controllers\Api\Manager\TuitionController;
 use App\Http\Controllers\Api\Notifications\NotificationsController;
 use App\Http\Controllers\Api\Alerts\SchoolAlertController;
 use App\Http\Controllers\Auth\AdminLoginController;
@@ -336,7 +337,7 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'active.user'])->group(function
         Route::apiResource('schools', ManagerSchoolController::class);
         Route::get('schools/{id}/classrooms', [ManagerSchoolController::class, 'classrooms']);
         Route::apiResource('principals', ManagerPrincipalController::class);
-        Route::apiResource('teachers', ManagerTeacherController::class)->only(['index', 'show']);
+        Route::apiResource('teachers', ManagerTeacherController::class)->only(['index', 'show', 'store', 'update', 'destroy']);
         Route::apiResource('students', ManagerStudentController::class)->only(['index', 'show']);
         Route::apiResource('parents', \App\Http\Controllers\Api\Manager\GuardianController::class)->only(['index']);
 
@@ -346,6 +347,8 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'active.user'])->group(function
         Route::patch('parents/{id}/toggle-block', [\App\Http\Controllers\Api\Manager\GuardianController::class, 'toggleBlock']);
 
         Route::get('dashboard-stats', [ManagerDashboardController::class, 'stats']);
+        Route::get('dashboard/regions', [ManagerDashboardController::class, 'regions']);
+        Route::get('tuition', [TuitionController::class, 'index']);
         Route::get('my-invoices', [ActivitiesController::class, 'getInvoices']);
         Route::get('my-invoices/{id}', [ActivitiesController::class, 'showInvoice']);
         Route::post('my-invoices/{id}/submit-payment', [ActivitiesController::class, 'submitPayment']);
