@@ -49,44 +49,77 @@ class GeneralReportController extends Controller
             'per_page' => 'nullable|integer|min:1|max:100',
             'institution_id' => 'nullable|integer|exists:institutions,id',
             'reporter_role' => ['nullable', Rule::in([...UserRole::values(), ...AdminRole::values()])],
+            'scope' => ['nullable', Rule::in(['mine', 'assigned'])],
         ]);
 
         $user = auth()->user();
         $role = $user->role->value;
         $institutionId = $user->institution_id;
+        $scope = $request->input('scope');
+
+        $ownReportsClause = function ($subQ) use ($user) {
+            $subQ->where('reporter_id', $user->id)
+                 ->where('reporter_type', get_class($user));
+        };
+
+        $assignedReportsClause = function ($subQ) use ($user, $role, $institutionId) {
+            $subQ->whereIn('reported_to_role', $this->visibleRolesFor($role));
+
+            if ($role === UserRole::Principal->value || $role === UserRole::Teacher->value || $role === UserRole::Parent->value) {
+                $subQ->where('institution_id', $institutionId);
+            } elseif ($role === AdminRole::Manager->value) {
+                // A manager only sees reports from institutions it
+                // actually manages, plus institution-less reports
+                // (e.g. admin/sub-admin sending a platform-wide note).
+                $subQ->where(function ($mgrQ) use ($user) {
+                    $mgrQ->whereNull('institution_id')
+                        ->orWhereHas('institution', function ($instQ) use ($user) {
+                            $instQ->where('manager_id', $user->id);
+                        });
+                });
+            }
+            // Admin and Subadmin can see all reports assigned to them.
+        };
 
         $query = GeneralReport::with(['reporter', 'resolvedBy', 'institution'])
-            ->where(function ($q) use ($user, $role, $institutionId) {
-                // User can see reports they created
-                $q->where(function ($subQ) use ($user) {
-                    $subQ->where('reporter_id', $user->id)
-                         ->where('reporter_type', get_class($user));
-                });
-
-                // User can see reports assigned to their role
-                $q->orWhere(function ($subQ) use ($role, $institutionId) {
-                    $subQ->whereIn('reported_to_role', $this->visibleRolesFor($role));
-
-                    if ($role === UserRole::Principal->value || $role === UserRole::Teacher->value || $role === UserRole::Parent->value) {
-                        $subQ->where('institution_id', $institutionId);
-                    }
-                    // For manager, we should ideally check all institutions they manage,
-                    // but if manager manages multiple, it requires more complex logic.
-                    // For simplicity, if institution_id is null, it's global.
-                    // Admin and Subadmin can see all reports assigned to them.
-                });
+            ->where(function ($q) use ($scope, $ownReportsClause, $assignedReportsClause) {
+                if ($scope === 'mine') {
+                    // Only reports this user authored themselves.
+                    $q->where($ownReportsClause);
+                } elseif ($scope === 'assigned') {
+                    // Only reports assigned to this user's role (excludes their own).
+                    $q->where($assignedReportsClause);
+                } else {
+                    // Default: both, same as before this filter existed.
+                    $q->where($ownReportsClause)->orWhere($assignedReportsClause);
+                }
             });
 
-        // A restricted sub-admin only sees reports for its assigned schools
-        // (plus school-less/manager reports, and its own reports regardless
-        // of scope). No-op for admin, manager, or an unrestricted sub-admin.
+        // A restricted sub-admin only sees reports for its assigned schools,
+        // plus manager reports where that manager owns one of those schools
+        // (manager reports carry no institution_id of their own), plus its
+        // own reports regardless of scope. No-op for admin, manager, or an
+        // unrestricted sub-admin.
         if ($user instanceof Admin && $user->role === AdminRole::SubAdmin) {
             $scopedIds = $user->assignedInstitutionIds();
 
             if ($scopedIds !== null) {
-                $query->where(function ($q) use ($scopedIds, $user) {
+                $allowedManagerIds = Admin::where('role', AdminRole::Manager)
+                    ->whereHas('institutions', fn($q) => $q->whereIn('id', $scopedIds))
+                    ->pluck('id');
+
+                $query->where(function ($q) use ($scopedIds, $user, $allowedManagerIds) {
                     $q->whereIn('institution_id', $scopedIds)
-                        ->orWhereNull('institution_id')
+                        ->orWhere(function ($noInstQ) use ($allowedManagerIds) {
+                            $noInstQ->whereNull('institution_id')
+                                ->where(function ($reporterQ) use ($allowedManagerIds) {
+                                    $reporterQ->where('reporter_type', '!=', Admin::class)
+                                        ->orWhereIn('reporter_id', $allowedManagerIds)
+                                        ->orWhereHasMorph('reporter', [Admin::class], function ($q2) {
+                                            $q2->where('role', '!=', AdminRole::Manager->value);
+                                        });
+                                });
+                        })
                         ->orWhere(function ($subQ) use ($user) {
                             $subQ->where('reporter_id', $user->id)
                                  ->where('reporter_type', get_class($user));

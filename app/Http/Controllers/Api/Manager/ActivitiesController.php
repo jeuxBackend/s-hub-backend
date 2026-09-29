@@ -6,6 +6,7 @@ use App\Actions\Invoice\SubmitManagerInvoicePaymentAction;
 use App\Http\Controllers\Controller;
 use App\Models\ManagerInvoice;
 use Illuminate\Http\Request;
+use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Validation\ValidationException;
 
 class ActivitiesController extends Controller
@@ -15,14 +16,17 @@ class ActivitiesController extends Controller
     ) {
     }
 
-    public function getInvoices()
+    public function getInvoices(Request $request)
     {
         $invoices = ManagerInvoice::with(['institution', 'confirmedBy'])
             ->where('manager_id', auth()->user()->id)
             ->latest()
-            ->get();
+            ->paginate($request->input('per_page', 20));
 
-        return $this->successResponse($invoices, 'Invoices retrieved successfully');
+        return $this->paginatedResponse(
+            JsonResource::collection($invoices),
+            'Invoices retrieved successfully'
+        );
     }
 
     public function showInvoice(string $id)
