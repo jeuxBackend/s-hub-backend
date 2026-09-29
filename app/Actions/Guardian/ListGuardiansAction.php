@@ -11,12 +11,22 @@ class ListGuardiansAction
     {
         $requester = auth()->user();
 
+        $registrationStatus = $request->input('registration_status');
+
         return User::query()
             ->where('role', 'parent')
             ->where('institution_id', $requester->institution_id)
             ->when(
                 in_array($requester->role?->value ?? null, ['principal', 'school-admin'], true),
-                fn($query) => $query->whereNotNull('password')
+                function ($query) use ($registrationStatus) {
+                    if ($registrationStatus === 'unregistered') {
+                        $query->whereNull('password');
+                    } elseif ($registrationStatus !== 'all') {
+                        // Default (and explicit 'registered'): unchanged
+                        // from before this filter existed.
+                        $query->whereNotNull('password');
+                    }
+                }
             )
             ->with([
                 'guardianStudents.classroom',
