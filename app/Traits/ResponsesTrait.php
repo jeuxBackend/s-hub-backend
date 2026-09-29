@@ -99,13 +99,16 @@ trait ResponsesTrait
             return collect($e->errors())->flatten()->first() ?? 'Validation failed';
         }
 
+        if ($e instanceof AuthorizationException) {
+            return $e->getMessage() ?: 'You are not authorized to perform this action';
+        }
+
         if (config('app.debug')) {
             return $e->getMessage();
         }
 
         return match (true) {
             $e instanceof ModelNotFoundException => 'Record not found',
-            $e instanceof AuthorizationException => 'You are not authorized to perform this action',
             default => 'Something went wrong',
         };
     }

@@ -195,7 +195,11 @@ class UserController extends Controller
      */
     private function updateAdminOwnProfile(\App\Models\Admin $admin, array $data): \App\Models\Admin
     {
-        $allowed = array_intersect_key($data, array_flip(['first_name', 'sure_name', 'last_name']));
+        $allowed = array_intersect_key($data, array_flip(['first_name', 'last_name']));
+
+        if (array_key_exists('sur_name', $data)) {
+            $allowed['sure_name'] = $data['sur_name'];
+        }
 
         if (!empty($data['profile_picture'])) {
             $allowed['profile_image'] = $data['profile_picture'];
