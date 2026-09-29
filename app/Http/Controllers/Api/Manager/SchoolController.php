@@ -9,6 +9,7 @@ use App\Actions\Institution\UpdateSchoolAction;
 use App\Http\Controllers\Controller;
 use App\Models\Classroom;
 use App\Models\Institution;
+use App\Models\Subject;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Validation\Rule;
@@ -85,6 +86,23 @@ class SchoolController extends Controller
             ->get();
 
         return $this->successResponse($classrooms, 'School classrooms retrieved successfully');
+    }
+
+    /**
+     * Subjects taught in one classroom — must belong to one of this
+     * manager's own schools.
+     */
+    public function classroomSubjects($id)
+    {
+        $classroom = Classroom::whereHas('institution', fn ($q) => $q->where('manager_id', auth()->id()))
+            ->findOrFail($id);
+
+        $subjects = Subject::where('classroom_id', $classroom->id)
+            ->select(['id', 'name', 'code'])
+            ->orderBy('name')
+            ->get();
+
+        return $this->successResponse($subjects, 'Classroom subjects retrieved successfully');
     }
 
     public function update(Request $request, $id)

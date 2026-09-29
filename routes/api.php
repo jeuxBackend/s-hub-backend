@@ -15,6 +15,7 @@ use App\Http\Controllers\Api\Manager\PrincipalController as ManagerPrincipalCont
 use App\Http\Controllers\Api\Manager\StudentController as ManagerStudentController;
 use App\Http\Controllers\Api\Manager\ManagerDashboardController;
 use App\Http\Controllers\Api\Manager\TuitionController;
+use App\Http\Controllers\Api\Manager\AcademicPerformanceController;
 use App\Http\Controllers\Api\Notifications\NotificationsController;
 use App\Http\Controllers\Api\Alerts\SchoolAlertController;
 use App\Http\Controllers\Auth\AdminLoginController;
@@ -336,6 +337,7 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'active.user'])->group(function
         Route::get('schools/names', [ManagerSchoolController::class, 'names']);
         Route::apiResource('schools', ManagerSchoolController::class);
         Route::get('schools/{id}/classrooms', [ManagerSchoolController::class, 'classrooms']);
+        Route::get('classrooms/{id}/subjects', [ManagerSchoolController::class, 'classroomSubjects']);
         Route::apiResource('principals', ManagerPrincipalController::class);
         Route::apiResource('teachers', ManagerTeacherController::class)->only(['index', 'show', 'store', 'update', 'destroy']);
         Route::apiResource('students', ManagerStudentController::class)->only(['index', 'show', 'store', 'update', 'destroy']);
@@ -349,6 +351,12 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'active.user'])->group(function
         Route::get('dashboard-stats', [ManagerDashboardController::class, 'stats']);
         Route::get('dashboard/regions', [ManagerDashboardController::class, 'regions']);
         Route::get('tuition', [TuitionController::class, 'index']);
+
+        Route::prefix('academic-performance')->group(function () {
+            Route::get('filters', [AcademicPerformanceController::class, 'filters']);
+            Route::get('students', [AcademicPerformanceController::class, 'students']);
+            Route::get('trend', [AcademicPerformanceController::class, 'trend']);
+        });
         Route::get('my-invoices', [ActivitiesController::class, 'getInvoices']);
         Route::get('my-invoices/{id}', [ActivitiesController::class, 'showInvoice']);
         Route::post('my-invoices/{id}/submit-payment', [ActivitiesController::class, 'submitPayment']);
