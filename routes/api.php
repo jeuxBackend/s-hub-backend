@@ -338,7 +338,7 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'active.user'])->group(function
         Route::get('schools/{id}/classrooms', [ManagerSchoolController::class, 'classrooms']);
         Route::apiResource('principals', ManagerPrincipalController::class);
         Route::apiResource('teachers', ManagerTeacherController::class)->only(['index', 'show', 'store', 'update', 'destroy']);
-        Route::apiResource('students', ManagerStudentController::class)->only(['index', 'show']);
+        Route::apiResource('students', ManagerStudentController::class)->only(['index', 'show', 'store', 'update', 'destroy']);
         Route::apiResource('parents', \App\Http\Controllers\Api\Manager\GuardianController::class)->only(['index']);
 
         // Moderation
