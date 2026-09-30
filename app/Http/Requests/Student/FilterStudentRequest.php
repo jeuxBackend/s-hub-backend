@@ -18,6 +18,7 @@ class FilterStudentRequest extends FormRequest
             'student_name'   => ['nullable', 'string'],
             'class_id'       => ['nullable', 'exists:classrooms,id'],
             'tuition_status' => ['nullable', 'in:paid,unpaid,partial'],
+            'status'         => ['nullable', 'boolean'],
             'gender'         => ['nullable', 'in:' . implode(',', GenderType::values())],
             'age_group'      => [
                 'nullable',

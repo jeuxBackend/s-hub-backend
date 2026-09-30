@@ -130,6 +130,9 @@ class ListStudentsAction
             ->when(!empty($filters['class_id']), function ($q) use ($filters) {
                 $q->where('classroom_id', $filters['class_id']);
             })
+            ->when(isset($filters['status']) && $filters['status'] !== '', function ($q) use ($filters) {
+                $q->where('status', filter_var($filters['status'], FILTER_VALIDATE_BOOLEAN));
+            })
             ->when(!empty($filters['gender']), function ($q) use ($filters) {
                 $q->where('gender', $filters['gender']);
             })
@@ -152,7 +155,10 @@ class ListStudentsAction
                 $q->where(function ($nameQuery) use ($search) {
                     $nameQuery->whereRaw('LOWER(first_name) LIKE ?', ['%' . $search . '%'])
                         ->orWhereRaw('LOWER(last_name) LIKE ?', ['%' . $search . '%'])
-                        ->orWhereRaw('LOWER(sur_name) LIKE ?', ['%' . $search . '%']);
+                        ->orWhereRaw('LOWER(sur_name) LIKE ?', ['%' . $search . '%'])
+                        ->orWhereRaw('LOWER(email) LIKE ?', ['%' . $search . '%'])
+                        ->orWhereRaw('LOWER(student_phone_number) LIKE ?', ['%' . $search . '%'])
+                        ->orWhereRaw('LOWER(registration_number) LIKE ?', ['%' . $search . '%']);
                 });
             })
             ->when(!empty($filters['tuition_status']), function ($q) use ($filters) {

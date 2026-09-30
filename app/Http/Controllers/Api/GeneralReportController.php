@@ -7,6 +7,7 @@ use App\Enums\ReportStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Admin;
 use App\Models\GeneralReport;
+use App\Models\Institution;
 use App\Models\User;
 use App\Http\Resources\GeneralReportResource;
 use Illuminate\Http\Request;
@@ -50,6 +51,7 @@ class GeneralReportController extends Controller
             'institution_id' => 'nullable|integer|exists:institutions,id',
             'reporter_role' => ['nullable', Rule::in([...UserRole::values(), ...AdminRole::values()])],
             'scope' => ['nullable', Rule::in(['mine', 'assigned'])],
+            'is_read' => 'nullable|boolean',
         ]);
 
         $user = auth()->user();
@@ -147,6 +149,14 @@ class GeneralReportController extends Controller
 
         if ($request->filled('institution_id')) {
             $query->where('institution_id', $request->input('institution_id'));
+        }
+
+        if ($request->has('is_read')) {
+            if ($request->boolean('is_read')) {
+                $query->whereNotNull('read_at');
+            } else {
+                $query->whereNull('read_at');
+            }
         }
 
         if ($request->filled('reporter_role')) {
@@ -287,6 +297,14 @@ class GeneralReportController extends Controller
         // Check institution logic for assignee
         if (in_array($user->role->value, [UserRole::Principal->value, UserRole::Teacher->value, UserRole::Parent->value]) && $report->institution_id !== $user->institution_id) {
             return $this->errorResponse('Unauthorized to update this report.', 403);
+        } elseif ($user instanceof Admin && $user->role === AdminRole::Manager) {
+            // A manager can only resolve reports from a school it actually manages.
+            $ownsInstitution = $report->institution_id !== null
+                && Institution::where('id', $report->institution_id)->where('manager_id', $user->id)->exists();
+
+            if (!$ownsInstitution) {
+                return $this->errorResponse('Unauthorized to update this report.', 403);
+            }
         }
 
         $validated = $request->validate([
@@ -346,6 +364,16 @@ class GeneralReportController extends Controller
 
         if (!$isAssignee) {
             return $this->errorResponse('Unauthorized. Only the assigned role can mark this report read.', 403);
+        }
+
+        if ($user instanceof Admin && $user->role === AdminRole::Manager) {
+            // A manager can only mark read reports from a school it actually manages.
+            $ownsInstitution = $report->institution_id !== null
+                && Institution::where('id', $report->institution_id)->where('manager_id', $user->id)->exists();
+
+            if (!$ownsInstitution) {
+                return $this->errorResponse('Unauthorized. Only the assigned role can mark this report read.', 403);
+            }
         }
 
         if ($report->read_at === null) {

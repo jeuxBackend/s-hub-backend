@@ -31,6 +31,7 @@ class Admin extends Authenticatable
         'profile_image',
         'stripe_connect_account_id',
         'stripe_onboarding_completed',
+        'password_changed_at',
     ];
 
     protected $hidden = [
@@ -42,6 +43,7 @@ class Admin extends Authenticatable
         'region' => 'array',
         'role' => \App\Enums\AdminRole::class,
         'stripe_onboarding_completed' => 'boolean',
+        'password_changed_at' => 'datetime',
     ];
 
     public function getNameAttribute()

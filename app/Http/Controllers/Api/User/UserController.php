@@ -195,7 +195,7 @@ class UserController extends Controller
      */
     private function updateAdminOwnProfile(\App\Models\Admin $admin, array $data): \App\Models\Admin
     {
-        $allowed = array_intersect_key($data, array_flip(['first_name', 'last_name']));
+        $allowed = array_intersect_key($data, array_flip(['first_name', 'last_name', 'email', 'phone_number']));
 
         if (array_key_exists('sur_name', $data)) {
             $allowed['sure_name'] = $data['sur_name'];
@@ -207,6 +207,7 @@ class UserController extends Controller
 
         if (!empty($data['password'])) {
             $allowed['password'] = \Illuminate\Support\Facades\Hash::make($data['password']);
+            $allowed['password_changed_at'] = now();
         }
 
         $admin->update($allowed);

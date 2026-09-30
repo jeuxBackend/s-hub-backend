@@ -27,6 +27,7 @@ class AdminResource extends JsonResource
             'region' => $this->region,
             'permissions' => $this->permissions,
             'profile_image' => $this->profile_image,
+            'password_changed_at' => $this->password_changed_at?->toIso8601String(),
         ];
     }
 }

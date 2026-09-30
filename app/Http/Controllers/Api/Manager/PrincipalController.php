@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Manager;
 
 use App\Actions\Manager\CreatePrincipalAction;
 use App\Actions\Manager\UpdatePrincipalAction;
+use App\Actions\User\ToggleUserStatusAction;
 use App\Http\Controllers\Controller;
 use App\Models\Institution;
 use App\Models\User;
@@ -26,6 +27,17 @@ class PrincipalController extends Controller
             ->whereHas('institution', function ($query) use ($managerId) {
                 $query->where('manager_id', $managerId);
             })
+            ->when($request->filled('name'), function ($query) use ($request) {
+                $search = $request->input('name');
+                $query->where(function ($q) use ($search) {
+                    $q->where('first_name', 'like', "%{$search}%")
+                        ->orWhere('last_name', 'like', "%{$search}%")
+                        ->orWhere('sur_name', 'like', "%{$search}%");
+                });
+            })
+            ->when($request->filled('email'), fn ($query) => $query->where('email', 'like', '%' . $request->input('email') . '%'))
+            ->when($request->filled('institution_id'), fn ($query) => $query->where('institution_id', $request->input('institution_id')))
+            ->when($request->has('status'), fn ($query) => $query->where('status', $request->boolean('status')))
             ->with('institution')
             ->orderBy('id', 'desc')
             ->paginate($request->input('per_page', 20));
@@ -46,15 +58,21 @@ class PrincipalController extends Controller
             'phone_number' => 'required|string|unique:users,phone_number',
             'password' => 'required|string|min:8',
             'institution_id' => 'required|exists:institutions,id',
+            'profile_picture' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
+
+        if ($request->hasFile('profile_picture')) {
+            $data['profile_picture'] = $this->handleUserFileUpload($request, 'profile_picture', 'profile_pictures');
+        }
 
         $school = Institution::where('manager_id', auth()->id())->findOrFail($data['institution_id']);
 
         if ($school->status !== 'approved') {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Cannot add a principal to a pending or rejected school.'
-            ], 403);
+            return $this->errorResponse('Cannot add a principal to a pending or rejected school.', 403);
+        }
+
+        if (User::where('role', UserRole::Principal)->where('institution_id', $school->id)->exists()) {
+            return $this->errorResponse('This school already has a principal assigned.', 422);
         }
 
         $principal = $this->createPrincipalAction->handle($data, $data['institution_id']);
@@ -94,21 +112,45 @@ class PrincipalController extends Controller
             'phone_number' => 'sometimes|string|unique:users,phone_number,' . $id,
             'password' => 'sometimes|string|min:8',
             'institution_id' => 'sometimes|exists:institutions,id',
+            'profile_picture' => 'sometimes|nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
+
+        if ($request->hasFile('profile_picture')) {
+            $data['profile_picture'] = $this->handleUserFileUpload($request, 'profile_picture', 'profile_pictures');
+        }
 
         if (isset($data['institution_id'])) {
             $school = Institution::where('manager_id', $managerId)->findOrFail($data['institution_id']);
             if ($school->status !== 'approved') {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'Cannot assign a principal to a pending or rejected school.'
-                ], 403);
+                return $this->errorResponse('Cannot assign a principal to a pending or rejected school.', 403);
+            }
+
+            if ((int) $data['institution_id'] !== (int) $principal->institution_id
+                && User::where('role', UserRole::Principal)->where('institution_id', $school->id)->exists()) {
+                return $this->errorResponse('This school already has a principal assigned.', 422);
             }
         }
 
         $updatedPrincipal = $this->updatePrincipalAction->handle($principal, $data);
+        $updatedPrincipal->load('institution');
 
         return $this->successResponse($updatedPrincipal, 'Principal updated successfully');
+    }
+
+    public function toggleBlock($id, ToggleUserStatusAction $action)
+    {
+        $managerId = auth()->id();
+        User::where('role', UserRole::Principal)
+            ->where('id', $id)
+            ->whereHas('institution', function ($query) use ($managerId) {
+                $query->where('manager_id', $managerId);
+            })
+            ->firstOrFail();
+
+        $principal = $action->handle($id);
+        $principal->load('institution');
+
+        return $this->successResponse($principal, 'Principal status toggled successfully');
     }
 
     public function destroy($id)

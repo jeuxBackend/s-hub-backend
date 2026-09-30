@@ -347,6 +347,7 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'active.user'])->group(function
         Route::patch('students/{id}/toggle-block', [ManagerStudentController::class, 'toggleBlockStudent']);
         Route::patch('teachers/{id}/toggle-block', [ManagerTeacherController::class, 'toggleBlock']);
         Route::patch('parents/{id}/toggle-block', [\App\Http\Controllers\Api\Manager\GuardianController::class, 'toggleBlock']);
+        Route::patch('principals/{id}/toggle-block', [ManagerPrincipalController::class, 'toggleBlock']);
 
         Route::get('dashboard-stats', [ManagerDashboardController::class, 'stats']);
         Route::get('dashboard/regions', [ManagerDashboardController::class, 'regions']);

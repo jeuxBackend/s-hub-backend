@@ -17,9 +17,15 @@ class UpdateUserRequest extends FormRequest
     {
         $ignoredUserId = $this->route('user')?->id ?? $this->user()?->id;
 
+        // An Admin/SubAdmin/Manager caller (self-service /update-profile only
+        // — there's no admin route-model-bound equivalent) lives in the
+        // `admins` table, not `users`, so its own email/phone must be
+        // checked for uniqueness there instead.
+        $uniqueTable = $this->user() instanceof \App\Models\Admin ? 'admins' : 'users';
+
         return [
-            'email' => ['nullable', 'email', Rule::unique('users')->ignore($ignoredUserId)],
-            'phone_number' => ['nullable', 'string', Rule::unique('users')->ignore($ignoredUserId)],
+            'email' => ['nullable', 'email', Rule::unique($uniqueTable)->ignore($ignoredUserId)],
+            'phone_number' => ['nullable', 'string', Rule::unique($uniqueTable)->ignore($ignoredUserId)],
             'emergency_number' => ['nullable', 'string', 'max:100'],
             'emergency_contact_name' => ['nullable', 'string', 'max:100'],
             'password' => ['nullable', 'string', 'min:6', 'confirmed'],

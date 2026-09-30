@@ -11,6 +11,7 @@ class GeneralReportResource extends JsonResource
     {
         return [
             'id' => $this->id,
+            'reporter_type' => $this->reporter_type === \App\Models\Admin::class ? 'admin' : 'user',
             'reporter' => [
                 'id' => $this->reporter->id ?? null,
                 'first_name' => $this->reporter->first_name ?? null,

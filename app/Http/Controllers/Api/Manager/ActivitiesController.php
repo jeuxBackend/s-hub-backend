@@ -18,14 +18,36 @@ class ActivitiesController extends Controller
 
     public function getInvoices(Request $request)
     {
+        $request->validate([
+            'status' => 'nullable|in:pending,pending_confirmation,paid,overdue',
+            'per_page' => 'nullable|integer|min:1|max:100',
+        ]);
+
+        $managerId = auth()->id();
+
+        $totals = [
+            'outstanding' => (float) ManagerInvoice::where('manager_id', $managerId)
+                ->whereIn('status', ['pending', 'overdue'])
+                ->sum('total_amount'),
+            'awaiting_confirmation' => (float) ManagerInvoice::where('manager_id', $managerId)
+                ->where('status', 'pending_confirmation')
+                ->sum('total_amount'),
+            'paid' => (float) ManagerInvoice::where('manager_id', $managerId)
+                ->where('status', 'paid')
+                ->sum('total_amount'),
+        ];
+
         $invoices = ManagerInvoice::with(['institution', 'confirmedBy'])
-            ->where('manager_id', auth()->user()->id)
+            ->where('manager_id', $managerId)
+            ->when($request->filled('status'), fn ($q) => $q->where('status', $request->input('status')))
             ->latest()
             ->paginate($request->input('per_page', 20));
 
         return $this->paginatedResponse(
             JsonResource::collection($invoices),
-            'Invoices retrieved successfully'
+            'Invoices retrieved successfully',
+            200,
+            ['totals' => $totals]
         );
     }
 

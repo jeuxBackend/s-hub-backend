@@ -34,18 +34,34 @@ class StudentController extends Controller
         $data['school_ids'] = $this->managerInstitutionIds();
 
         $students = $this->listStudentsAction->handle($data);
+        $genderCounts = $this->listStudentsAction->countsByGender($data);
+
         return $this->paginatedResponse(
             StudentResource::collection($students),
-            'Students retrieved successfully'
+            'Students retrieved successfully',
+            200,
+            ['gender_counts' => $genderCounts]
         );
     }
+
+    private const DETAIL_RELATIONS = [
+        'institution',
+        'classroom',
+        'classroom.subjects',
+        'guardian',
+        'guardian.authorizedPickup',
+        'studentInvoices',
+        'studentGrades',
+        'attendanceRecords',
+        'feeRecords',
+    ];
 
     public function show($id)
     {
         $student = $this->assertInScope($id);
-        $student->load(['institution', 'classroom', 'guardian']);
+        $student->load(self::DETAIL_RELATIONS);
 
-        return $this->successResponse($student, 'Student retrieved successfully');
+        return $this->successResponse(new StudentResource($student), 'Student retrieved successfully');
     }
 
     public function store(Request $request)
@@ -107,10 +123,17 @@ class StudentController extends Controller
             'institution_id' => ['sometimes', 'exists:institutions,id', Rule::in($institutionIds)],
             'guardian_id' => ['sometimes', Rule::exists('users', 'id')->where('role', 'parent')],
             'status' => 'sometimes|boolean',
+            'profile_picture' => 'sometimes|nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
+        if ($request->hasFile('profile_picture')) {
+            $data['profile_picture'] = $this->handleUserFileUpload($request, 'profile_picture', 'profile_pictures');
+        }
+
         $student = $this->updateGlobalStudentAction->handle($data, $id);
-        return $this->successResponse($student, 'Student updated successfully');
+        $student->load(self::DETAIL_RELATIONS);
+
+        return $this->successResponse(new StudentResource($student), 'Student updated successfully');
     }
 
     public function destroy($id)
@@ -125,8 +148,9 @@ class StudentController extends Controller
     {
         $this->assertInScope($id);
         $student = $this->toggleStudentStatusAction->handle($id);
+        $student->load(self::DETAIL_RELATIONS);
 
-        return $this->successResponse($student, 'Student status toggled successfully');
+        return $this->successResponse(new StudentResource($student), 'Student status toggled successfully');
     }
 
     private function managerInstitutionIds(): array

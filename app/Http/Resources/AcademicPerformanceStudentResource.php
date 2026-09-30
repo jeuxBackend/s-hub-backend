@@ -21,6 +21,7 @@ class AcademicPerformanceStudentResource extends JsonResource
                 'id' => $this->institution->id,
                 'name' => $this->institution->name,
                 'region' => $this->institution->region,
+                'logo' => $this->institution->logo,
             ]),
             'classroom' => $this->whenLoaded('classroom', fn () => [
                 'id' => $this->classroom->id,

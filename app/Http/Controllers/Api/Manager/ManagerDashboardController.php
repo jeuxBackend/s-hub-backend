@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Manager;
 use App\Http\Controllers\Controller;
 use App\Actions\Dashboard\GetDistinctRegionsAction;
 use App\Actions\Dashboard\GetManagerDashboardStatsAction;
+use App\Models\Institution;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Throwable;
@@ -35,7 +36,9 @@ class ManagerDashboardController extends Controller
     public function regions(GetDistinctRegionsAction $action)
     {
         try {
-            return $this->successResponse($action->handle(), 'Regions retrieved successfully.');
+            $institutionIds = Institution::where('manager_id', auth()->id())->pluck('id')->all();
+
+            return $this->successResponse($action->handle($institutionIds), 'Regions retrieved successfully.');
         } catch (Throwable $e) {
             return $this->exceptionResponse($e);
         }

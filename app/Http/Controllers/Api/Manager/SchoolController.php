@@ -39,7 +39,7 @@ class SchoolController extends Controller
     public function names()
     {
         $schools = Institution::where('manager_id', auth()->id())
-            ->select(['id', 'name'])
+            ->select(['id', 'name', 'status'])
             ->orderBy('name')
             ->get();
 
@@ -55,6 +55,17 @@ class SchoolController extends Controller
             'phone_number' => 'required|string|unique:institutions,phone_number',
             'physical_address' => 'required|string',
             'school_logo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+
+            'slogan' => 'sometimes|nullable|string|max:255',
+            'academic_year' => 'sometimes|nullable|string|max:50',
+            'examination_system' => 'sometimes|nullable|string|max:255',
+            'region' => 'sometimes|nullable|string|max:255',
+            'alternate_email' => 'sometimes|nullable|email',
+            'alternate_phone' => 'sometimes|nullable|string|max:255',
+            'telephone' => 'sometimes|nullable|string|max:255',
+            'latitude' => 'sometimes|nullable|numeric|between:-90,90',
+            'longitude' => 'sometimes|nullable|numeric|between:-180,180',
+            'timezone' => 'sometimes|nullable|string|max:100',
         ]);
 
         $data['manager_id'] = auth()->id();
@@ -66,7 +77,8 @@ class SchoolController extends Controller
 
     public function show($id)
     {
-        $school = Institution::with(['manager:id,first_name,sure_name,last_name,email', 'category'])
+        $school = Institution::with(['manager:id,first_name,sure_name,last_name,email', 'category', 'principal'])
+            ->withCount(['students', 'teachers', 'schoolAdmins', 'classrooms'])
             ->where('manager_id', auth()->id())
             ->findOrFail($id);
         return $this->successResponse($school, 'School retrieved successfully');
@@ -81,7 +93,9 @@ class SchoolController extends Controller
         Institution::where('manager_id', auth()->id())->findOrFail($id);
 
         $classrooms = Classroom::where('institution_id', $id)
-            ->select(['id', 'name'])
+            ->select(['id', 'name', 'in_charge_id'])
+            ->with('inCharge:id,first_name,last_name,sur_name')
+            ->withCount('teachers')
             ->orderBy('name')
             ->get();
 

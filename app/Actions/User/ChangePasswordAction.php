@@ -15,8 +15,12 @@ class ChangePasswordAction
         }
 
         // ✅ Update password securely
-        $user->update([
-            'password' => Hash::make($data['password']),
-        ]);
+        $updateData = ['password' => Hash::make($data['password'])];
+
+        if ($user instanceof \App\Models\Admin) {
+            $updateData['password_changed_at'] = now();
+        }
+
+        $user->update($updateData);
     }
 }

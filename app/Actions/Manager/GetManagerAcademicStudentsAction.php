@@ -21,7 +21,7 @@ class GetManagerAcademicStudentsAction
         $query = Student::query()
             ->whereIn('institution_id', $institutionIds)
             ->with([
-                'institution:id,name,region',
+                'institution:id,name,region,logo',
                 'classroom:id,name',
                 'guardian:id,first_name,last_name,sur_name,phone_number,guardian_type,guardian_relation,alternative_guardian_phone_number',
             ])

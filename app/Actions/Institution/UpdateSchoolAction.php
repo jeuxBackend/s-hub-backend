@@ -12,14 +12,16 @@ class UpdateSchoolAction
         $school = Institution::findOrFail($id);
 
         if (isset($data['school_logo']) && $data['school_logo'] instanceof \Illuminate\Http\UploadedFile) {
-            // Delete old logo if exists
-            if ($school->logo) {
-                Storage::disk('public')->delete($school->logo);
+            // Delete old logo if exists — must use the raw stored path, since
+            // the `logo` accessor returns a full asset() URL, not the path.
+            $oldLogoPath = $school->getRawOriginal('logo');
+            if ($oldLogoPath) {
+                Storage::disk('public')->delete($oldLogoPath);
             }
             $data['logo'] = $data['school_logo']->store('institutions/logos', 'public');
         }
 
         $school->update($data);
-        return $school;
+        return $school->fresh(['category']);
     }
 }

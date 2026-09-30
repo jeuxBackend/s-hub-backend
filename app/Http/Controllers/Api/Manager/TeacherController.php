@@ -39,7 +39,7 @@ class TeacherController extends Controller
     public function show($id)
     {
         $teacher = $this->assertInScope($id);
-        $teacher->load('institution');
+        $teacher->load(['institution', 'classrooms']);
 
         return $this->successResponse($teacher, 'Teacher retrieved successfully');
     }
@@ -59,7 +59,12 @@ class TeacherController extends Controller
             'staff_number' => 'nullable|string|max:255',
             'emergency_contact_name' => 'nullable|string|max:255',
             'emergency_number' => 'nullable|string|max:255',
+            'profile_picture' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
+
+        if ($request->hasFile('profile_picture')) {
+            $data['profile_picture'] = $this->handleUserFileUpload($request, 'profile_picture', 'profile_pictures');
+        }
 
         $teacher = $this->createGlobalTeacherAction->handle($data);
         return $this->successResponse($teacher, 'Teacher created successfully', 201);
@@ -82,9 +87,16 @@ class TeacherController extends Controller
             'staff_number' => 'sometimes|nullable|string|max:255',
             'emergency_contact_name' => 'sometimes|nullable|string|max:255',
             'emergency_number' => 'sometimes|nullable|string|max:255',
+            'profile_picture' => 'sometimes|nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
+        if ($request->hasFile('profile_picture')) {
+            $data['profile_picture'] = $this->handleUserFileUpload($request, 'profile_picture', 'profile_pictures');
+        }
+
         $teacher = $this->updateGlobalTeacherAction->handle($data, $id);
+        $teacher->load('institution');
+
         return $this->successResponse($teacher, 'Teacher updated successfully');
     }
 
@@ -100,6 +112,7 @@ class TeacherController extends Controller
     {
         $this->assertInScope($id);
         $teacher = $action->handle($id);
+        $teacher->load('institution');
 
         return $this->successResponse($teacher, 'Teacher status toggled successfully');
     }
