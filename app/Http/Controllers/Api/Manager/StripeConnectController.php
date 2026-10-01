@@ -5,8 +5,7 @@ namespace App\Http\Controllers\Api\Manager;
 use App\Http\Controllers\Controller;
 use App\Actions\Manager\CreateStripeConnectAccountAction;
 use Illuminate\Http\Request;
-use Stripe\Stripe;
-use Stripe\Account;
+use Stripe\StripeClient;
 use Throwable;
 
 class StripeConnectController extends Controller
@@ -53,10 +52,19 @@ class StripeConnectController extends Controller
                 ], 'Stripe Connect Account not created yet.');
             }
 
-            Stripe::setApiKey(config('services.stripe.secret'));
-            $account = Account::retrieve($manager->stripe_connect_account_id);
+            $stripe = new StripeClient([
+                'api_key' => config('services.stripe.secret'),
+                'stripe_version' => config('services.stripe.connect_api_version'),
+            ]);
+            $account = $stripe->v2->core->accounts->retrieve($manager->stripe_connect_account_id, [
+                'include' => ['configuration.merchant', 'configuration.recipient', 'requirements'],
+            ]);
 
-            $onboardingCompleted = $account->details_submitted && $account->charges_enabled;
+            $chargesEnabled = ($account->configuration?->merchant?->capabilities?->card_payments?->status) === 'active';
+            $payoutsEnabled = ($account->configuration?->recipient?->capabilities?->stripe_balance?->payouts?->status) === 'active';
+            $hasOutstandingRequirements = !empty($account->requirements?->entries);
+
+            $onboardingCompleted = $chargesEnabled && !$hasOutstandingRequirements;
 
             if ($onboardingCompleted !== $manager->stripe_onboarding_completed) {
                 $manager->update([
@@ -67,8 +75,8 @@ class StripeConnectController extends Controller
             return $this->successResponse([
                 'stripe_connect_account_id' => $manager->stripe_connect_account_id,
                 'stripe_onboarding_completed' => $manager->stripe_onboarding_completed,
-                'payouts_enabled' => $account->payouts_enabled,
-                'charges_enabled' => $account->charges_enabled,
+                'payouts_enabled' => $payoutsEnabled,
+                'charges_enabled' => $chargesEnabled,
             ], 'Stripe status retrieved successfully.');
         } catch (Throwable $e) {
             return $this->exceptionResponse($e);

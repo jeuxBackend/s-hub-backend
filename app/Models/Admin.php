@@ -20,6 +20,7 @@ class Admin extends Authenticatable
         'last_name',
         'email',
         'region',
+        'country',
         'phone_number',
         'password',
         'role',

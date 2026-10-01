@@ -45,6 +45,7 @@ class ManagerController extends Controller
             'emergency_contact_name' => 'nullable|string|max:255',
             'emergency_contact_phone' => 'nullable|string|max:255',
             'status' => 'nullable|in:active,inactive',
+            'country' => 'nullable|string|size:2',
         ]);
 
         $manager = $this->createManagerAction->handle($data);

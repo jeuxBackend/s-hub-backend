@@ -39,6 +39,12 @@ return [
         'key' => env('STRIPE_KEY'),
         'secret' => env('STRIPE_SECRET'),
         'webhook_secret' => env('STRIPE_WEBHOOK_SECRET'),
+        // Required (as of 2026-09) to create a v2 Core Account with
+        // dashboard=express AND losses_collector=stripe together — that
+        // combination is only available on this preview version. Stripe
+        // may rename/retire this string; re-check their Connect "design an
+        // integration" guide if account creation starts failing again.
+        'connect_api_version' => env('STRIPE_CONNECT_API_VERSION', '2026-09-30.preview'),
     ],
 
 ];
