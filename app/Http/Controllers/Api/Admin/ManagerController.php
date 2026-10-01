@@ -71,6 +71,7 @@ class ManagerController extends Controller
             'emergency_contact_name' => 'sometimes|nullable|string|max:255',
             'emergency_contact_phone' => 'sometimes|nullable|string|max:255',
             'status' => 'sometimes|in:active,inactive',
+            'country' => 'sometimes|nullable|string|size:2',
         ]);
 
         $manager = $this->updateManagerAction->handle($data, $id);

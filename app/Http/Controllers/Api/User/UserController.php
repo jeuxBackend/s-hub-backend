@@ -197,6 +197,15 @@ class UserController extends Controller
     {
         $allowed = array_intersect_key($data, array_flip(['first_name', 'last_name', 'email', 'phone_number']));
 
+        if (!empty($data['country'])) {
+            if (!preg_match('/^[A-Za-z]{2}$/', $data['country'])) {
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    'country' => ['Country must be a 2-letter country code (e.g. US, GB).'],
+                ]);
+            }
+            $allowed['country'] = strtoupper($data['country']);
+        }
+
         if (array_key_exists('sur_name', $data)) {
             $allowed['sure_name'] = $data['sur_name'];
         }

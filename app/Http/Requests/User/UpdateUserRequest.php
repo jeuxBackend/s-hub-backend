@@ -35,6 +35,7 @@ class UpdateUserRequest extends FormRequest
             'guardian_name' => ['nullable', 'string', 'max:100'],
             'sur_name' => ['nullable', 'string', 'max:100'],
             'last_name' => ['nullable', 'string', 'max:100'],
+            'country' => ['nullable', 'string', 'max:255'],
             'nationality' => ['nullable', 'string', 'max:100'],
             'country_of_birth' => ['nullable', 'string', 'max:100'],
             'primary_language' => ['nullable', 'string', 'max:100'],
