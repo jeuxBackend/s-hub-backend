@@ -17,6 +17,28 @@ use Throwable;
 
 class SubjectController extends Controller
 {
+    /**
+     * Distinct subject names taught anywhere across this school's classes —
+     * names only, no ids or other fields.
+     */
+    public function names()
+    {
+        try {
+            $requester = auth()->user();
+            $institutionId = $requester->institution->id;
+
+            $names = Subject::where('institution_id', $institutionId)
+                ->select('name')
+                ->distinct()
+                ->orderBy('name')
+                ->pluck('name');
+
+            return $this->successResponse($names, 'Subject names retrieved successfully');
+        } catch (Throwable $e) {
+            return $this->exceptionResponse($e);
+        }
+    }
+
     public function index(ListSubjectsAction $listSubjects,Request $request)
     {
         try {

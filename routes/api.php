@@ -89,7 +89,7 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'active.user'])->group(function
     Route::get('classnames', [ClassnameController::class, 'index']);
     Route::get('classnames/{classname}', [ClassnameController::class, 'show']);
 
-    Route::middleware('role:admin,sub_admin,manager')->group(function () {
+    Route::middleware('role:admin,sub_admin,manager,principal')->group(function () {
         Route::post('classnames', [ClassnameController::class, 'store']);
         Route::put('classnames/{classname}', [ClassnameController::class, 'update']);
         Route::patch('classnames/{classname}', [ClassnameController::class, 'update']);
@@ -233,6 +233,7 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'active.user'])->group(function
             Route::get('classrooms/{id}/average-performance', [ClassroomController::class, 'getAveragePerformance']);
             Route::get('classrooms/{id}/tuition-paid-owed', [ClassroomController::class, 'getTuitionPaidOwed'])->middleware('schooladmin.permission:Finance');
             Route::apiResource('classrooms', ClassroomController::class);
+            Route::get('subjects/names', [SubjectController::class, 'names']);
             Route::apiResource('subjects', SubjectController::class);
             Route::get('student-promotions', [PrincipalStudentPromotionController::class, 'index']);
             Route::post('students/{student}/promote', [PrincipalStudentPromotionController::class, 'store']);

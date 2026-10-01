@@ -98,15 +98,24 @@ class ClassnameController extends Controller
     /**
      * Admins manage class names for any institution. Managers are
      * restricted to institutions they own (Institution.manager_id). A
-     * restricted sub-admin is limited to its assigned schools.
+     * restricted sub-admin is limited to its assigned schools. A
+     * principal is restricted to their own institution.
      */
     private function authorizeInstitution(int $institutionId): void
     {
-        $admin = auth()->user();
+        $user = auth()->user();
 
-        if ($admin->role === AdminRole::Manager) {
+        if ($user instanceof \App\Models\User && $user->role === \App\Enums\UserRole::Principal) {
+            if ((int) $user->institution_id !== $institutionId) {
+                throw new AuthorizationException('You do not manage this institution.');
+            }
+
+            return;
+        }
+
+        if ($user->role === AdminRole::Manager) {
             $owns = Institution::where('id', $institutionId)
-                ->where('manager_id', $admin->id)
+                ->where('manager_id', $user->id)
                 ->exists();
 
             if (!$owns) {
@@ -116,7 +125,7 @@ class ClassnameController extends Controller
             return;
         }
 
-        $ids = $admin->assignedInstitutionIds();
+        $ids = $user->assignedInstitutionIds();
         if ($ids !== null && !in_array($institutionId, $ids, true)) {
             throw new AuthorizationException('You do not manage this institution.');
         }
