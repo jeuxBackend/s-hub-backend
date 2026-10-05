@@ -4,7 +4,9 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Facades\DB;
+use App\Models\Student;
 use App\Models\StudentInvoice;
 use App\Actions\StudentInvoice\CreateStudentInvoiceAction;
 use App\Actions\StudentInvoice\UpdateStudentInvoiceAction;
@@ -20,7 +22,7 @@ class StudentInvoiceController extends Controller
     {
         try {
             $items = $action->handle($request);
-            return $this->paginatedResponse($items);
+            return $this->paginatedResponse(JsonResource::collection($items), 'Retrieved successfully');
         } catch (Throwable $e) {
             return $this->exceptionResponse($e);
         }
@@ -30,6 +32,7 @@ class StudentInvoiceController extends Controller
     {
         try {
             $item = $action->handle($id);
+            $this->assertInScope($item);
             return $this->successResponse($item, 'Retrieved successfully');
         } catch (Throwable $e) {
             return $this->exceptionResponse($e);
@@ -39,7 +42,17 @@ class StudentInvoiceController extends Controller
     public function store(Request $request, CreateStudentInvoiceAction $action)
     {
         try {
-            $item = $action->handle($request->all());
+            $data = $request->all();
+
+            $belongsToOwnInstitution = Student::where('id', $data['student_id'] ?? null)
+                ->where('institution_id', auth()->user()->institution_id)
+                ->exists();
+
+            if (!$belongsToOwnInstitution) {
+                return $this->errorResponse('Unauthorized access to this student.', 403);
+            }
+
+            $item = $action->handle($data);
             return $this->successResponse($item, 'Created successfully');
         } catch (Throwable $e) {
             return $this->exceptionResponse($e);
@@ -49,6 +62,7 @@ class StudentInvoiceController extends Controller
     public function update(Request $request, StudentInvoice $studentInvoice, UpdateStudentInvoiceAction $action)
     {
         try {
+            $this->assertInScope($studentInvoice);
             $item = $action->handle($studentInvoice, $request->all());
             return $this->successResponse($item, 'Updated successfully');
         } catch (Throwable $e) {
@@ -59,6 +73,7 @@ class StudentInvoiceController extends Controller
     public function destroy(StudentInvoice $studentInvoice, DeleteStudentInvoiceAction $action)
     {
         try {
+            $this->assertInScope($studentInvoice);
             $action->handle($studentInvoice);
             return $this->successResponse(null, 'Deleted successfully');
         } catch (Throwable $e) {
@@ -76,6 +91,8 @@ class StudentInvoiceController extends Controller
         ]);
 
         try {
+            $this->assertInScope($studentInvoice);
+
             if ($studentInvoice->status === 'paid') {
                 return $this->errorResponse('Invoice is already paid.', 400);
             }
@@ -148,9 +165,23 @@ class StudentInvoiceController extends Controller
     public function downloadReceipt(StudentInvoice $studentInvoice, GenerateInvoiceReceiptPdfAction $action)
     {
         try {
+            $this->assertInScope($studentInvoice);
             return $action->handle($studentInvoice);
         } catch (Throwable $e) {
             return $this->exceptionResponse($e);
+        }
+    }
+
+    /**
+     * Abort with 404 if this invoice's student doesn't belong to the
+     * authenticated Principal/SchoolAdmin's own institution.
+     */
+    private function assertInScope(StudentInvoice $invoice): void
+    {
+        $invoice->loadMissing('student');
+
+        if (!$invoice->student || $invoice->student->institution_id !== auth()->user()->institution_id) {
+            abort(404);
         }
     }
 }
