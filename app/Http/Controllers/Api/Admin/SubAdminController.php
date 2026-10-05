@@ -11,6 +11,7 @@ use App\Models\Admin;
 use App\Enums\AdminRole;
 use App\Enums\SubAdminPermission;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class SubAdminController extends Controller
 {
@@ -42,7 +43,7 @@ class SubAdminController extends Controller
             'first_name' => 'required|string|max:255',
             'sure_name' => 'required|string|max:255',
             'last_name' => 'nullable|string|max:255',
-            'email' => 'required|email|unique:admins,email',
+            'email' => ['required', 'email', Rule::unique('admins', 'email'), Rule::unique('users', 'email')],
             'phone_number' => 'required|string|unique:admins,phone_number',
             'password' => 'required|string|min:8',
             'region' => 'nullable|array',
@@ -73,7 +74,7 @@ class SubAdminController extends Controller
             'first_name' => 'sometimes|string|max:255',
             'sure_name' => 'sometimes|string|max:255',
             'last_name' => 'nullable|string|max:255',
-            'email' => 'sometimes|email|unique:admins,email,' . $id,
+            'email' => ['sometimes', 'email', Rule::unique('admins', 'email')->ignore($id), Rule::unique('users', 'email')],
             'phone_number' => 'sometimes|string|unique:admins,phone_number,' . $id,
             'password' => 'nullable|string|min:8',
             'region' => 'nullable|array',
