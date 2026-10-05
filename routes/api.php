@@ -235,6 +235,7 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'active.user'])->group(function
             Route::apiResource('classrooms', ClassroomController::class);
             Route::get('subjects/names', [SubjectController::class, 'names']);
             Route::apiResource('subjects', SubjectController::class);
+            Route::apiResource('school-assets', \App\Http\Controllers\Api\Principal\SchoolAssetController::class)->only(['index', 'show', 'store', 'update', 'destroy']);
             Route::get('student-promotions', [PrincipalStudentPromotionController::class, 'index']);
             Route::post('students/{student}/promote', [PrincipalStudentPromotionController::class, 'store']);
             Route::post('classrooms/{classroom}/exam-schedules', [\App\Http\Controllers\Api\Principal\AcademicDocumentController::class, 'storeExamSchedule']);
