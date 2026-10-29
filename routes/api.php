@@ -72,6 +72,7 @@ Route::post('/web/login', AdminLoginController::class);
 Route::post('/otp/verify', VerifyOtpController::class);
 Route::post('/otp/resend', ResendOtpController::class)->middleware('throttle:otp-resend');
 Route::post('/stripe/webhook', [\App\Http\Controllers\Api\StripeWebhookController::class, 'handleWebhook']);
+Route::get('/institute-types', [\App\Http\Controllers\Api\InstituteTypeController::class, 'index']);
 // });
 Route::post('/logout', LogoutController::class)->middleware('auth:sanctum');
 // ==================== AUTHENTICATED ROUTES ====================
@@ -307,6 +308,8 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'active.user'])->group(function
     Route::get('classrooms/{classroom}', [ClassroomController::class, 'show']);
     Route::get('subjects', [SubjectController::class, 'index']);
     Route::get('subjects/{subject}', [SubjectController::class, 'show']);
+    Route::get('institute-types', [\App\Http\Controllers\Api\InstituteTypeController::class, 'index']);
+    Route::get('institute-types/{id}', [\App\Http\Controllers\Api\InstituteTypeController::class, 'show']);
 
     // ===================== GLOBAL ADMIN ONLY =====================
     Route::prefix('admin')->middleware('role:admin,sub_admin')->group(function () {

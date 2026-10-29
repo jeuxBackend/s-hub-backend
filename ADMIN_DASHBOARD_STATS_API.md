@@ -9,6 +9,7 @@
 - `GET v1/admin/class-toppers` *(new)*
 - `POST/PUT v1/principal/students` *(last_name optional)*
 - `POST/PUT v1/manager/students` *(last_name optional)*
+- `GET v1/institute-types` *(new)*
 
 ---
 
@@ -297,4 +298,49 @@ Returned if the token belongs to a role other than `admin` or `sub_admin`.
 }
 ```
 *(Notice `last_name` is omitted completely without any validation error)*
+
+
+---
+
+## 5. Institute Types API *(New — 2026-10-29)*
+
+### Endpoints:
+- `GET /api/v1/institute-types` *(Authenticated)*
+- `GET /api/v1/institute-types/{id}` *(Authenticated)*
+- `GET /api/institute-types` *(Public / Unauthenticated)*
+
+### Description:
+Returns all school / institute type records from the `institute_types` table for dropdowns, forms, and filtering.
+
+### Query Parameters:
+| Param | Type | Description |
+|---|---|---|
+| `search` | string (optional) | Filter types matching a search keyword |
+
+### Success Response `200`:
+```json
+{
+  "success": true,
+  "message": "Institute types retrieved successfully",
+  "data": [
+    {
+      "id": 1,
+      "type": "Primary School",
+      "type_name": "Primary School",
+      "created_at": "2026-10-29T12:00:00.000000Z",
+      "updated_at": "2026-10-29T12:00:00.000000Z"
+    },
+    {
+      "id": 2,
+      "type": "High School",
+      "type_name": "High School",
+      "created_at": "2026-10-29T12:00:00.000000Z",
+      "updated_at": "2026-10-29T12:00:00.000000Z"
+    }
+  ]
+}
+```
+
+> **Note on field naming:**  
+> Both `type` and `type_name` are available in each record for frontend convenience.
 
