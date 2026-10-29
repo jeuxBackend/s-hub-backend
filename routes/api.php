@@ -339,6 +339,9 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'active.user'])->group(function
         Route::delete('categories/{category}', [\App\Http\Controllers\Api\Admin\CategoryController::class, 'destroy'])->middleware('subadmin.permission:Schools');
         Route::post('settings', [SettingController::class, 'update'])->middleware('subadmin.permission:Settings');
         Route::put('settings', [SettingController::class, 'update'])->middleware('subadmin.permission:Settings');
+
+        // Class toppers — top performing students per classroom per school (ties fully included)
+        Route::get('class-toppers', [\App\Http\Controllers\Api\Admin\ClassToppersController::class, 'index'])->middleware('subadmin.permission:Students,Dashboard');
     });
 
     // ===================== MANAGER ONLY =====================
