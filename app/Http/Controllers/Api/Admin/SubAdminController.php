@@ -48,6 +48,7 @@ class SubAdminController extends Controller
             'password' => 'required|string|min:8',
             'region' => 'nullable|array',
             'region.*' => 'string|max:255',
+            'country' => 'nullable|string|size:2',
             'profile_image' => 'nullable|image|max:2048',
             'permissions' => 'nullable|array',
             'permissions.*' => 'string',
@@ -55,6 +56,11 @@ class SubAdminController extends Controller
             'school_ids.*' => 'exists:institutions,id',
             'status' => 'nullable|in:active,inactive',
         ]);
+
+        // Only an Admin (not another sub-admin) may set a sub-admin's country.
+        if (auth()->user()->role !== AdminRole::Admin) {
+            unset($data['country']);
+        }
 
         $subAdmin = $this->createSubAdminAction->handle($data);
         return $this->successResponse($subAdmin, 'Sub admin created successfully', 201);
@@ -79,6 +85,7 @@ class SubAdminController extends Controller
             'password' => 'nullable|string|min:8',
             'region' => 'nullable|array',
             'region.*' => 'string|max:255',
+            'country' => 'sometimes|nullable|string|size:2',
             'profile_image' => 'nullable|image|max:2048',
             'permissions' => 'nullable|array',
             'permissions.*' => 'string',
@@ -86,6 +93,11 @@ class SubAdminController extends Controller
             'school_ids.*' => 'exists:institutions,id',
             'status' => 'sometimes|in:active,inactive',
         ]);
+
+        // Only an Admin (not another sub-admin) may change a sub-admin's country.
+        if (auth()->user()->role !== AdminRole::Admin) {
+            unset($data['country']);
+        }
 
         $subAdmin = $this->updateSubAdminAction->handle($data, $id);
         return $this->successResponse($subAdmin, 'Sub admin updated successfully');

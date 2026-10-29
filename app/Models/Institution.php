@@ -23,6 +23,7 @@ class Institution extends Model
         'examination_system',
         'physical_address',
         'region',
+        'country',
         'email',
         'alternate_email',
         'phone_number',

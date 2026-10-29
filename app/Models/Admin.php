@@ -85,6 +85,14 @@ class Admin extends Authenticatable
      * Institution IDs this sub-admin is restricted to, or null if
      * unrestricted (sees everything within their granted permissions).
      * Only ever restricts sub_admin — admin/manager are never limited here.
+     *
+     * Explicit per-school assignment always takes priority. Only when a
+     * sub-admin has no explicit assignments at all do we fall back to every
+     * school in their own country (if one is set on their own profile) —
+     * this can legitimately return an empty array when that country simply
+     * has no schools yet, which is intentional: stay restricted, don't fall
+     * through to unrestricted. A sub-admin with neither an assignment nor a
+     * country keeps the old unrestricted (null) behavior.
      */
     public function assignedInstitutionIds(): ?array
     {
@@ -94,7 +102,15 @@ class Admin extends Authenticatable
 
         $ids = $this->assignedSchools()->pluck('id')->all();
 
-        return empty($ids) ? null : $ids;
+        if (!empty($ids)) {
+            return $ids;
+        }
+
+        if ($this->country) {
+            return Institution::where('country', $this->country)->pluck('id')->all();
+        }
+
+        return null;
     }
 
     public function students()

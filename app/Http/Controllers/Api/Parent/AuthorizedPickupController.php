@@ -6,7 +6,10 @@ use App\Enums\UserRole;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\AuthorizedPickupResource;
 use App\Models\AuthorizedPickup;
+use App\Models\NotificationLog;
+use App\Models\Student;
 use App\Models\User;
+use App\Services\FirebaseNotificationService;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\Request;
 use Throwable;
@@ -94,6 +97,8 @@ class AuthorizedPickupController extends Controller
                 $parent->update(['current_authorized_pickup_id' => $authorizedPickup->id]);
             }
 
+            $this->notifyAuthorizedPickupChange($authorizedPickup, $parent, 'created');
+
             return $this->successResponse(
                 new AuthorizedPickupResource($authorizedPickup),
                 'Authorized pickup created successfully',
@@ -116,6 +121,8 @@ class AuthorizedPickupController extends Controller
             }
 
             auth()->user()->update(['current_authorized_pickup_id' => $authorizedPickup->id]);
+
+            $this->notifyAuthorizedPickupChange($authorizedPickup, auth()->user(), 'set_current');
 
             return $this->successResponse(
                 new AuthorizedPickupResource($authorizedPickup),
@@ -144,6 +151,8 @@ class AuthorizedPickupController extends Controller
 
             $authorizedPickup->update($data);
 
+            $this->notifyAuthorizedPickupChange($authorizedPickup, auth()->user(), 'updated');
+
             return $this->successResponse(
                 new AuthorizedPickupResource($authorizedPickup->fresh()),
                 'Authorized pickup updated successfully'
@@ -160,11 +169,106 @@ class AuthorizedPickupController extends Controller
                 throw new AuthorizationException('You are not authorized to manage this authorized pickup.');
             }
 
+            $this->notifyAuthorizedPickupChange($authorizedPickup, auth()->user(), 'deleted');
+
             $authorizedPickup->delete();
 
             return $this->successResponse(null, 'Authorized pickup deleted successfully');
         } catch (Throwable $e) {
             return $this->exceptionResponse($e);
+        }
+    }
+
+    /**
+     * Notify every teacher of the parent's children, plus the principal of
+     * each child's institution, whenever an authorized pickup is created,
+     * updated, deleted, or switched as the current one. FCM push + a
+     * NotificationLog row only — no broadcasting events are fired.
+     */
+    private function notifyAuthorizedPickupChange(AuthorizedPickup $authorizedPickup, User $parent, string $action): void
+    {
+        $students = Student::where('guardian_id', $parent->id)
+            ->whereNotNull('classroom_id')
+            ->with('classroom.teachers')
+            ->get();
+
+        if ($students->isEmpty()) {
+            return;
+        }
+
+        $parentName = trim("{$parent->first_name} {$parent->last_name} {$parent->sur_name}");
+        $pickupName = $authorizedPickup->full_name ?: 'an authorized pickup contact';
+
+        $actionText = match ($action) {
+            'created' => 'added a new authorized pickup contact',
+            'updated' => 'updated an authorized pickup contact',
+            'deleted' => 'removed an authorized pickup contact',
+            'set_current' => 'changed the current authorized pickup contact',
+            default => 'updated authorized pickup details',
+        };
+
+        $title = 'Authorized Pickup Updated';
+        $message = "{$parentName} {$actionText}: {$pickupName}.";
+
+        $recipients = collect();
+
+        foreach ($students as $student) {
+            foreach ($student->classroom?->teachers ?? [] as $teacher) {
+                $recipients->put($teacher->id, $teacher);
+            }
+
+            $principal = User::where('institution_id', $student->institution_id)
+                ->where('role', UserRole::Principal)
+                ->first();
+
+            if ($principal) {
+                $recipients->put($principal->id, $principal);
+            }
+        }
+
+        foreach ($recipients as $recipient) {
+            $this->sendAuthorizedPickupNotification($recipient, $parent, $authorizedPickup, $title, $message, $action);
+        }
+    }
+
+    private function sendAuthorizedPickupNotification(
+        User $recipient,
+        User $parent,
+        AuthorizedPickup $authorizedPickup,
+        string $title,
+        string $message,
+        string $action
+    ): void {
+        $type = 'authorized_pickup_' . $action;
+
+        $notificationLog = NotificationLog::create([
+            'user_id' => $recipient->id,
+            'type' => $type,
+            'title' => $title,
+            'message' => $message,
+            'is_read' => false,
+            'meta' => [
+                'recipient_role' => $recipient->role?->value,
+                'parent_id' => (string) $parent->id,
+                'parent_name' => trim("{$parent->first_name} {$parent->last_name} {$parent->sur_name}"),
+                'authorized_pickup_id' => (string) $authorizedPickup->id,
+                'authorized_pickup_name' => $authorizedPickup->full_name,
+                'action' => $action,
+            ],
+            'sent_at' => now($recipient->timezone ?? 'UTC'),
+        ]);
+
+        if ($recipient->notifications_enabled && $recipient->fcm_token) {
+            app(FirebaseNotificationService::class)->sendToToken(
+                $recipient->fcm_token,
+                $title,
+                $message,
+                [
+                    'type' => $type,
+                    'authorized_pickup_id' => (string) $authorizedPickup->id,
+                    'parent_id' => (string) $parent->id,
+                ]
+            );
         }
     }
 }

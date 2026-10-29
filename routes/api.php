@@ -186,32 +186,6 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'active.user'])->group(function
             Route::get('teachers-list', [SchoolAdminController::class, 'getTeachersListForSchoolAdmin']);
             Route::post('update-permissions', [SchoolAdminController::class, 'updatePermissions']);
             Route::get('remove-admin/{id}', [SchoolAdminController::class, 'removeSchoolAdmin']);
-            Route::patch('institution/slogan', [InstituteController::class, 'updateSlogan']);
-            Route::post('institution/slogan', [InstituteController::class, 'updateSlogan']);
-            Route::patch('student-reports/{id}/status', [\App\Http\Controllers\Api\StudentReportController::class, 'updateStatus']);
-            Route::get('timetable/config', [\App\Http\Controllers\Api\Principal\TimetableConfigController::class, 'showCurrent']);
-            Route::put('timetable/config', [\App\Http\Controllers\Api\Principal\TimetableConfigController::class, 'upsertConfig']);
-            Route::get('timetable/teacher-availabilities', [\App\Http\Controllers\Api\Principal\TimetableConfigController::class, 'indexTeacherAvailabilities']);
-            Route::get('timetable/class-subject-requirements', [\App\Http\Controllers\Api\Principal\TimetableConfigController::class, 'indexClassSubjectRequirements']);
-            Route::post('timetable/teacher-availabilities', [\App\Http\Controllers\Api\Principal\TimetableConfigController::class, 'bulkUpsertTeacherAvailabilities']);
-            Route::patch('timetable/teacher-availabilities/{id}', [\App\Http\Controllers\Api\Principal\TimetableConfigController::class, 'updateTeacherAvailability']);
-            Route::delete('timetable/teacher-availabilities/{id}', [\App\Http\Controllers\Api\Principal\TimetableConfigController::class, 'destroyTeacherAvailability']);
-            Route::post('timetable/class-subject-requirements', [\App\Http\Controllers\Api\Principal\TimetableConfigController::class, 'bulkUpsertClassSubjectRequirements']);
-            Route::patch('timetable/class-subject-requirements/{id}', [\App\Http\Controllers\Api\Principal\TimetableConfigController::class, 'updateClassSubjectRequirement']);
-            Route::delete('timetable/class-subject-requirements/{id}', [\App\Http\Controllers\Api\Principal\TimetableConfigController::class, 'destroyClassSubjectRequirement']);
-            Route::post('timetable/generate-preview', [\App\Http\Controllers\Api\Principal\TimetableGenerationController::class, 'preview']);
-            Route::post('timetable/apply', [\App\Http\Controllers\Api\Principal\TimetableGenerationController::class, 'apply']);
-            Route::post('timetable/entries', [\App\Http\Controllers\Api\Principal\TimetableGenerationController::class, 'storeEntry']);
-            Route::patch('timetable/entries/lock', [\App\Http\Controllers\Api\Principal\TimetableGenerationController::class, 'bulkLockEntries']);
-            Route::patch('timetable/entries/bulk-move', [\App\Http\Controllers\Api\Principal\TimetableGenerationController::class, 'bulkMoveEntries']);
-            Route::post('timetable/entries/swap', [\App\Http\Controllers\Api\Principal\TimetableGenerationController::class, 'swapEntries']);
-            Route::patch('timetable/entries/{id}', [\App\Http\Controllers\Api\Principal\TimetableGenerationController::class, 'updateEntry']);
-            Route::delete('timetable/entries/{id}', [\App\Http\Controllers\Api\Principal\TimetableGenerationController::class, 'destroyEntry']);
-            Route::get('school-timetable', [\App\Http\Controllers\Api\Principal\PrincipalTimetableController::class, 'getSchoolTimetable']);
-            Route::get('teachers/{id}/timetable', [\App\Http\Controllers\Api\Principal\PrincipalTimetableController::class, 'getTeacherTimetable']);
-            Route::get('classrooms/{id}/timetable', [\App\Http\Controllers\Api\Principal\PrincipalTimetableController::class, 'getClassroomTimetable']);
-            Route::get('subjects/{id}/timetable', [\App\Http\Controllers\Api\Principal\PrincipalTimetableController::class, 'getSubjectTimetable']);
-            Route::post('final-results-submissions', [\App\Http\Controllers\Api\Principal\FinalResultSubmissionController::class, 'store']);
         });
 
 
@@ -233,8 +207,42 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'active.user'])->group(function
             Route::get('classrooms/{id}/average-performance', [ClassroomController::class, 'getAveragePerformance']);
             Route::get('classrooms/{id}/tuition-paid-owed', [ClassroomController::class, 'getTuitionPaidOwed'])->middleware('schooladmin.permission:Finance');
             Route::apiResource('classrooms', ClassroomController::class);
-            Route::get('subjects/names', [SubjectController::class, 'names']);
-            Route::apiResource('subjects', SubjectController::class);
+            Route::get('subjects/names', [SubjectController::class, 'names'])->middleware('schooladmin.permission:Classrooms');
+            Route::apiResource('subjects', SubjectController::class)->middleware('schooladmin.permission:Classrooms');
+
+            // School configuration
+            Route::patch('institution/slogan', [InstituteController::class, 'updateSlogan'])->middleware('schooladmin.permission:Settings');
+            Route::post('institution/slogan', [InstituteController::class, 'updateSlogan'])->middleware('schooladmin.permission:Settings');
+
+            // Academic oversight
+            Route::patch('student-reports/{id}/status', [\App\Http\Controllers\Api\StudentReportController::class, 'updateStatus'])->middleware('schooladmin.permission:AcademicOversight');
+            Route::post('final-results-submissions', [\App\Http\Controllers\Api\Principal\FinalResultSubmissionController::class, 'store'])->middleware('schooladmin.permission:AcademicOversight');
+
+            // Timetable & scheduling
+            Route::middleware('schooladmin.permission:Timetable')->group(function () {
+                Route::get('timetable/config', [\App\Http\Controllers\Api\Principal\TimetableConfigController::class, 'showCurrent']);
+                Route::put('timetable/config', [\App\Http\Controllers\Api\Principal\TimetableConfigController::class, 'upsertConfig']);
+                Route::get('timetable/teacher-availabilities', [\App\Http\Controllers\Api\Principal\TimetableConfigController::class, 'indexTeacherAvailabilities']);
+                Route::get('timetable/class-subject-requirements', [\App\Http\Controllers\Api\Principal\TimetableConfigController::class, 'indexClassSubjectRequirements']);
+                Route::post('timetable/teacher-availabilities', [\App\Http\Controllers\Api\Principal\TimetableConfigController::class, 'bulkUpsertTeacherAvailabilities']);
+                Route::patch('timetable/teacher-availabilities/{id}', [\App\Http\Controllers\Api\Principal\TimetableConfigController::class, 'updateTeacherAvailability']);
+                Route::delete('timetable/teacher-availabilities/{id}', [\App\Http\Controllers\Api\Principal\TimetableConfigController::class, 'destroyTeacherAvailability']);
+                Route::post('timetable/class-subject-requirements', [\App\Http\Controllers\Api\Principal\TimetableConfigController::class, 'bulkUpsertClassSubjectRequirements']);
+                Route::patch('timetable/class-subject-requirements/{id}', [\App\Http\Controllers\Api\Principal\TimetableConfigController::class, 'updateClassSubjectRequirement']);
+                Route::delete('timetable/class-subject-requirements/{id}', [\App\Http\Controllers\Api\Principal\TimetableConfigController::class, 'destroyClassSubjectRequirement']);
+                Route::post('timetable/generate-preview', [\App\Http\Controllers\Api\Principal\TimetableGenerationController::class, 'preview']);
+                Route::post('timetable/apply', [\App\Http\Controllers\Api\Principal\TimetableGenerationController::class, 'apply']);
+                Route::post('timetable/entries', [\App\Http\Controllers\Api\Principal\TimetableGenerationController::class, 'storeEntry']);
+                Route::patch('timetable/entries/lock', [\App\Http\Controllers\Api\Principal\TimetableGenerationController::class, 'bulkLockEntries']);
+                Route::patch('timetable/entries/bulk-move', [\App\Http\Controllers\Api\Principal\TimetableGenerationController::class, 'bulkMoveEntries']);
+                Route::post('timetable/entries/swap', [\App\Http\Controllers\Api\Principal\TimetableGenerationController::class, 'swapEntries']);
+                Route::patch('timetable/entries/{id}', [\App\Http\Controllers\Api\Principal\TimetableGenerationController::class, 'updateEntry']);
+                Route::delete('timetable/entries/{id}', [\App\Http\Controllers\Api\Principal\TimetableGenerationController::class, 'destroyEntry']);
+                Route::get('school-timetable', [\App\Http\Controllers\Api\Principal\PrincipalTimetableController::class, 'getSchoolTimetable']);
+                Route::get('teachers/{id}/timetable', [\App\Http\Controllers\Api\Principal\PrincipalTimetableController::class, 'getTeacherTimetable']);
+                Route::get('classrooms/{id}/timetable', [\App\Http\Controllers\Api\Principal\PrincipalTimetableController::class, 'getClassroomTimetable']);
+                Route::get('subjects/{id}/timetable', [\App\Http\Controllers\Api\Principal\PrincipalTimetableController::class, 'getSubjectTimetable']);
+            });
             Route::apiResource('school-assets', \App\Http\Controllers\Api\Principal\SchoolAssetController::class)->only(['index', 'show', 'store', 'update', 'destroy']);
             Route::get('student-promotions', [PrincipalStudentPromotionController::class, 'index']);
             Route::post('students/{student}/promote', [PrincipalStudentPromotionController::class, 'store']);

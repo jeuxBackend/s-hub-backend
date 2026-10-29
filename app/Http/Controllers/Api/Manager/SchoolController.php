@@ -60,6 +60,7 @@ class SchoolController extends Controller
             'academic_year' => 'sometimes|nullable|string|max:50',
             'examination_system' => 'sometimes|nullable|string|max:255',
             'region' => 'sometimes|nullable|string|max:255',
+            'country' => 'sometimes|nullable|string|size:2',
             'alternate_email' => 'sometimes|nullable|email',
             'alternate_phone' => 'sometimes|nullable|string|max:255',
             'telephone' => 'sometimes|nullable|string|max:255',
@@ -130,6 +131,7 @@ class SchoolController extends Controller
             'examination_system' => 'sometimes|nullable|string|max:255',
             'physical_address' => 'sometimes|nullable|string',
             'region' => 'sometimes|nullable|string|max:255',
+            'country' => 'sometimes|nullable|string|size:2',
 
             'email' => 'sometimes|email|unique:institutions,email,' . $id,
             'alternate_email' => 'sometimes|nullable|email',

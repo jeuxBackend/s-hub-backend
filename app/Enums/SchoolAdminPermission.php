@@ -11,6 +11,9 @@ enum SchoolAdminPermission: string
     case Subjects = 'Subjects';
     case Finance = 'Finance';
     case Dashboard = 'Dashboard';
+    case Settings = 'Settings';
+    case Timetable = 'Timetable';
+    case AcademicOversight = 'AcademicOversight';
 
     /**
      * Get all permission values as array

@@ -197,7 +197,10 @@ class UserController extends Controller
     {
         $allowed = array_intersect_key($data, array_flip(['first_name', 'last_name', 'email', 'phone_number']));
 
-        if (!empty($data['country'])) {
+        // Managers and sub-admins cannot change their own country — only an
+        // Admin (via the dedicated managers/sub-admins endpoints) can set
+        // it for them. Admin may still set its own here.
+        if (!empty($data['country']) && $admin->role === \App\Enums\AdminRole::Admin) {
             if (!preg_match('/^[A-Za-z]{2}$/', $data['country'])) {
                 throw \Illuminate\Validation\ValidationException::withMessages([
                     'country' => ['Country must be a 2-letter country code (e.g. US, GB).'],
