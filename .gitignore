@@ -21,3 +21,4 @@ Homestead.yaml
 Homestead.json
 /.vagrant
 .phpunit.result.cache
+ADMIN_DASHBOARD_STATS_API.md

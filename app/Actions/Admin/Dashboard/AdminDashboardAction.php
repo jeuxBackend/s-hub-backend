@@ -2,8 +2,10 @@
 
 namespace App\Actions\Admin\Dashboard;
 
+use App\Enums\AdminRole;
 use App\Enums\GenderType;
 use App\Enums\UserRole;
+use App\Models\Admin;
 use App\Models\Institution;
 use App\Models\Student;
 use App\Models\StatusHistory;
@@ -30,6 +32,8 @@ class AdminDashboardAction
             $principalQuery = User::where('role', UserRole::Principal->value);
             $studentQuery = Student::query();
             $institutionQuery = Institution::query();
+            $managerQuery = Admin::where('role', AdminRole::Manager->value);
+            $subAdminQuery = Admin::where('role', AdminRole::SubAdmin->value);
 
             if ($institutionIds !== null) {
                 $parentQuery->whereHas('guardianStudents', fn($q) => $q->whereIn('institution_id', $institutionIds));
@@ -37,6 +41,15 @@ class AdminDashboardAction
                 $principalQuery->whereIn('institution_id', $institutionIds);
                 $studentQuery->whereIn('institution_id', $institutionIds);
                 $institutionQuery->whereIn('id', $institutionIds);
+                $managerQuery->whereHas('institutions', fn($q) => $q->whereIn('id', $institutionIds));
+
+                $user = auth()->user();
+                $subAdminQuery->where(function ($q) use ($institutionIds, $user) {
+                    $q->whereHas('assignedSchools', fn($sq) => $sq->whereIn('id', $institutionIds));
+                    if ($user && $user->country) {
+                        $q->orWhere('country', $user->country);
+                    }
+                });
             }
 
             $parentIds = (clone $parentQuery)->pluck('id')->all();
@@ -44,6 +57,8 @@ class AdminDashboardAction
             $principalIds = (clone $principalQuery)->pluck('id')->all();
             $studentIds = (clone $studentQuery)->pluck('id')->all();
             $scopedInstitutionIds = $institutionIds ?? (clone $institutionQuery)->pluck('id')->all();
+            $managerIds = (clone $managerQuery)->pluck('id')->all();
+            $subAdminIds = (clone $subAdminQuery)->pluck('id')->all();
 
             $userIdsInScope = $institutionIds === null
                 ? null
@@ -79,6 +94,16 @@ class AdminDashboardAction
                     (clone $studentQuery)->where('status', true)->count(),
                     (clone $studentQuery)->where('status', false)->count(),
                     $institutionIds === null ? null : $studentIds),
+
+                $this->bucket('managers', Admin::class, $asOfLastMonth,
+                    (clone $managerQuery)->where('status', 'active')->count(),
+                    (clone $managerQuery)->where('status', 'inactive')->count(),
+                    $managerIds),
+
+                $this->bucket('subadmins', Admin::class, $asOfLastMonth,
+                    (clone $subAdminQuery)->where('status', 'active')->count(),
+                    (clone $subAdminQuery)->where('status', 'inactive')->count(),
+                    $subAdminIds),
 
                 $this->countriesStats($asOfLastMonth, $institutionIds),
 

@@ -11,7 +11,7 @@ class GetManagerAction
 {
     public function handle(array $data = [])
     {
-        $query = Admin::select(['id', 'first_name', 'last_name', 'sure_name', 'email', 'phone_number', 'role', 'status', 'profile_image'])
+        $query = Admin::select(['id', 'first_name', 'last_name', 'sure_name', 'email', 'phone_number', 'role', 'status', 'country', 'profile_image'])
             ->where('role', AdminRole::Manager)
             ->withCount([
                 'institutions as total_schools',

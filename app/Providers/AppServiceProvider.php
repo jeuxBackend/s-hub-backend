@@ -8,9 +8,11 @@ use Illuminate\Cache\RateLimiting\Limit;
 use App\Models\User;
 use App\Models\Student;
 use App\Models\Institution;
+use App\Models\Admin;
 use App\Observers\UserStatusHistoryObserver;
 use App\Observers\StudentStatusHistoryObserver;
 use App\Observers\InstitutionStatusHistoryObserver;
+use App\Observers\AdminStatusHistoryObserver;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -35,5 +37,6 @@ class AppServiceProvider extends ServiceProvider
         User::observe(UserStatusHistoryObserver::class);
         Student::observe(StudentStatusHistoryObserver::class);
         Institution::observe(InstitutionStatusHistoryObserver::class);
+        Admin::observe(AdminStatusHistoryObserver::class);
     }
 }
