@@ -34,6 +34,8 @@ class UpdateInstituteRequest extends FormRequest
             'phone_number' => 'nullable|string|max:20',
             'alternate_phone' => 'nullable|string|max:20',
             'telephone' => 'nullable|string|max:20',
+            'type' => 'nullable|array',
+            'type.*' => 'string|max:255',
             'subjects' => 'nullable|array',
             'subjects.*' => 'string|max:100',
             'logo' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',

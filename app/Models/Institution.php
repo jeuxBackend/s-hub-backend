@@ -15,6 +15,7 @@ class Institution extends Model
         'subadmin_id',
         'category_id',
         'status',
+        'type',
         'is_blocked',
         'name',
         'slogan',
@@ -48,7 +49,22 @@ class Institution extends Model
         'allowed_alert_types' => 'array',
         'mock_exam_classroom_ids' => 'array',
         'subjects' => 'array',
+        'type' => 'array',
     ];
+
+    public function getTypeAttribute($value): array
+    {
+        if (empty($value)) {
+            return [];
+        }
+
+        if (is_array($value)) {
+            return array_values($value);
+        }
+
+        $decoded = json_decode($value, true);
+        return is_array($decoded) ? array_values($decoded) : [];
+    }
 
     public function getLogoAttribute($value): ?string
     {

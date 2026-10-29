@@ -35,3 +35,4 @@ class InstituteType extends Model
         $this->attributes['type'] = $value;
     }
 }
+

@@ -10,6 +10,7 @@
 - `POST/PUT v1/principal/students` *(last_name optional)*
 - `POST/PUT v1/manager/students` *(last_name optional)*
 - `GET v1/institute-types` *(new)*
+- `POST/PUT v1/admin/schools` & `POST/PUT v1/manager/schools` *(type array)*
 
 ---
 
@@ -344,3 +345,48 @@ Returns all school / institute type records from the `institute_types` table for
 > **Note on field naming:**  
 > Both `type` and `type_name` are available in each record for frontend convenience.
 
+
+---
+
+## 6. Institution `type` Field *(New — 2026-10-29)*
+
+### Endpoints Impacted:
+- `POST /api/v1/admin/schools` (Create school by Admin/Sub-Admin)
+- `PUT/PATCH /api/v1/admin/schools/{id}` (Update school by Admin/Sub-Admin)
+- `POST /api/v1/manager/schools` (Create school by Manager)
+- `PUT/PATCH /api/v1/manager/schools/{id}` (Update school by Manager)
+- `PUT/PATCH /api/v1/principal/institution` (Update school by Principal)
+- All GET endpoints returning school / institution data (`GET /api/v1/admin/schools`, `GET /api/v1/manager/schools`, `GET /api/v1/school/{id}`, and within user/student profiles).
+
+### Request Payload:
+Pass `type` as an array of strings (e.g., selected from `GET /api/v1/institute-types`):
+```json
+{
+  "name": "Beaconhouse School System",
+  "category_id": 1,
+  "type": [
+    "Primary School",
+    "Middle School",
+    "High School"
+  ],
+  "email": "beaconhouse@example.com",
+  "phone_number": "+923001234567",
+  "physical_address": "Main Boulevard, Lahore"
+}
+```
+
+### Response:
+Institutions consistently return `type` as an array of strings (or `[]` if none set):
+```json
+{
+  "id": 1,
+  "name": "Beaconhouse School System",
+  "type": [
+    "Primary School",
+    "Middle School",
+    "High School"
+  ],
+  "region": "Punjab",
+  "country": "PK"
+}
+```

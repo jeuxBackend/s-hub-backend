@@ -84,6 +84,8 @@ class SchoolController extends Controller
             'physical_address' => 'nullable|string',
             'region' => 'nullable|string|max:255',
             'country' => 'nullable|string|size:2',
+            'type' => 'nullable|array',
+            'type.*' => 'string|max:255',
 
             'email' => 'required|email|unique:institutions,email',
             'alternate_email' => 'nullable|email',
@@ -160,6 +162,8 @@ class SchoolController extends Controller
             'physical_address' => 'sometimes|nullable|string',
             'region' => 'sometimes|nullable|string|max:255',
             'country' => 'sometimes|nullable|string|size:2',
+            'type' => 'sometimes|nullable|array',
+            'type.*' => 'string|max:255',
 
             'email' => 'sometimes|email|unique:institutions,email,' . $id,
             'alternate_email' => 'sometimes|nullable|email',

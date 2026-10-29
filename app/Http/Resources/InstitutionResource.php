@@ -17,6 +17,9 @@ class InstitutionResource extends JsonResource
             'academic_year' => $this->academic_year,
             'examination_system' => $this->examination_system,
             'physical_address' => $this->physical_address,
+            'region' => $this->region,
+            'country' => $this->country,
+            'type' => $this->type ?? [],
 
             'email' => $this->email,
             'alternate_email' => $this->alternate_email,
