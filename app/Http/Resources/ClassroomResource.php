@@ -15,7 +15,7 @@ class ClassroomResource extends JsonResource
             'name' => $this->name,
             'code' => $this->code,
             'institution_id' => $this->institution?->id,
-            'institution_type' => $this->institution?->category->name,
+            'institution_type' => $this->institution?->category?->name,
             'total_subjects' => $this->relationLoaded('subjects') ? $this->subjects->count() : 0,
             'total_teachers' => $this->relationLoaded('classSubjectRequirements')
                 ? $this->classSubjectRequirements->pluck('teacher_id')->filter()->unique()->count()
