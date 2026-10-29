@@ -7,6 +7,8 @@
 - `GET v1/admin/sub-admins`
 - `GET v1/admin/managers`
 - `GET v1/admin/class-toppers` *(new)*
+- `POST/PUT v1/principal/students` *(last_name optional)*
+- `POST/PUT v1/manager/students` *(last_name optional)*
 
 ---
 
@@ -264,4 +266,35 @@ Ties are fully included — if two students share rank 1, both appear as rank 1.
 ### Error — Forbidden `403`
 
 Returned if the token belongs to a role other than `admin` or `sub_admin`.
+
+
+---
+
+## 4. Student Registration & Update: `last_name` Optional *(Updated — 2026-10-29)*
+
+### Endpoints Impacted:
+- `POST /api/v1/principal/students`
+- `PUT/PATCH /api/v1/principal/students/{id}`
+- `POST /api/v1/manager/students`
+- `PUT/PATCH /api/v1/manager/students/{id}`
+- `PUT/PATCH /api/v1/admin/students/{id}`
+
+### What Changed:
+- `last_name` is now strictly **optional** (`sometimes|nullable|string|max:255`).
+- Frontend forms do **NOT** require `last_name`. If a student does not have a last name, the field can be omitted, left empty `""`, or passed as `null`.
+- Empty strings `""` are automatically converted to `null` before database insertion.
+
+### Example Request Payload (`POST /api/v1/principal/students`):
+```json
+{
+  "first_name": "Ahmad",
+  "sur_name": "Khan",
+  "gender": "male",
+  "dob": "2015-05-12",
+  "term": "first",
+  "classroom_id": 3,
+  "guardian_id": 14
+}
+```
+*(Notice `last_name` is omitted completely without any validation error)*
 
