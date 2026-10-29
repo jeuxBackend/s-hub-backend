@@ -51,13 +51,15 @@ class GetClassToppersAction
             ->whereNotNull('sg.total')
             ->where('sg.total', '>', 0)
             ->groupBy('sg.student_id', 's.classroom_id', 's.institution_id')
+            ->havingRaw('SUM(sg.total) > 0')
+            ->havingRaw('SUM(sg.score) > 0') // A student with 0 obtained marks across all stats cannot be a topper
             ->select([
                 'sg.student_id',
                 's.classroom_id',
                 's.institution_id',
                 DB::raw('ROUND(SUM(sg.score), 2) AS obtained_marks'),
                 DB::raw('ROUND(SUM(sg.total), 2) AS total_marks'),
-                DB::raw('ROUND(SUM(sg.score) / SUM(sg.total) * 100, 2) AS performance_pct'),
+                DB::raw('CASE WHEN SUM(sg.total) > 0 AND SUM(sg.score) > 0 THEN ROUND((SUM(sg.score) / SUM(sg.total)) * 100, 2) ELSE 0.0 END AS performance_pct'),
             ]);
 
         if ($institutionIds !== null) {
@@ -205,8 +207,9 @@ class GetClassToppersAction
         $byClassroom = $performances->groupBy('classroom_id');
 
         foreach ($byClassroom as $classroomId => $rows) {
-            // Get distinct sorted percentages descending
+            // Get distinct sorted positive percentages descending (0% cannot be a topper)
             $distinctPcts = $rows
+                ->filter(fn($r) => (float) $r->performance_pct > 0)
                 ->pluck('performance_pct')
                 ->unique()
                 ->sortDesc()
