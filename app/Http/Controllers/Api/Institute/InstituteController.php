@@ -45,6 +45,8 @@ class InstituteController extends Controller
             $validated = $request->validate([
                 'slogan' => ['nullable', 'string', 'max:255'],
                 'logo' => ['nullable', 'image', 'mimes:jpeg,png,jpg,webp', 'max:2048'],
+                'principal_signature' => ['nullable', 'image', 'mimes:jpeg,png,jpg,webp', 'max:2048'],
+                'stamp' => ['nullable', 'image', 'mimes:jpeg,png,jpg,webp', 'max:2048'],
             ]);
 
             $user = Auth::user();
@@ -62,6 +64,12 @@ class InstituteController extends Controller
 
             if ($request->hasFile('logo') && array_key_exists('logo', $validated)) {
                 $payload['logo'] = $validated['logo'];
+            }
+
+            foreach (['principal_signature', 'stamp'] as $imageField) {
+                if ($request->hasFile($imageField) && array_key_exists($imageField, $validated)) {
+                    $payload[$imageField] = $validated[$imageField];
+                }
             }
 
             $action->handle($institute, $payload);

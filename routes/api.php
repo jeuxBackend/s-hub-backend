@@ -108,6 +108,10 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'active.user'])->group(function
         // Student Performance & Grades
         Route::apiResource('student-performances', \App\Http\Controllers\Api\StudentPerformanceController::class);
 
+        // Report-book details printed on the result PDF (conduct, remarks, next term date...)
+        Route::get('student-result-remarks', [\App\Http\Controllers\Api\StudentResultRemarkController::class, 'show']);
+        Route::put('student-result-remarks', [\App\Http\Controllers\Api\StudentResultRemarkController::class, 'upsert']);
+
         Route::prefix('classrooms/{classroom}/grades')->group(function () {
             Route::get('/', [GradeController::class, 'index']);
             Route::post('/', [GradeController::class, 'store']);

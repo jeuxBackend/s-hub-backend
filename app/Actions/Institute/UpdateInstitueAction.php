@@ -37,6 +37,21 @@ class UpdateInstitueAction
             ]);
         }
 
+        foreach (['principal_signature' => 'signatures', 'stamp' => 'stamps'] as $field => $directory) {
+            if (!(($data[$field] ?? null) instanceof \Illuminate\Http\UploadedFile)) {
+                unset($data[$field]);
+                continue;
+            }
+
+            $existingPath = $institution->getRawOriginal($field);
+
+            if ($existingPath && Storage::disk('public')->exists($existingPath)) {
+                Storage::disk('public')->delete($existingPath);
+            }
+
+            $data[$field] = $data[$field]->store($directory, 'public');
+        }
+
         $fillable = $institution->getFillable();
         $filtered = collect($data)->only($fillable)->toArray();
 

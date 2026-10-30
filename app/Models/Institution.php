@@ -20,6 +20,8 @@ class Institution extends Model
         'name',
         'slogan',
         'logo',
+        'principal_signature',
+        'stamp',
         'academic_year',
         'examination_system',
         'physical_address',
@@ -71,6 +73,16 @@ class Institution extends Model
         return $value
             ? asset('storage/' . $value)
             : asset('defaults/user.png');
+    }
+
+    public function getPrincipalSignatureAttribute($value): ?string
+    {
+        return $value ? asset('storage/' . $value) : null;
+    }
+
+    public function getStampAttribute($value): ?string
+    {
+        return $value ? asset('storage/' . $value) : null;
     }
 
     public function principal()

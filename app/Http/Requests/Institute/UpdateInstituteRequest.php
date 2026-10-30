@@ -39,6 +39,8 @@ class UpdateInstituteRequest extends FormRequest
             'subjects' => 'nullable|array',
             'subjects.*' => 'string|max:100',
             'logo' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
+            'principal_signature' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
+            'stamp' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
             'email_verified' => 'nullable|boolean',
             'phone_verified' => 'nullable|boolean',
             'category_id' => 'nullable|exists:categories,id',

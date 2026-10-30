@@ -22,3 +22,4 @@ Homestead.json
 /.vagrant
 .phpunit.result.cache
 PROMOTION_EXPENSES_API.md
+RESULT_PDF_REPORT_BOOK_API.md

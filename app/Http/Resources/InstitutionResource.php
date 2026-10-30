@@ -14,6 +14,8 @@ class InstitutionResource extends JsonResource
             'name' => $this->name,
             'slogan' => $this->slogan,
             'logo' => $this->logo,
+            'principal_signature' => $this->principal_signature,
+            'stamp' => $this->stamp,
             'academic_year' => $this->academic_year,
             'examination_system' => $this->examination_system,
             'physical_address' => $this->physical_address,
