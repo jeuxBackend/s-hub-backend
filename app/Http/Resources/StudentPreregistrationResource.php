@@ -16,6 +16,8 @@ class StudentPreregistrationResource extends JsonResource
             'submitted_at' => $this->submitted_at?->toDateTimeString(),
             'approved_at' => $this->approved_at?->toDateTimeString(),
             'notes' => $this->notes,
+            // Read-only estimate, only visible while the parent has yet to decide.
+            'expenses' => $this->status === 'submitted' ? $this->expenses : null,
             'student' => new StudentResource($this->whenLoaded('student')),
             'guardian' => new UserResource($this->whenLoaded('guardian')),
             'current_classroom' => new ClassroomResource($this->whenLoaded('currentClassroom')),

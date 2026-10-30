@@ -56,7 +56,25 @@ class StudentPromotionController extends Controller
             $validated = $request->validate([
                 'target_classroom_id' => ['required', 'exists:classrooms,id'],
                 'notes' => ['nullable', 'string'],
+                'expenses' => ['required', 'array'],
+                'expenses.tuition_fee' => ['nullable', 'numeric', 'min:0'],
+                'expenses.uniform_fee' => ['nullable', 'numeric', 'min:0'],
+                'expenses.meals_fee' => ['nullable', 'numeric', 'min:0'],
+                'expenses.books_fee' => ['nullable', 'numeric', 'min:0'],
+                'expenses.other_fee' => ['nullable', 'numeric', 'min:0'],
+                'expenses.discount' => ['nullable', 'numeric', 'min:0'],
+                'expenses.due_date' => ['nullable', 'date'],
             ]);
+
+            $expenses = $this->buildExpenses($validated['expenses']);
+
+            if ($expenses['amount'] <= 0) {
+                return $this->errorResponse('Please enter the expected expenses before sending the promotion request.', 422);
+            }
+
+            if ($expenses['discount'] > $expenses['amount']) {
+                return $this->errorResponse('Discount cannot be greater than the total expenses.', 422);
+            }
 
             $principal = auth()->user();
 
@@ -119,7 +137,7 @@ class StudentPromotionController extends Controller
                 ], 'This student promotion request has already been sent.');
             }
 
-            $preregistration = DB::transaction(function () use ($student, $currentClassroom, $targetClassroom, $validated, $existingPromotion, $nextAcademicYear) {
+            $preregistration = DB::transaction(function () use ($student, $currentClassroom, $targetClassroom, $validated, $expenses, $nextAcademicYear) {
                 return StudentPreregistration::updateOrCreate(
                     [
                         'student_id' => $student->id,
@@ -133,6 +151,7 @@ class StudentPromotionController extends Controller
                         'submitted_at' => now(),
                         'approved_at' => null,
                         'notes' => $validated['notes'] ?? null,
+                        'expenses' => $expenses,
                     ]
                 );
             });
@@ -201,6 +220,28 @@ class StudentPromotionController extends Controller
 
             return $this->exceptionResponse($e);
         }
+    }
+
+    /**
+     * Same shape as a student invoice, but informational only (never payable).
+     */
+    private function buildExpenses(array $input): array
+    {
+        $fees = [];
+
+        foreach (['tuition_fee', 'uniform_fee', 'meals_fee', 'books_fee', 'other_fee'] as $key) {
+            $fees[$key] = (float) ($input[$key] ?? 0);
+        }
+
+        $amount = array_sum($fees);
+        $discount = (float) ($input['discount'] ?? 0);
+
+        return $fees + [
+            'amount' => $amount,
+            'discount' => $discount,
+            'total_amount' => $amount - $discount,
+            'due_date' => $input['due_date'] ?? null,
+        ];
     }
 
     private function getNextAcademicYear(): string

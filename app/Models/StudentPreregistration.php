@@ -19,9 +19,11 @@ class StudentPreregistration extends Model
         'submitted_at',
         'approved_at',
         'notes',
+        'expenses',
     ];
 
     protected $casts = [
+        'expenses' => 'array',
         'submitted_at' => 'datetime',
         'approved_at' => 'datetime',
     ];

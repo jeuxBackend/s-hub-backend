@@ -21,3 +21,4 @@ Homestead.yaml
 Homestead.json
 /.vagrant
 .phpunit.result.cache
+PROMOTION_EXPENSES_API.md
