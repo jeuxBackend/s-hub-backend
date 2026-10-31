@@ -36,6 +36,9 @@ class ConversationController extends Controller
                 
                 // Additional filter: Only show conversations where both user1 and user2 exist
                 $query->whereHas('userOne')->whereHas('userTwo');
+
+                // Empty chats (created only so parents/teachers see their principal) are not shown
+                $query->whereHas('messages');
             } else {
                 $query->where(function ($q) use ($authId) {
                     $q->where('user_one_id', $authId)
@@ -46,6 +49,24 @@ class ConversationController extends Controller
             $conversations = $query->with(['userOne', 'userTwo', 'latestMessage.sender'])
                 ->orderByDesc('last_message_at')
                 ->get();
+
+            // Parents, teachers and school admins always see their principal in the inbox,
+            // even before any message has been exchanged. This is a real (empty) conversation,
+            // so the apps open it and send messages exactly like any other chat.
+            if ($auth->role !== \App\Enums\UserRole::Principal) {
+                $chattedWith = $conversations
+                    ->flatMap(fn($conversation) => [$conversation->user_one_id, $conversation->user_two_id])
+                    ->all();
+
+                $emptyPrincipalChats = $auth->chatPrincipals()
+                    ->reject(fn(User $principal) => in_array($principal->id, $chattedWith, true))
+                    ->map(function (User $principal) use ($authId) {
+                        return Conversation::findOrCreateBetween($authId, $principal->id)
+                            ->load(['userOne', 'userTwo', 'latestMessage.sender']);
+                    });
+
+                $conversations = $emptyPrincipalChats->concat($conversations)->values();
+            }
 
             return $this->successResponse(
                 ConversationResource::collection($conversations),

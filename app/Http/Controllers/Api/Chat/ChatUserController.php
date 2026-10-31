@@ -73,13 +73,7 @@ class ChatUserController extends Controller
         $allIds = $teacherIds->unique()->filter();
 
         // The principal is always available, even for a parent with no child in a class yet.
-        $institutionIds = Student::where('guardian_id', $parent->id)
-            ->pluck('institution_id')
-            ->push($institutionId)
-            ->filter()
-            ->unique();
-
-        return $this->withPrincipals($allIds, $institutionIds->all());
+        return $this->withPrincipals($allIds, $parent);
     }
 
     private function contactsForTeacher(User $teacher, int $institutionId): \Illuminate\Support\Collection
@@ -111,18 +105,16 @@ class ChatUserController extends Controller
 
         $allIds = $teacherIds->merge($parentIds)->unique()->filter();
 
-        return $this->withPrincipals($allIds, [$institutionId]);
+        return $this->withPrincipals($allIds, $teacher);
     }
 
     /**
-     * Returns the given users plus the principal(s) of the given institutions,
+     * Returns the given users plus the viewer's principal(s),
      * with the principal(s) first so the apps can pin them at the top.
      */
-    private function withPrincipals(\Illuminate\Support\Collection $userIds, array $institutionIds): \Illuminate\Support\Collection
+    private function withPrincipals(\Illuminate\Support\Collection $userIds, User $viewer): \Illuminate\Support\Collection
     {
-        $principals = User::whereIn('institution_id', $institutionIds)
-            ->where('role', UserRole::Principal->value)
-            ->get();
+        $principals = $viewer->chatPrincipals();
 
         $others = User::whereIn('id', $userIds->diff($principals->pluck('id')))->get();
 

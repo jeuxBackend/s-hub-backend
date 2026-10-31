@@ -35,9 +35,15 @@ class MessageController extends Controller
             $auth = auth()->user();
             $authId = $auth->id;
 
-            // Authorization: Principals cannot send messages
+            // Authorization: a principal can only reply, inside a chat they are part of
+            // and in which the other person has already written to them.
             if ($auth->role === \App\Enums\UserRole::Principal) {
-                return $this->errorResponse('Principals cannot send messages.', 403);
+                $isParticipant = $conversation->user_one_id === $authId || $conversation->user_two_id === $authId;
+                $hasBeenWrittenTo = $conversation->messages()->where('sender_id', '!=', $authId)->exists();
+
+                if (!$isParticipant || !$hasBeenWrittenTo) {
+                    return $this->errorResponse('Principals can only reply to messages sent to them.', 403);
+                }
             }
 
             // Authorization: only participants can send messages

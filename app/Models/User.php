@@ -163,6 +163,23 @@ class User extends Authenticatable
             ->withTimestamps();
     }
 
+    /**
+     * Principal(s) this user can always chat with: those of their own school and,
+     * for a parent, of their children's schools.
+     */
+    public function chatPrincipals(): \Illuminate\Support\Collection
+    {
+        $institutionIds = Student::where('guardian_id', $this->id)
+            ->pluck('institution_id')
+            ->push($this->institution_id)
+            ->filter()
+            ->unique();
+
+        return static::whereIn('institution_id', $institutionIds)
+            ->where('role', UserRole::Principal->value)
+            ->get();
+    }
+
     public function guardianStudents()
     {
         return $this->hasMany(Student::class, 'guardian_id');
