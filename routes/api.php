@@ -186,6 +186,7 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'active.user'])->group(function
     Route::middleware(['otp.verified', 'role:principal,school-admin'])->group(function () {
         Route::apiResource('users', UserController::class)->only(['index', 'show', 'update', 'destroy']);
         Route::prefix('principal')->middleware('role:principal')->group(function () {
+            Route::patch('school-admins/{id}/position', [SchoolAdminController::class, 'updatePosition']);
             Route::apiResource('school-admins', SchoolAdminController::class);
             Route::post('change-role', [SchoolAdminController::class, 'makeSubAdmin']);
             Route::get('teachers-list', [SchoolAdminController::class, 'getTeachersListForSchoolAdmin']);

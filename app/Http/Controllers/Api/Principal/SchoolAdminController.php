@@ -44,12 +44,20 @@ class SchoolAdminController extends Controller
             $request->validate([
                 'user_id' => 'required|exists:users,id',
                 'role' => 'sometimes|string|in:school-admin,teacher,parent',
-                'permissions' => 'required'
+                'permissions' => 'required',
+                'position' => [
+                    \Illuminate\Validation\Rule::requiredIf(
+                        ($request->role ?? \App\Enums\UserRole::SchoolAdmin->value) === \App\Enums\UserRole::SchoolAdmin->value
+                    ),
+                    'nullable',
+                    'string',
+                    'max:255',
+                ],
             ]);
 
             $requester = auth()->user();
             $role = $request->role ?? \App\Enums\UserRole::SchoolAdmin->value;
-            $user = $action->handle($request->user_id, $role, $requester, $request->permissions);
+            $user = $action->handle($request->user_id, $role, $requester, $request->permissions, $request->position);
 
             return $this->successResponse($user, 'User permissions updated successfully');
 
@@ -77,6 +85,33 @@ class SchoolAdminController extends Controller
             $user->save();
 
             return $this->successResponse($user, 'User permissions updated successfully');
+        } catch (Throwable $e) {
+            return $this->exceptionResponse($e);
+        }
+    }
+
+    public function updatePosition(Request $request, int $id)
+    {
+        try {
+            $validated = $request->validate([
+                'position' => ['required', 'string', 'max:255'],
+            ]);
+
+            $requester = auth()->user();
+            $user = User::findOrFail($id);
+
+            if ($user->institution_id !== $requester->institution_id) {
+                abort(403, 'You can only modify users within your own institution.');
+            }
+
+            if ($user->role !== \App\Enums\UserRole::SchoolAdmin) {
+                return $this->errorResponse('Only school admins have a position.', 422);
+            }
+
+            $user->position = $validated['position'];
+            $user->save();
+
+            return $this->successResponse(new UserResource($user), 'School admin position updated successfully');
         } catch (Throwable $e) {
             return $this->exceptionResponse($e);
         }
@@ -131,6 +166,7 @@ class SchoolAdminController extends Controller
             if ($user->role->value == \App\Enums\UserRole::SchoolAdmin->value) {
                 $user->role = \App\Enums\UserRole::Teacher->value;
                 $user->permissions = null;
+                $user->position = null;
                 $user->save();
             } else {
                 return $this->errorResponse('Teacher not a school admin', 400);

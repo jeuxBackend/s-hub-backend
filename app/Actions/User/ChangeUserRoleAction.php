@@ -7,7 +7,7 @@ use App\Enums\UserRole;
 
 class ChangeUserRoleAction
 {
-    public function handle(int $userId, string $role, $requester, $permissions = [])
+    public function handle(int $userId, string $role, $requester, $permissions = [], ?string $position = null)
     {
         $user = User::findOrFail($userId);
 
@@ -25,8 +25,11 @@ class ChangeUserRoleAction
 
         $user->role = UserRole::from($role);
         $user->permissions = is_array($permissions) ? $permissions : [];
+
+        // Position only belongs to school admins; clear it for any other role.
+        $user->position = $role === UserRole::SchoolAdmin->value ? $position : null;
         $user->save();
 
         return $user;
     }
-}
+}
