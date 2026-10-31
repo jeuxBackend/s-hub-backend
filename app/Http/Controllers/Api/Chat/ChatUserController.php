@@ -14,8 +14,8 @@ class ChatUserController extends Controller
      * Returns the list of users the authenticated user is allowed to chat with,
      * filtered by their role and scoped to the same institution.
      *
-     * Parent    → child's classroom teachers + the institution principal
-     * Teacher   → all other teachers + principal + parents of students in their classrooms
+     * Parent    → child's classroom teachers + the institution principal (always)
+     * Teacher   → all other teachers + principal (always) + parents of students in their classrooms
      * Principal → all teachers + all parents in the institution
      */
     public function index()
@@ -47,7 +47,7 @@ class ChatUserController extends Controller
 
     // ─── Role-specific contact builders ───────────────────────────────
 
-    private function contactsForParent(User $parent, int $institutionId): \Illuminate\Support\Collection
+    private function contactsForParent(User $parent, ?int $institutionId): \Illuminate\Support\Collection
     {
         // Get all classrooms the parent's children are enrolled in
         $classroomIds = Student::where('guardian_id', $parent->id)
@@ -72,7 +72,14 @@ class ChatUserController extends Controller
 
         $allIds = $teacherIds->unique()->filter();
 
-        return User::whereIn('id', $allIds)->get();
+        // The principal is always available, even for a parent with no child in a class yet.
+        $institutionIds = Student::where('guardian_id', $parent->id)
+            ->pluck('institution_id')
+            ->push($institutionId)
+            ->filter()
+            ->unique();
+
+        return $this->withPrincipals($allIds, $institutionIds->all());
     }
 
     private function contactsForTeacher(User $teacher, int $institutionId): \Illuminate\Support\Collection
@@ -104,7 +111,22 @@ class ChatUserController extends Controller
 
         $allIds = $teacherIds->merge($parentIds)->unique()->filter();
 
-        return User::whereIn('id', $allIds)->get();
+        return $this->withPrincipals($allIds, [$institutionId]);
+    }
+
+    /**
+     * Returns the given users plus the principal(s) of the given institutions,
+     * with the principal(s) first so the apps can pin them at the top.
+     */
+    private function withPrincipals(\Illuminate\Support\Collection $userIds, array $institutionIds): \Illuminate\Support\Collection
+    {
+        $principals = User::whereIn('institution_id', $institutionIds)
+            ->where('role', UserRole::Principal->value)
+            ->get();
+
+        $others = User::whereIn('id', $userIds->diff($principals->pluck('id')))->get();
+
+        return $principals->concat($others);
     }
 
 }
