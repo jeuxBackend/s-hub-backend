@@ -13,6 +13,10 @@ class CreateManagerAction
         $data['password'] = Hash::make($data['password']);
         $data['role'] = AdminRole::Manager;
 
+        if (isset($data['profile_image']) && $data['profile_image'] instanceof \Illuminate\Http\UploadedFile) {
+            $data['profile_image'] = $data['profile_image']->store('admin_profiles', 'public');
+        }
+
         // Auto-create a Stripe Connect account (Accounts v2 — v1 Account::create
         // is blocked on newer Stripe platform accounts with "We recommend
         // building your integration using Accounts v2"). Stripe requires

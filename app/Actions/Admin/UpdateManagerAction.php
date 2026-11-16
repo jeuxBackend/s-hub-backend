@@ -4,6 +4,7 @@ namespace App\Actions\Admin;
 
 use App\Models\Admin;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 
 class UpdateManagerAction
 {
@@ -17,6 +18,14 @@ class UpdateManagerAction
             unset($data['password']);
         }
         
+        if (isset($data['profile_image']) && $data['profile_image'] instanceof \Illuminate\Http\UploadedFile) {
+            if ($manager->profile_image) {
+                Storage::disk('public')->delete($manager->profile_image);
+            }
+
+            $data['profile_image'] = $data['profile_image']->store('admin_profiles', 'public');
+        }
+
         $manager->update($data);
         return $manager;
     }

@@ -214,6 +214,10 @@ class UserController extends Controller
         }
 
         if (!empty($data['profile_picture'])) {
+            if ($oldPicture = $admin->getRawOriginal('profile_image')) {
+                \Illuminate\Support\Facades\Storage::disk('public')->delete($oldPicture);
+            }
+
             $allowed['profile_image'] = $data['profile_picture'];
         }
 

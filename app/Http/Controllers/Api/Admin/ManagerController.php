@@ -47,6 +47,7 @@ class ManagerController extends Controller
             'emergency_contact_phone' => 'nullable|string|max:255',
             'status' => 'nullable|in:active,inactive',
             'country' => 'nullable|string|size:2',
+            'profile_image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
         ]);
 
         $manager = $this->createManagerAction->handle($data);
@@ -73,6 +74,7 @@ class ManagerController extends Controller
             'emergency_contact_phone' => 'sometimes|nullable|string|max:255',
             'status' => 'sometimes|in:active,inactive',
             'country' => 'sometimes|nullable|string|size:2',
+            'profile_image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
         ]);
 
         $manager = $this->updateManagerAction->handle($data, $id);

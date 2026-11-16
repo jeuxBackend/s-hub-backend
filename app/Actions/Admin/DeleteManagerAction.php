@@ -5,6 +5,7 @@ namespace App\Actions\Admin;
 use App\Models\Admin;
 use App\Models\Institution;
 use App\Models\ManagerInvoice;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 
 class DeleteManagerAction
@@ -29,7 +30,14 @@ class DeleteManagerAction
             ]);
         }
 
+        $picture = $manager->getRawOriginal('profile_image');
+
         $manager->delete();
+
+        if ($picture) {
+            Storage::disk('public')->delete($picture);
+        }
+
         return true;
     }
 }
