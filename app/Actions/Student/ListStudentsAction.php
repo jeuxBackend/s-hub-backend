@@ -63,6 +63,14 @@ class ListStudentsAction
         $this->applyRoleConstraints($query, $user, $filters);
         $this->applyFilters($query, $filters, $user);
 
+        // Principals / school admins: students with poor attendance (<= 50% present+late,
+        // same rule as the `attendance_indicator` in StudentResource) come first.
+        if (!($user instanceof Admin) && ($user->isRole(UserRole::Principal) || $user->isRole(UserRole::SchoolAdmin))) {
+            $query->reorder()
+                ->orderByRaw("CASE WHEN (SELECT SUM(CASE WHEN sa.status IN ('present','late') THEN 1 ELSE 0 END) * 100.0 / COUNT(*) FROM student_attendances sa WHERE sa.student_id = students.id) <= 50 THEN 0 ELSE 1 END")
+                ->latest();
+        }
+
         return $query;
     }
 
