@@ -117,7 +117,7 @@ class AdminLoginAction
         $relations = [];
 
         if (in_array($user->role, [UserRole::Principal, UserRole::SchoolAdmin])) {
-            $relations[] = 'institution';
+            $relations[] = 'institution.watermark';
         }
 
         if ($user->role === UserRole::SchoolAdmin) {

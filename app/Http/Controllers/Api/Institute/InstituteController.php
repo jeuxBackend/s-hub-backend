@@ -39,15 +39,26 @@ class InstituteController extends Controller
         }
     }
 
-    public function updateSlogan(Request $request, UpdateInstitueAction $action, GetUserAction $getUserAction)
-    {
+    public function updateSlogan(
+        Request $request,
+        UpdateInstitueAction $action,
+        GetUserAction $getUserAction,
+        \App\Actions\SchoolAsset\SaveInstitutionWatermarkAction $watermarkAction
+    ) {
         try {
             $validated = $request->validate([
                 'slogan' => ['nullable', 'string', 'max:255'],
                 'logo' => ['nullable', 'image', 'mimes:jpeg,png,jpg,webp', 'max:2048'],
                 'principal_signature' => ['nullable', 'image', 'mimes:jpeg,png,jpg,webp', 'max:2048'],
                 'stamp' => ['nullable', 'image', 'mimes:jpeg,png,jpg,webp', 'max:2048'],
+                'watermark_text' => ['nullable', 'string', 'max:500'],
+                'watermark_image' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif,webp', 'max:2048'],
+                'remove_watermark' => ['nullable', 'boolean'],
             ]);
+
+            if ($request->hasFile('watermark_image') && $request->filled('watermark_text')) {
+                return $this->errorResponse('Send either watermark_text or watermark_image, not both.', 422);
+            }
 
             $user = Auth::user();
             $institute = $user?->institution;
@@ -73,6 +84,14 @@ class InstituteController extends Controller
             }
 
             $action->handle($institute, $payload);
+
+            $watermarkAction->handle(
+                $institute,
+                $user->id,
+                $request->file('watermark_image'),
+                $validated['watermark_text'] ?? null,
+                $request->boolean('remove_watermark')
+            );
 
             return $this->successResponse(
                 $this->buildPrincipalResponse($user->id, $getUserAction),

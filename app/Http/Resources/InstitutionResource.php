@@ -44,6 +44,12 @@ class InstitutionResource extends JsonResource
             'school_admins_count' => $this->when(isset($this->school_admins_count), (int) $this->school_admins_count),
             'classrooms_count' => $this->when(isset($this->classrooms_count), (int) $this->classrooms_count),
 
+            'watermark' => $this->whenLoaded('watermark', fn() => [
+                'id' => $this->watermark->id,
+                'asset_format' => $this->watermark->asset_format->value,
+                'text_value' => $this->watermark->text_value,
+                'file_url' => $this->watermark->file_url,
+            ]),
             'category' => $this->whenLoaded('category', fn() => [
                 'id' => $this->category->id ?? null,
                 'name' => $this->category->name ?? null,

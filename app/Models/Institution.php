@@ -106,6 +106,11 @@ class Institution extends Model
         return $this->hasMany(User::class, 'institution_id')->where('role', \App\Enums\UserRole::SchoolAdmin->value);
     }
 
+    public function watermark()
+    {
+        return $this->hasOne(SchoolAsset::class, 'institution_id')->where('type', \App\Enums\SchoolAssetType::Watermark->value);
+    }
+
     public function classrooms()
     {
         return $this->hasMany(Classroom::class, 'institution_id');

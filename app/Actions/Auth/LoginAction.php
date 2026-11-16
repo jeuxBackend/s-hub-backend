@@ -120,7 +120,7 @@ class LoginAction
         $relations = [];
 
         if (in_array($user->role, [UserRole::Principal, UserRole::Teacher, UserRole::SchoolAdmin, UserRole::Parent], true)) {
-            $relations[] = 'institution';
+            $relations[] = 'institution.watermark';
         }
 
         if ($user->role === UserRole::Parent) {

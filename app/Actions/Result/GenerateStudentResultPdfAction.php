@@ -2,7 +2,9 @@
 
 namespace App\Actions\Result;
 
+use App\Enums\SchoolAssetType;
 use App\Models\FinalResultSubmission;
+use App\Models\SchoolAsset;
 use App\Models\Student;
 use App\Models\StudentGrade;
 use App\Models\StudentResultRemark;
@@ -128,6 +130,7 @@ class GenerateStudentResultPdfAction
             'logo' => $this->imageDataUri($institution?->getRawOriginal('logo')),
             'signature' => $this->imageDataUri($institution?->getRawOriginal('principal_signature')),
             'stamp' => $this->imageDataUri($institution?->getRawOriginal('stamp')),
+            'watermark' => $this->watermark($institution?->id),
         ])->render();
 
         $pdf = Pdf::loadHTML($html)
@@ -169,6 +172,29 @@ class GenerateStudentResultPdfAction
         $own = $percentages->get($studentId);
 
         return $percentages->filter(fn ($value) => $value > $own)->count() + 1;
+    }
+
+    /**
+     * The school's watermark (text or image) from its school assets, if it has one.
+     */
+    private function watermark(?int $institutionId): ?array
+    {
+        $asset = $institutionId
+            ? SchoolAsset::where('institution_id', $institutionId)->where('type', SchoolAssetType::Watermark->value)->first()
+            : null;
+
+        if (!$asset) {
+            return null;
+        }
+
+        $image = $this->imageDataUri($asset->file_path);
+        $text = trim((string) $asset->text_value);
+
+        if ($asset->asset_format->value === 'image' && $image) {
+            return ['image' => $image, 'text' => null];
+        }
+
+        return $text !== '' ? ['image' => null, 'text' => $text] : null;
     }
 
     /**

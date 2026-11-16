@@ -95,7 +95,7 @@ class UserController extends Controller
 
             // Load relationships based on user role similar to login action
             if (in_array($user->role, [\App\Enums\UserRole::Principal, \App\Enums\UserRole::Teacher, \App\Enums\UserRole::SchoolAdmin, \App\Enums\UserRole::Parent], true)) {
-                $user->load(['institution']);
+                $user->load(['institution.watermark']);
             }
 
             if ($user->role === \App\Enums\UserRole::Parent) {

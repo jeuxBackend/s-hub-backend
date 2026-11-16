@@ -18,6 +18,7 @@ class GetUserAction
         // Gate::authorize('view', $user);
         $user->load([
             'institution.category',
+            'institution.watermark',
             'guardianStudents.classroom',
             'guardianStudents.studentInvoices',
         ]);

@@ -110,6 +110,26 @@
         .footer .right {
             text-align: right;
         }
+        .watermark {
+            position: fixed;
+            top: 36%;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            opacity: 0.12;
+        }
+        .watermark span {
+            display: inline-block;
+            font-size: 64px;
+            font-weight: bold;
+            text-transform: uppercase;
+            color: #111827;
+            transform: rotate(-30deg);
+        }
+        .watermark img {
+            max-width: 380px;
+            max-height: 380px;
+        }
         .footer img {
             max-height: 70px;
             max-width: 150px;
@@ -136,6 +156,15 @@
     };
 @endphp
 <body>
+    @if ($watermark)
+        <div class="watermark">
+            @if ($watermark['image'])
+                <img src="{{ $watermark['image'] }}" alt="Watermark">
+            @else
+                <span>{{ $watermark['text'] }}</span>
+            @endif
+        </div>
+    @endif
     @foreach ($terms as $term)
         @php($remark = $term['remark'])
         <div class="page">
