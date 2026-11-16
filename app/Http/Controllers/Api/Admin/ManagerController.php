@@ -63,11 +63,20 @@ class ManagerController extends Controller
 
     public function update(Request $request, $id)
     {
+        // Uniqueness is only checked when the email is actually being changed, so saving a
+        // manager with their current email never fails (even if a user shares that email).
+        $emailRules = ['sometimes', 'email'];
+
+        if (strcasecmp((string) $request->input('email'), (string) Admin::findOrFail($id)->email) !== 0) {
+            $emailRules[] = Rule::unique('admins', 'email')->ignore($id);
+            $emailRules[] = Rule::unique('users', 'email');
+        }
+
         $data = $request->validate([
             'first_name' => 'sometimes|string|max:255',
             'sure_name' => 'sometimes|string|max:255',
             'last_name' => 'nullable|string|max:255',
-            'email' => ['sometimes', 'email', Rule::unique('admins', 'email')->ignore($id), Rule::unique('users', 'email')],
+            'email' => $emailRules,
             'phone_number' => 'sometimes|string|unique:admins,phone_number,' . $id,
             'password' => 'nullable|string|min:8',
             'emergency_contact_name' => 'sometimes|nullable|string|max:255',
