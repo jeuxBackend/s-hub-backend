@@ -167,6 +167,8 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'active.user'])->group(function
     });
 
     Route::put('update-profile', [UserController::class, 'updateProfile']);
+    Route::get('admin-settings', [\App\Http\Controllers\Api\Admin\AdminProfileController::class, 'show']);
+    Route::match(['put', 'patch', 'post'], 'admin-settings', [\App\Http\Controllers\Api\Admin\AdminProfileController::class, 'update']);
     // Route::patch('users/{user}/notifications/toggle', [UserController::class, 'toggleNotification']);
     Route::patch('users/remote/toggle', [UserController::class, 'toggleRemote']);
     Route::get('me', [UserController::class, 'getAuthenticatedUser']);

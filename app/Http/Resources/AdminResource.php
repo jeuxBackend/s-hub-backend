@@ -27,6 +27,8 @@ class AdminResource extends JsonResource
             'region' => $this->region,
             'country' => $this->country,
             'permissions' => $this->permissions,
+            'emergency_contact_name' => $this->emergency_contact_name,
+            'emergency_contact_phone' => $this->emergency_contact_phone,
             'profile_image' => $this->profile_image,
             'password_changed_at' => $this->password_changed_at?->toIso8601String(),
         ];
