@@ -33,6 +33,9 @@ class StoreStudentRequest extends FormRequest
             'classroom_id'                => ['required', 'exists:classrooms,id'],
             'guardian_id'                 => ['required', 'exists:users,id'],
             'address'                     => ['nullable', 'string'],
+            'state'                     => ['nullable', 'string', 'max:100'],
+            'province'                     => ['nullable', 'string', 'max:100'],
+            'city'                     => ['nullable', 'string', 'max:100'],
         ];
     }
 

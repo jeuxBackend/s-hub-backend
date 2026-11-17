@@ -82,6 +82,9 @@ class StudentController extends Controller
             'country_of_birth' => 'nullable|string|max:255',
             'primary_language' => 'nullable|string|max:255',
             'address' => 'nullable|string|max:255',
+            'state' => 'nullable|string|max:100',
+            'province' => 'nullable|string|max:100',
+            'city' => 'nullable|string|max:100',
             'classroom_id' => [
                 'nullable',
                 Rule::exists('classrooms', 'id')->where(fn ($q) => $q->whereIn('institution_id', $institutionIds)),
@@ -115,6 +118,9 @@ class StudentController extends Controller
             'country_of_birth' => 'sometimes|nullable|string|max:255',
             'primary_language' => 'sometimes|nullable|string|max:255',
             'address' => 'sometimes|nullable|string|max:255',
+            'state' => 'sometimes|nullable|string|max:100',
+            'province' => 'sometimes|nullable|string|max:100',
+            'city' => 'sometimes|nullable|string|max:100',
             'classroom_id' => [
                 'sometimes',
                 'nullable',

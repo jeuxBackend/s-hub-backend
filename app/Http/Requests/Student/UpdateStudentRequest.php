@@ -29,6 +29,9 @@ class UpdateStudentRequest extends FormRequest
             'country_of_birth'           => ['sometimes', 'nullable', 'string', 'max:100'],
             'primary_language'           => ['sometimes', 'nullable', 'string', 'max:100'],
             'address'                    => ['sometimes', 'nullable', 'string'],
+            'state'                    => ['sometimes', 'nullable', 'string', 'max:100'],
+            'province'                    => ['sometimes', 'nullable', 'string', 'max:100'],
+            'city'                    => ['sometimes', 'nullable', 'string', 'max:100'],
         ];
     }
 

@@ -39,6 +39,9 @@ class CreateStudentAction
                 'profile_picture' => $data['profile_picture'] ?? null,
                 'guardian_id' => $data['guardian_id'], // FK to users table
                 'address' => $data['address'] ?? null,
+                'state' => $data['state'] ?? null,
+                'province' => $data['province'] ?? null,
+                'city' => $data['city'] ?? null,
                 'institution_id' => auth()->user()->institution?->id ?? auth()->user()->institution_id,
                 'registration_number' => "student_" . time() . "_" . rand(1000, 9999), // Generate a unique registration number
                 'created_by' => auth()->id(),

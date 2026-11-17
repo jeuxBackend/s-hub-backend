@@ -18,6 +18,9 @@ class SignupRequest extends FormRequest
         $base = [
             'email'            => ['required', 'email', 'unique:users,email'],
             'phone_number'     => ['required', 'unique:users,phone_number'],
+            'state'     => ['nullable', 'string', 'max:100'],
+            'province'     => ['nullable', 'string', 'max:100'],
+            'city'     => ['nullable', 'string', 'max:100'],
             'password'         => ['required', 'string', 'min:6', 'confirmed'],
             'role'             => ['required', Rule::enum(UserRole::class)],
             // Optional security fields

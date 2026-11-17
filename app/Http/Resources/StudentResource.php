@@ -82,6 +82,9 @@ class StudentResource extends JsonResource
             'status' => $this->status,
             'attendance_status' => $this->attendance_status ?? null,
             'address' => $this->address,
+            'state' => $this->state,
+            'province' => $this->province,
+            'city' => $this->city,
             'parent' => new UserResource($this->whenLoaded('guardian')),
             'authorized_pickup' => $this->when(
                 $this->relationLoaded('guardian'),
