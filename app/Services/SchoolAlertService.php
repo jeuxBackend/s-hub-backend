@@ -234,7 +234,7 @@ class SchoolAlertService
         $updatedAlert = DB::transaction(function () use ($alert, $actor, $data) {
             $this->ensureSameInstitution($alert, $actor);
 
-            if (!in_array($actor->role?->value ?? $actor->role, ['principal', 'school-admin', 'admin', 'sub_admin'], true)) {
+            if (!in_array($actor->role?->value ?? $actor->role, ['principal', 'school-admin', 'admin', 'sub_admin', 'sub_manager', 'sub_sub_admin'], true)) {
                 abort(403, 'Unauthorized to resolve this alert.');
             }
 
@@ -244,9 +244,13 @@ class SchoolAlertService
 
             $alert->update([
                 'status' => 'resolved',
-                'resolved_by' => $actor->id,
+                'resolved_by' => $actor instanceof Admin ? null : $actor->id,
                 'resolved_at' => now(),
-                'meta' => array_merge($alert->meta ?? [], $data['meta'] ?? []),
+                'meta' => array_merge(
+                    $alert->meta ?? [],
+                    $data['meta'] ?? [],
+                    $actor instanceof Admin ? ['resolved_by_admin_id' => $actor->id] : []
+                ),
             ]);
 
             return $alert->fresh(['responses.user', 'responses.student', 'creator', 'confirmedBy', 'resolvedBy']);
@@ -398,8 +402,14 @@ class SchoolAlertService
         });
     }
 
-    protected function dispatchAlertNotification(SchoolAlert $alert, User $actor, string $state): void
+    protected function dispatchAlertNotification(SchoolAlert $alert, User|Admin $actor, string $state): void
     {
+        // Admin-side accounts (school's manager / sub-manager, admin, scoped sub-admins)
+        // are told when an alert becomes active.
+        if ($state === 'active') {
+            app(\App\Services\AdminNotificationService::class)->schoolAlert($alert);
+        }
+
         $targetRoles = $state === 'potential'
             ? ['teacher', 'school-admin', 'principal']
             : ['teacher', 'school-admin', 'principal', 'parent'];
@@ -656,8 +666,42 @@ class SchoolAlertService
         }
     }
 
+    /**
+     * Can this admin-side account act on the given school?
+     * Platform admin: any. Sub-admin / sub-sub-admin: their scope.
+     * Manager / sub-manager: their own / assigned schools.
+     */
+    protected function adminCanAccessInstitution(Admin $admin, int $institutionId): bool
+    {
+        $role = $admin->role?->value ?? $admin->role;
+
+        if ($role === 'admin') {
+            return true;
+        }
+
+        if (in_array($role, ['sub_admin', 'sub_sub_admin'], true)) {
+            $ids = $admin->assignedInstitutionIds();
+
+            return $ids === null || in_array($institutionId, $ids, true);
+        }
+
+        if (in_array($role, ['manager', 'sub_manager'], true)) {
+            return $admin->institutions()->where('id', $institutionId)->exists();
+        }
+
+        return false;
+    }
+
     protected function ensureSameInstitution(SchoolAlert $alert, User|Admin $actor): void
     {
+        if ($actor instanceof Admin) {
+            if (!$this->adminCanAccessInstitution($actor, (int) $alert->institution_id)) {
+                abort(403, 'Unauthorized access to this alert.');
+            }
+
+            return;
+        }
+
         $actorInstitutionId = $actor->institution_id ?? null;
 
         if ((int) $alert->institution_id !== (int) $actorInstitutionId) {
@@ -688,7 +732,9 @@ class SchoolAlertService
 
         $alert = SchoolAlert::create([
             'institution_id' => $institution->id,
-            'created_by' => $actor->id,
+            // created_by points at the users table, so an admin-side actor is
+            // recorded in meta instead of being stored against an unrelated user id.
+            'created_by' => $actor instanceof Admin ? null : $actor->id,
             'type' => $type,
             'status' => $initialStatus,
             'title' => $data['title'] ?? ($type === 'abduction' ? 'Potential Abduction Alert' : 'Emergency Alert'),
@@ -701,12 +747,12 @@ class SchoolAlertService
             'meta' => array_merge($data['meta'] ?? [], [
                 'ring_duration_seconds' => 180,
                 'triggered_role' => $actor->role?->value ?? $actor->role,
-            ]),
+            ], $actor instanceof Admin ? ['triggered_by_admin_id' => $actor->id] : []),
         ]);
 
         if ($isPrincipal) {
             $alert->update([
-                'confirmed_by' => $actor->id,
+                'confirmed_by' => $actor instanceof Admin ? null : $actor->id,
                 'confirmed_at' => now(),
             ]);
         }
@@ -726,7 +772,17 @@ class SchoolAlertService
                 abort(422, 'institution_id is required for platform admins.');
             }
 
-            return Institution::findOrFail($institutionId);
+            $institution = Institution::findOrFail($institutionId);
+
+            // Sub-managers and sub-sub-admins may only raise alerts for their own schools.
+            if (
+                in_array($actor->role?->value ?? $actor->role, ['sub_manager', 'sub_sub_admin'], true)
+                && !$this->adminCanAccessInstitution($actor, (int) $institution->id)
+            ) {
+                abort(403, 'This institution does not belong to your schools.');
+            }
+
+            return $institution;
         }
 
         $institutionId = $actor->institution_id;
@@ -745,7 +801,7 @@ class SchoolAlertService
     protected function isPrincipalOrPlatformAdmin(User|Admin $actor): bool
     {
         if ($actor instanceof Admin) {
-            return in_array($actor->role?->value ?? $actor->role, ['admin', 'sub_admin'], true);
+            return in_array($actor->role?->value ?? $actor->role, ['admin', 'sub_admin', 'sub_manager', 'sub_sub_admin'], true);
         }
 
         return $actor->role?->value === 'principal';

@@ -8,7 +8,7 @@ class AddManagerInvoiceAction
 {
     public function handle(array $data): ManagerInvoice
     {
-        return ManagerInvoice::create([
+        $invoice = ManagerInvoice::create([
             'manager_id' => $data['manager_id'],
             'institution_id' => $data['institution_id'] ?? null,
             'created_by' => $data['created_by'],
@@ -20,6 +20,10 @@ class AddManagerInvoiceAction
             'due_date' => $data['due_date'],
             'status' => $data['status'] ?? 'pending',
         ]);
+
+        app(\App\Services\AdminNotificationService::class)->invoiceChanged($invoice, 'created');
+
+        return $invoice;
     }
 
     private function generateInvoiceNumber(): string

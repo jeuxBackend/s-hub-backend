@@ -22,6 +22,8 @@ class UpdateInvoiceAction
             'status' => $data['status'] ?? $invoice->status,
         ]);
 
+        app(\App\Services\AdminNotificationService::class)->invoiceChanged($invoice, 'updated');
+
         return $invoice;
     }
 }

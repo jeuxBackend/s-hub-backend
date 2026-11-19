@@ -26,7 +26,13 @@ class UpdateManagerAction
             $data['profile_image'] = $data['profile_image']->store('admin_profiles', 'public');
         }
 
+        $previousStatus = $manager->status;
         $manager->update($data);
+
+        if ($previousStatus !== $manager->status) {
+            app(\App\Services\AdminNotificationService::class)->accountStatusChanged($manager, $manager->status !== 'active');
+        }
+
         return $manager;
     }
 }

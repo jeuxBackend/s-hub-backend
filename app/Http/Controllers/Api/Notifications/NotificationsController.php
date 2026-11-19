@@ -126,11 +126,7 @@ class NotificationsController extends Controller
     {
         $user = auth()->user();
 
-        if ($user instanceof \App\Models\Admin) {
-            return $this->successResponse([], 'Notifications fetched successfully');
-        }
-
-        $notifications = NotificationLog::where('user_id', $user->id)
+        $notifications = NotificationLog::where($user instanceof \App\Models\Admin ? 'admin_id' : 'user_id', $user->id)
             ->orderByDesc('created_at')
             ->get();
         $notifications = $notifications->map(function ($notification) {
@@ -186,11 +182,7 @@ class NotificationsController extends Controller
     {
         $user = auth()->user();
 
-        if ($user instanceof \App\Models\Admin) {
-            return $this->errorResponse('Notification not found', 404);
-        }
-
-        $notification = NotificationLog::where('user_id', $user->id)->where('id', $id)->first();
+        $notification = NotificationLog::where($user instanceof \App\Models\Admin ? 'admin_id' : 'user_id', $user->id)->where('id', $id)->first();
         if (!$notification) {
             return $this->errorResponse('Notification not found', 404);
         }
@@ -206,11 +198,7 @@ class NotificationsController extends Controller
         try {
             $user = auth()->user();
 
-            if ($user instanceof \App\Models\Admin) {
-                return $this->successResponse(['marked_count' => 0], 'All notifications marked as read successfully');
-            }
-
-            $updated = NotificationLog::where('user_id', $user->id)
+            $updated = NotificationLog::where($user instanceof \App\Models\Admin ? 'admin_id' : 'user_id', $user->id)
                 ->where('is_read', false)
                 ->update(['is_read' => true]);
 
@@ -231,11 +219,7 @@ class NotificationsController extends Controller
         try {
             $user = auth()->user();
 
-            if ($user instanceof \App\Models\Admin) {
-                return $this->successResponse(['unread_count' => 0], 'Unread notification count retrieved successfully');
-            }
-
-            $count = NotificationLog::where('user_id', $user->id)
+            $count = NotificationLog::where($user instanceof \App\Models\Admin ? 'admin_id' : 'user_id', $user->id)
                 ->where('is_read', false)
                 ->count();
 

@@ -25,7 +25,7 @@ class PrincipalController extends Controller
         $managerId = auth()->id();
         $principals = User::where('role', UserRole::Principal)
             ->whereHas('institution', function ($query) use ($managerId) {
-                $query->where('manager_id', $managerId);
+                $query->where(auth()->user()->institutionOwnerColumn(), $managerId);
             })
             ->when($request->filled('name'), function ($query) use ($request) {
                 $search = $request->input('name');
@@ -68,7 +68,7 @@ class PrincipalController extends Controller
             $data['profile_picture'] = $this->handleUserFileUpload($request, 'profile_picture', 'profile_pictures');
         }
 
-        $school = Institution::where('manager_id', auth()->id())->findOrFail($data['institution_id']);
+        $school = Institution::where(auth()->user()->institutionOwnerColumn(), auth()->id())->findOrFail($data['institution_id']);
 
         if ($school->status !== 'approved') {
             return $this->errorResponse('Cannot add a principal to a pending or rejected school.', 403);
@@ -89,7 +89,7 @@ class PrincipalController extends Controller
         $principal = User::where('role', UserRole::Principal)
             ->where('id', $id)
             ->whereHas('institution', function ($query) use ($managerId) {
-                $query->where('manager_id', $managerId);
+                $query->where(auth()->user()->institutionOwnerColumn(), $managerId);
             })
             ->with('institution')
             ->firstOrFail();
@@ -103,7 +103,7 @@ class PrincipalController extends Controller
         $principal = User::where('role', UserRole::Principal)
             ->where('id', $id)
             ->whereHas('institution', function ($query) use ($managerId) {
-                $query->where('manager_id', $managerId);
+                $query->where(auth()->user()->institutionOwnerColumn(), $managerId);
             })
             ->firstOrFail();
 
@@ -126,7 +126,7 @@ class PrincipalController extends Controller
         }
 
         if (isset($data['institution_id'])) {
-            $school = Institution::where('manager_id', $managerId)->findOrFail($data['institution_id']);
+            $school = Institution::where(auth()->user()->institutionOwnerColumn(), $managerId)->findOrFail($data['institution_id']);
             if ($school->status !== 'approved') {
                 return $this->errorResponse('Cannot assign a principal to a pending or rejected school.', 403);
             }
@@ -149,7 +149,7 @@ class PrincipalController extends Controller
         User::where('role', UserRole::Principal)
             ->where('id', $id)
             ->whereHas('institution', function ($query) use ($managerId) {
-                $query->where('manager_id', $managerId);
+                $query->where(auth()->user()->institutionOwnerColumn(), $managerId);
             })
             ->firstOrFail();
 
@@ -165,7 +165,7 @@ class PrincipalController extends Controller
         $principal = User::where('role', UserRole::Principal)
             ->where('id', $id)
             ->whereHas('institution', function ($query) use ($managerId) {
-                $query->where('manager_id', $managerId);
+                $query->where(auth()->user()->institutionOwnerColumn(), $managerId);
             })
             ->firstOrFail();
 

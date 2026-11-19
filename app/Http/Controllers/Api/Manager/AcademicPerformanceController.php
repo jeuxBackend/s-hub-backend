@@ -81,6 +81,6 @@ class AcademicPerformanceController extends Controller
 
     private function managerInstitutionIds(): array
     {
-        return Institution::where('manager_id', auth()->id())->pluck('id')->all();
+        return Institution::where(auth()->user()->institutionOwnerColumn(), auth()->id())->pluck('id')->all();
     }
 }

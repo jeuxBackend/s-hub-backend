@@ -36,7 +36,7 @@ class ManagerDashboardController extends Controller
     public function regions(GetDistinctRegionsAction $action)
     {
         try {
-            $institutionIds = Institution::where('manager_id', auth()->id())->pluck('id')->all();
+            $institutionIds = Institution::where(auth()->user()->institutionOwnerColumn(), auth()->id())->pluck('id')->all();
 
             return $this->successResponse($action->handle($institutionIds), 'Regions retrieved successfully.');
         } catch (Throwable $e) {

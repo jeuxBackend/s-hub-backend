@@ -15,10 +15,10 @@ class ListSchoolAdminsAction
         if ($requester instanceof \App\Models\User && $requester->isRole(UserRole::Principal)) {
             // Principal can see school admins in their school
             $query->where('institution_id', $requester->institution_id);
-        } elseif ($requester instanceof \App\Models\Admin && $requester->role->value === 'manager') {
-            // Manager can see school admins in schools they manage
+        } elseif ($requester instanceof \App\Models\Admin && $requester->isManagerLevel()) {
+            // Manager / sub-manager can see school admins in schools they manage
             $query->whereHas('institution', function ($q) use ($requester) {
-                $q->where('manager_id', $requester->id);
+                $q->where($requester->institutionOwnerColumn(), $requester->id);
             });
         } else {
             // Block all other roles

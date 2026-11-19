@@ -27,6 +27,8 @@ class Admin extends Authenticatable
         'phone_number',
         'password',
         'role',
+        'manager_id',
+        'parent_id',
         'status',
         'permissions',
         'emergency_contact_name',
@@ -71,9 +73,55 @@ class Admin extends Authenticatable
         });
     }
 
+    /**
+     * Column on `institutions` that ties a school to this account:
+     * managers own schools via manager_id, sub-managers are assigned
+     * schools via sub_manager_id.
+     */
+    public function institutionOwnerColumn(): string
+    {
+        return $this->role === \App\Enums\AdminRole::SubManager ? 'sub_manager_id' : 'manager_id';
+    }
+
+    /**
+     * True for the two accounts that work through the /manager routes.
+     */
+    public function isManagerLevel(): bool
+    {
+        return in_array($this->role, [\App\Enums\AdminRole::Manager, \App\Enums\AdminRole::SubManager], true);
+    }
+
+    /**
+     * Schools this account manages: a manager's own schools, or the
+     * schools a manager assigned to this sub-manager.
+     */
     public function institutions()
     {
-        return $this->hasMany(Institution::class, 'manager_id');
+        return $this->hasMany(Institution::class, $this->institutionOwnerColumn());
+    }
+
+    /**
+     * Sub-managers created by this manager.
+     */
+    public function subManagers()
+    {
+        return $this->hasMany(self::class, 'manager_id')->where('role', \App\Enums\AdminRole::SubManager->value);
+    }
+
+    /**
+     * The manager who created this sub-manager.
+     */
+    public function parentManager()
+    {
+        return $this->belongsTo(self::class, 'manager_id');
+    }
+
+    /**
+     * Schools assigned to this sub-manager.
+     */
+    public function subManagerSchools()
+    {
+        return $this->hasMany(Institution::class, 'sub_manager_id');
     }
 
     /**
@@ -99,6 +147,14 @@ class Admin extends Authenticatable
      */
     public function assignedInstitutionIds(): ?array
     {
+        // A sub-sub-admin works on exactly the same schools as the
+        // sub-admin who created them.
+        if ($this->role === \App\Enums\AdminRole::SubSubAdmin) {
+            $parent = $this->parentAdmin;
+
+            return $parent ? $parent->assignedInstitutionIds() : [];
+        }
+
         if ($this->role !== \App\Enums\AdminRole::SubAdmin) {
             return null;
         }
@@ -116,14 +172,67 @@ class Admin extends Authenticatable
         return null;
     }
 
+    /**
+     * The sub-admin who created this sub-sub-admin.
+     */
+    public function parentAdmin()
+    {
+        return $this->belongsTo(self::class, 'parent_id');
+    }
+
+    /**
+     * Sub-sub-admins created by this sub-admin.
+     */
+    public function subSubAdmins()
+    {
+        return $this->hasMany(self::class, 'parent_id')->where('role', \App\Enums\AdminRole::SubSubAdmin->value);
+    }
+
+    public function isSubSubAdmin(): bool
+    {
+        return $this->role === \App\Enums\AdminRole::SubSubAdmin;
+    }
+
+    /**
+     * The account whose scope (country / assigned schools) applies to this
+     * one: the parent sub-admin for a sub-sub-admin, otherwise the account itself.
+     */
+    public function scopeAdmin(): self
+    {
+        return $this->isSubSubAdmin() ? ($this->parentAdmin ?? $this) : $this;
+    }
+
+    /**
+     * Permissions that actually apply right now. For a sub-sub-admin that is
+     * what the sub-admin granted, limited to what that sub-admin still holds
+     * (nothing at all if the sub-admin is gone or blocked).
+     */
+    public function effectivePermissions(): array
+    {
+        $own = is_array($this->permissions) ? $this->permissions : [];
+
+        if (!$this->isSubSubAdmin()) {
+            return $own;
+        }
+
+        $parent = $this->parentAdmin;
+        if (!$parent || $parent->status !== 'active') {
+            return [];
+        }
+
+        $parentPerms = is_array($parent->permissions) ? $parent->permissions : [];
+
+        return array_values(array_intersect($own, $parentPerms));
+    }
+
     public function students()
     {
-        return $this->hasManyThrough(Student::class, Institution::class, 'manager_id', 'institution_id');
+        return $this->hasManyThrough(Student::class, Institution::class, $this->institutionOwnerColumn(), 'institution_id');
     }
 
     public function users()
     {
-        return $this->hasManyThrough(User::class, Institution::class, 'manager_id', 'institution_id');
+        return $this->hasManyThrough(User::class, Institution::class, $this->institutionOwnerColumn(), 'institution_id');
     }
 
     public function invoices()

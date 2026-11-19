@@ -31,7 +31,30 @@ class UpdateSubAdminAction
             $data['profile_image'] = $data['profile_image']->store('admin_profiles', 'public');
         }
 
+        $previousStatus = $subAdmin->status;
         $subAdmin->update($data);
+
+        if ($previousStatus !== $subAdmin->status) {
+            app(\App\Services\AdminNotificationService::class)->accountStatusChanged($subAdmin, $subAdmin->status !== 'active');
+        }
+
+        // A sub-admin can never hold less than its own sub-sub-admins: when
+        // permissions are reduced, take the lost ones away from them too.
+        if (array_key_exists('permissions', $data)) {
+            $kept = is_array($data['permissions']) ? $data['permissions'] : [];
+            $subAdmin->subSubAdmins()->get()->each(function ($child) use ($kept) {
+                $current = is_array($child->permissions) ? $child->permissions : [];
+                $trimmed = array_values(array_intersect($current, $kept));
+                if ($trimmed !== $current) {
+                    $child->update(['permissions' => $trimmed]);
+                }
+            });
+        }
+
+        // Blocking a sub-admin logs its sub-sub-admins out as well.
+        if (($data['status'] ?? null) === 'inactive') {
+            $subAdmin->subSubAdmins()->get()->each(fn ($child) => $child->tokens()->delete());
+        }
 
         if ($schoolIdsProvided) {
             // Full sync: unassign anything no longer in the list, assign the rest.

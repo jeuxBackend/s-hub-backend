@@ -7,6 +7,8 @@ enum AdminRole: string
     case Admin = 'admin';
     case SubAdmin = 'sub_admin';
     case Manager = 'manager';
+    case SubManager = 'sub_manager';
+    case SubSubAdmin = 'sub_sub_admin';
 
     /**
      * Get all role values as array (Required for migration)
@@ -39,6 +41,8 @@ enum AdminRole: string
             self::Admin => 'Admin',
             self::SubAdmin => 'Sub Admin',
             self::Manager => 'Manager',
+            self::SubManager => 'Sub Manager',
+            self::SubSubAdmin => 'Sub Sub Admin',
         };
     }
 }

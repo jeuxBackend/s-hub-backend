@@ -17,7 +17,7 @@ class ListGuardiansAction
 
         $query = User::query()->where('role', 'parent');
 
-        if ($requester instanceof Admin && $requester->role === AdminRole::Manager) {
+        if ($requester instanceof Admin && $requester->isManagerLevel()) {
             // A manager has no institution_id of its own — scope to every
             // institution it owns instead.
             $query->whereIn('institution_id', $requester->institutions()->pluck('id'));

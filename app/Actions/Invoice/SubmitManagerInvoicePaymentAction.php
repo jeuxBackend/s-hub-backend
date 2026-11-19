@@ -29,6 +29,8 @@ class SubmitManagerInvoicePaymentAction
             'status' => 'pending_confirmation',
         ]);
 
+        app(\App\Services\AdminNotificationService::class)->paymentSubmitted($invoice);
+
         return $invoice;
     }
 }

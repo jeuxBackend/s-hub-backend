@@ -51,6 +51,10 @@ Broadcast::channel('notifications.{userId}', function (User $user, int $userId) 
     return (int) $user->id === (int) $userId;
 });
 
+Broadcast::channel('admin-notifications.{adminId}', function ($user, int $adminId) {
+    return $user instanceof \App\Models\Admin && (int) $user->id === (int) $adminId;
+});
+
 Broadcast::channel('school-alerts.{institutionId}', function (User $user, int $institutionId) {
     return (int) $user->institution_id === (int) $institutionId;
 });

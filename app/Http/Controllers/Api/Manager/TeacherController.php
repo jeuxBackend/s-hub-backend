@@ -27,7 +27,7 @@ class TeacherController extends Controller
     public function index(Request $request)
     {
         $data = $request->all();
-        $data['manager_id'] = auth()->id();
+        $data['institution_ids'] = auth()->user()->institutions()->pluck('id')->all();
 
         $teachers = $this->getGlobalTeachersAction->handle($data);
         return $this->paginatedResponse(

@@ -13,6 +13,7 @@ class Institution extends Model
     protected $fillable = [
         'manager_id',
         'subadmin_id',
+        'sub_manager_id',
         'category_id',
         'status',
         'type',
@@ -119,6 +120,11 @@ class Institution extends Model
     public function manager(): BelongsTo
     {
         return $this->belongsTo(Admin::class, 'manager_id');
+    }
+
+    public function subManager(): BelongsTo
+    {
+        return $this->belongsTo(Admin::class, 'sub_manager_id');
     }
 
     public function category(): BelongsTo

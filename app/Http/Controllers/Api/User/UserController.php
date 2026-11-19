@@ -84,11 +84,15 @@ class UserController extends Controller
             if ($user instanceof \App\Models\Admin) {
                 $user->load('assignedSchools:id,name,subadmin_id');
 
+                if ($user->role === \App\Enums\AdminRole::SubManager) {
+                    $user->load('subManagerSchools:id,name,sub_manager_id');
+                }
+
                 return $this->successResponse([
                     'user' => new \App\Http\Resources\AdminResource($user),
                     'role' => $user->role->value,
                     'is_registered' => !is_null($user->password),
-                    'unread_notification_count' => 0,
+                    'unread_notification_count' => \App\Models\NotificationLog::where('admin_id', $user->id)->where('is_read', false)->count(),
                     'ongoing_class' => null,
                 ], 'Authenticated user data retrieved successfully');
             }

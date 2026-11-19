@@ -30,7 +30,6 @@ class StudentController extends Controller
     public function index(Request $request)
     {
         $data = $request->all();
-        $data['manager_id'] = auth()->id();
         $data['school_ids'] = $this->managerInstitutionIds();
 
         $students = $this->listStudentsAction->handle($data);
@@ -161,7 +160,7 @@ class StudentController extends Controller
 
     private function managerInstitutionIds(): array
     {
-        return Institution::where('manager_id', auth()->id())->pluck('id')->all();
+        return Institution::where(auth()->user()->institutionOwnerColumn(), auth()->id())->pluck('id')->all();
     }
 
     /**

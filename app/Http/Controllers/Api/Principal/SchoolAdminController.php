@@ -21,7 +21,7 @@ class SchoolAdminController extends Controller
             $requester = auth()->user();
 
             if (
-                !($requester instanceof \App\Models\Admin && $requester->role->value === 'manager') &&
+                !($requester instanceof \App\Models\Admin && $requester->isManagerLevel()) &&
                 !($requester instanceof \App\Models\User && $requester->isRole(\App\Enums\UserRole::Principal))
             ) {
                 abort(403, 'Unauthorized. Only Principals and Managers can view School Admins.');

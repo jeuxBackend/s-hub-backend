@@ -28,6 +28,8 @@ class ConfirmManagerInvoicePaymentAction
             'confirmed_at' => now(),
         ]);
 
+        app(\App\Services\AdminNotificationService::class)->paymentConfirmed($invoice);
+
         return $invoice;
     }
 }

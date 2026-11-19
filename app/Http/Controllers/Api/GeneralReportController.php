@@ -23,7 +23,7 @@ class GeneralReportController extends Controller
      */
     private function visibleRolesFor(string $role): array
     {
-        if ($role === AdminRole::SubAdmin->value) {
+        if (in_array($role, [AdminRole::SubAdmin->value, AdminRole::SubSubAdmin->value], true)) {
             return [AdminRole::SubAdmin->value, AdminRole::Admin->value];
         }
 
@@ -102,7 +102,7 @@ class GeneralReportController extends Controller
         // (manager reports carry no institution_id of their own), plus its
         // own reports regardless of scope. No-op for admin, manager, or an
         // unrestricted sub-admin.
-        if ($user instanceof Admin && $user->role === AdminRole::SubAdmin) {
+        if ($user instanceof Admin && in_array($user->role, [AdminRole::SubAdmin, AdminRole::SubSubAdmin], true)) {
             $scopedIds = $user->assignedInstitutionIds();
 
             if ($scopedIds !== null) {
@@ -201,7 +201,7 @@ class GeneralReportController extends Controller
                 UserRole::Teacher => [UserRole::Principal->value, AdminRole::Manager->value],
                 UserRole::Principal => [AdminRole::Admin->value, AdminRole::Manager->value, UserRole::SchoolAdmin->value],
                 UserRole::SchoolAdmin => [AdminRole::Admin->value, AdminRole::Manager->value, UserRole::Principal->value],
-                AdminRole::Admin, AdminRole::SubAdmin => [AdminRole::Manager->value],
+                AdminRole::Admin, AdminRole::SubAdmin, AdminRole::SubSubAdmin => [AdminRole::Manager->value],
                 default => []
             };
 
@@ -222,6 +222,8 @@ class GeneralReportController extends Controller
             'description' => $validated['description'],
             'status' => ReportStatus::Pending->value
         ]);
+
+        app(\App\Services\AdminNotificationService::class)->reportToAdmin($report);
 
         return $this->successResponse(
             new GeneralReportResource($report->load(['reporter'])),
@@ -261,7 +263,7 @@ class GeneralReportController extends Controller
                 UserRole::Teacher => [UserRole::Principal->value, AdminRole::Manager->value],
                 UserRole::Principal => [AdminRole::Admin->value, AdminRole::Manager->value, UserRole::SchoolAdmin->value],
                 UserRole::SchoolAdmin => [AdminRole::Admin->value, AdminRole::Manager->value, UserRole::Principal->value],
-                AdminRole::Admin, AdminRole::SubAdmin => [AdminRole::Manager->value],
+                AdminRole::Admin, AdminRole::SubAdmin, AdminRole::SubSubAdmin => [AdminRole::Manager->value],
                 default => []
             };
 

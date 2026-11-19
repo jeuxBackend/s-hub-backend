@@ -99,7 +99,7 @@ class SchoolAlertController extends Controller
     public function triggerAbduction(Request $request, SchoolAlertService $service)
     {
         try {
-            $this->authorizeRole(['teacher', 'school-admin', 'principal', 'admin', 'sub_admin']);
+            $this->authorizeRole(['teacher', 'school-admin', 'principal', 'admin', 'sub_admin', 'sub_manager', 'sub_sub_admin']);
 
             $data = $request->validate([
                 'institution_id' => 'nullable|exists:institutions,id',
@@ -132,7 +132,7 @@ class SchoolAlertController extends Controller
     public function triggerEmergency(Request $request, SchoolAlertService $service)
     {
         try {
-            $this->authorizeRole(['teacher', 'school-admin', 'principal', 'admin', 'sub_admin']);
+            $this->authorizeRole(['teacher', 'school-admin', 'principal', 'admin', 'sub_admin', 'sub_manager', 'sub_sub_admin']);
 
             $data = $request->validate([
                 'institution_id' => 'nullable|exists:institutions,id',
@@ -190,7 +190,7 @@ class SchoolAlertController extends Controller
     public function resolve(Request $request, SchoolAlert $alert, SchoolAlertService $service)
     {
         try {
-            $this->authorizeRole(['principal', 'school-admin', 'admin', 'sub_admin']);
+            $this->authorizeRole(['principal', 'school-admin', 'admin', 'sub_admin', 'sub_manager', 'sub_sub_admin']);
 
             $data = $request->validate([
                 'meta' => 'nullable|array',

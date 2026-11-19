@@ -49,6 +49,10 @@ class AdminLoginAction
             throw new AuthorizationException('Your account has been blocked.');
         }
 
+        if ($admin->role === AdminRole::SubSubAdmin && $admin->parentAdmin?->status !== 'active') {
+            throw new AuthorizationException('Your account has been blocked.');
+        }
+
         $this->updateFcmToken($admin, $data['fcm_token'] ?? null);
         $token = $admin->createToken('admin_auth_token')->plainTextToken;
 
@@ -56,10 +60,15 @@ class AdminLoginAction
             $admin->load(['institutions']);
         }
 
+        if ($admin->role === AdminRole::SubManager) {
+            $admin->load('subManagerSchools:id,name,sub_manager_id');
+        }
+
         return [
             'user' => new AdminResource($admin),
             'token' => $token,
-            'type' => 'admin'
+            'type' => 'admin',
+            'unread_notification_count' => \App\Models\NotificationLog::where('admin_id', $admin->id)->where('is_read', false)->count()
         ];
     }
 

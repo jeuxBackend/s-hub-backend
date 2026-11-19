@@ -113,9 +113,9 @@ class ClassnameController extends Controller
             return;
         }
 
-        if ($user->role === AdminRole::Manager) {
+        if ($user->role === AdminRole::Manager || $user->role === AdminRole::SubManager) {
             $owns = Institution::where('id', $institutionId)
-                ->where('manager_id', $user->id)
+                ->where($user->institutionOwnerColumn(), $user->id)
                 ->exists();
 
             if (!$owns) {

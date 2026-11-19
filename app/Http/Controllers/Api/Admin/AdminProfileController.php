@@ -20,7 +20,9 @@ class AdminProfileController extends Controller
     private const EDITABLE = [
         'admin' => ['first_name', 'sure_name', 'last_name', 'phone_number', 'profile_image'],
         'sub_admin' => ['phone_number', 'profile_image'],
+        'sub_sub_admin' => ['phone_number', 'profile_image'],
         'manager' => ['phone_number', 'emergency_contact_name', 'emergency_contact_phone', 'profile_image'],
+        'sub_manager' => ['phone_number', 'emergency_contact_name', 'emergency_contact_phone', 'profile_image'],
     ];
 
     private const PASSWORD_FIELDS = ['current_password', 'password', 'password_confirmation'];
@@ -31,6 +33,10 @@ class AdminProfileController extends Controller
 
         if (!$admin instanceof Admin) {
             return $this->errorResponse('Only admin, sub-admin and manager accounts can use this endpoint.', 403);
+        }
+
+        if ($admin->role === AdminRole::SubManager) {
+            $admin->load('subManagerSchools:id,name,sub_manager_id');
         }
 
         return $this->successResponse(['user' => new AdminResource($admin)], 'Profile fetched successfully');

@@ -63,6 +63,8 @@ class SchoolController extends Controller
         $this->assertInScope($id);
 
         $school = $this->updateSchoolAction->handle(['status' => 'approved'], $id);
+        app(\App\Services\AdminNotificationService::class)->schoolDecision($school, 'approved');
+
         return $this->successResponse($school, 'School approved successfully');
     }
 
@@ -71,6 +73,8 @@ class SchoolController extends Controller
         $this->assertInScope($id);
 
         $school = $this->updateSchoolAction->handle(['status' => 'rejected'], $id);
+        app(\App\Services\AdminNotificationService::class)->schoolDecision($school, 'rejected');
+
         return $this->successResponse($school, 'School rejected successfully');
     }
 
@@ -117,6 +121,9 @@ class SchoolController extends Controller
 
         if (auth()->user()->role === \App\Enums\AdminRole::SubAdmin) {
             $data['subadmin_id'] = auth()->id();
+        } elseif (auth()->user()->role === \App\Enums\AdminRole::SubSubAdmin) {
+            // Schools a sub-sub-admin adds belong to the sub-admin who created them.
+            $data['subadmin_id'] = auth()->user()->parent_id;
         }
 
         $school = $this->createSchoolAction->handle($data);

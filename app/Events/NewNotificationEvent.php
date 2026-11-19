@@ -38,7 +38,10 @@ class NewNotificationEvent implements ShouldBroadcastNow
      */
     public function broadcastOn(): array
     {
-        $channel = new PrivateChannel('notifications.' . $this->notification->user_id);
+        // Admin-side accounts have their own channel so ids never clash with users.
+        $channel = $this->notification->admin_id
+            ? new PrivateChannel('admin-notifications.' . $this->notification->admin_id)
+            : new PrivateChannel('notifications.' . $this->notification->user_id);
         Log::info('NewNotificationEvent broadcasting on channel', [
             'channel' => $channel->name,
             'user_id' => $this->notification->user_id

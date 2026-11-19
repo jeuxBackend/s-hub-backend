@@ -21,12 +21,13 @@ class CheckSubAdminPermission
         // Assuming role could be an Enum instance or a string value
         $roleValue = $user->role instanceof AdminRole ? $user->role->value : $user->role;
 
-        if ($roleValue !== AdminRole::SubAdmin->value) {
+        if (!in_array($roleValue, [AdminRole::SubAdmin->value, AdminRole::SubSubAdmin->value], true)) {
             return $next($request);
         }
 
-        // Allowed if the sub-admin holds ANY one of the listed permissions
-        $userPermissions = $user->permissions ?? [];
+        // Allowed if the sub-admin holds ANY one of the listed permissions.
+        // For a sub-sub-admin this is limited to what its sub-admin still holds.
+        $userPermissions = $user->effectivePermissions();
         $hasAny = collect($permissions)->contains(fn($permission) => in_array($permission, $userPermissions));
 
         if (!$hasAny) {

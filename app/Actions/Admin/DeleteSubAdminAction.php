@@ -16,6 +16,15 @@ class DeleteSubAdminAction
             Storage::disk('public')->delete($subAdmin->profile_image);
         }
 
+        // Their sub-sub-admins are removed with them (database cascade);
+        // clean up the profile pictures first.
+        $subAdmin->subSubAdmins()->get()->each(function ($child) {
+            if ($child->profile_image) {
+                Storage::disk('public')->delete($child->profile_image);
+            }
+            $child->tokens()->delete();
+        });
+
         $subAdmin->delete();
         return true;
     }

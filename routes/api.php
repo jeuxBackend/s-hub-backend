@@ -85,12 +85,12 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'active.user'])->group(function
 
     Route::patch('users/allow-alert/toggle', [UserController::class, 'toggleAllowAlert']);
 
-    // Class names: per-institution, managed by admin/sub_admin/manager only.
+    // Class names: per-institution, managed by admin/sub_admin/sub_sub_admin/manager/sub_manager/principal only.
     // Listing/viewing is open to any authenticated, active user regardless of role.
     Route::get('classnames', [ClassnameController::class, 'index']);
     Route::get('classnames/{classname}', [ClassnameController::class, 'show']);
 
-    Route::middleware('role:admin,sub_admin,manager,principal')->group(function () {
+    Route::middleware('role:admin,sub_admin,sub_sub_admin,manager,sub_manager,principal')->group(function () {
         Route::post('classnames', [ClassnameController::class, 'store']);
         Route::put('classnames/{classname}', [ClassnameController::class, 'update']);
         Route::patch('classnames/{classname}', [ClassnameController::class, 'update']);
@@ -319,7 +319,14 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'active.user'])->group(function
     Route::get('institute-types/{id}', [\App\Http\Controllers\Api\InstituteTypeController::class, 'show']);
 
     // ===================== GLOBAL ADMIN ONLY =====================
-    Route::prefix('admin')->middleware('role:admin,sub_admin')->group(function () {
+    Route::prefix('admin')->middleware('role:admin,sub_admin,sub_sub_admin')->group(function () {
+        // Sub-admins create and manage their own sub-sub-admins.
+        Route::middleware('role:sub_admin')->group(function () {
+            Route::get('sub-sub-admins/permissions', [\App\Http\Controllers\Api\Admin\SubSubAdminController::class, 'permissions']);
+            Route::apiResource('sub-sub-admins', \App\Http\Controllers\Api\Admin\SubSubAdminController::class);
+            Route::patch('sub-sub-admins/{id}/toggle-block', [\App\Http\Controllers\Api\Admin\SubSubAdminController::class, 'toggleBlock']);
+        });
+
         Route::get('dashboard', [ActivityControler::class, 'dashboard'])->middleware('subadmin.permission:Dashboard');
 
         Route::apiResource('managers', ManagerController::class)->middleware('subadmin.permission:Managers');
@@ -328,8 +335,8 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'active.user'])->group(function
         // Must come before the apiResource below, else {sub_admin} would swallow "permissions".
         Route::get('sub-admins/permissions', [SubAdminController::class, 'permissions'])->middleware('role:admin');
         Route::apiResource('sub-admins', SubAdminController::class)->middleware('role:admin');
-        Route::apiResource('manager-invoices', ManagerInvoiceController::class)->middleware('subadmin.permission:Managers');
-        Route::patch('manager-invoices/{id}/confirm', [ManagerInvoiceController::class, 'confirm'])->middleware('subadmin.permission:Managers');
+        Route::apiResource('manager-invoices', ManagerInvoiceController::class)->middleware('subadmin.permission:Invoices');
+        Route::patch('manager-invoices/{id}/confirm', [ManagerInvoiceController::class, 'confirm'])->middleware('subadmin.permission:Invoices');
 
         // Read-only views for Admin
         // Must come before the apiResource below, else {school} would swallow "names"/"pending".
@@ -344,24 +351,42 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'active.user'])->group(function
         Route::apiResource('students', AdminStudentController::class)->only(['index', 'show', 'update', 'destroy'])->middleware('subadmin.permission:Students');
         Route::patch('schools/{id}/alert-feature', [SchoolController::class, 'toggleAlertFeature'])->middleware('subadmin.permission:Schools');
         Route::get('schools/{id}/classrooms', [SchoolController::class, 'classrooms'])->middleware('subadmin.permission:Schools,Teachers,Students');
-        Route::get('categories', [\App\Http\Controllers\Api\Admin\CategoryController::class, 'index'])->middleware('subadmin.permission:Schools');
-        Route::post('categories', [\App\Http\Controllers\Api\Admin\CategoryController::class, 'store'])->middleware('subadmin.permission:Schools');
-        Route::delete('categories/{category}', [\App\Http\Controllers\Api\Admin\CategoryController::class, 'destroy'])->middleware('subadmin.permission:Schools');
+        Route::get('categories', [\App\Http\Controllers\Api\Admin\CategoryController::class, 'index'])->middleware('subadmin.permission:Schools,Categories');
+        Route::post('categories', [\App\Http\Controllers\Api\Admin\CategoryController::class, 'store'])->middleware('subadmin.permission:Categories');
+        Route::delete('categories/{category}', [\App\Http\Controllers\Api\Admin\CategoryController::class, 'destroy'])->middleware('subadmin.permission:Categories');
         Route::post('settings', [SettingController::class, 'update'])->middleware('subadmin.permission:Settings');
         Route::put('settings', [SettingController::class, 'update'])->middleware('subadmin.permission:Settings');
 
         // Class toppers — top performing students per classroom per school (ties fully included)
-        Route::get('class-toppers', [\App\Http\Controllers\Api\Admin\ClassToppersController::class, 'index'])->middleware('subadmin.permission:Students,Dashboard');
+        Route::get('class-toppers', [\App\Http\Controllers\Api\Admin\ClassToppersController::class, 'index'])->middleware('subadmin.permission:AcademicAnalytics');
     });
 
     // ===================== MANAGER ONLY =====================
-    Route::prefix('manager')->middleware('role:manager')->group(function () {
+    Route::prefix('manager')->middleware('role:manager,sub_manager')->group(function () {
+        // ---- Manager-only: sub-manager admin, school/principal creation, billing ----
+        Route::middleware('role:manager')->group(function () {
+            Route::apiResource('sub-managers', \App\Http\Controllers\Api\Manager\SubManagerController::class);
+            Route::patch('sub-managers/{id}/toggle-block', [\App\Http\Controllers\Api\Manager\SubManagerController::class, 'toggleBlock']);
+            Route::post('schools', [ManagerSchoolController::class, 'store']);
+            Route::delete('schools/{school}', [ManagerSchoolController::class, 'destroy']);
+            Route::post('principals', [ManagerPrincipalController::class, 'store']);
+            Route::delete('principals/{principal}', [ManagerPrincipalController::class, 'destroy']);
+            Route::get('my-invoices', [ActivitiesController::class, 'getInvoices']);
+            Route::get('my-invoices/{id}', [ActivitiesController::class, 'showInvoice']);
+            Route::post('my-invoices/{id}/submit-payment', [ActivitiesController::class, 'submitPayment']);
+            Route::post('categories', [\App\Http\Controllers\Api\Admin\CategoryController::class, 'store']);
+            Route::delete('categories/{category}', [\App\Http\Controllers\Api\Admin\CategoryController::class, 'destroy']);
+            Route::post('stripe/connect', [\App\Http\Controllers\Api\Manager\StripeConnectController::class, 'connect']);
+            Route::get('stripe/status', [\App\Http\Controllers\Api\Manager\StripeConnectController::class, 'status']);
+        });
+
+        // ---- Manager and sub-manager (sub-managers only see their assigned schools) ----
         // Must come before the apiResource below, else {school} would swallow "names".
         Route::get('schools/names', [ManagerSchoolController::class, 'names']);
-        Route::apiResource('schools', ManagerSchoolController::class);
+        Route::apiResource('schools', ManagerSchoolController::class)->except(['store', 'destroy']);
         Route::get('schools/{id}/classrooms', [ManagerSchoolController::class, 'classrooms']);
         Route::get('classrooms/{id}/subjects', [ManagerSchoolController::class, 'classroomSubjects']);
-        Route::apiResource('principals', ManagerPrincipalController::class);
+        Route::apiResource('principals', ManagerPrincipalController::class)->except(['store', 'destroy']);
         Route::apiResource('teachers', ManagerTeacherController::class)->only(['index', 'show', 'store', 'update', 'destroy']);
         Route::apiResource('students', ManagerStudentController::class)->only(['index', 'show', 'store', 'update', 'destroy']);
         Route::apiResource('parents', \App\Http\Controllers\Api\Manager\GuardianController::class)->only(['index']);
@@ -381,16 +406,7 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'active.user'])->group(function
             Route::get('students', [AcademicPerformanceController::class, 'students']);
             Route::get('trend', [AcademicPerformanceController::class, 'trend']);
         });
-        Route::get('my-invoices', [ActivitiesController::class, 'getInvoices']);
-        Route::get('my-invoices/{id}', [ActivitiesController::class, 'showInvoice']);
-        Route::post('my-invoices/{id}/submit-payment', [ActivitiesController::class, 'submitPayment']);
         Route::get('categories', [\App\Http\Controllers\Api\Admin\CategoryController::class, 'index']);
-        Route::post('categories', [\App\Http\Controllers\Api\Admin\CategoryController::class, 'store']);
-        Route::delete('categories/{category}', [\App\Http\Controllers\Api\Admin\CategoryController::class, 'destroy']);
-
-        // Stripe Connect for Managers
-        Route::post('stripe/connect', [\App\Http\Controllers\Api\Manager\StripeConnectController::class, 'connect']);
-        Route::get('stripe/status', [\App\Http\Controllers\Api\Manager\StripeConnectController::class, 'status']);
     });
 
     // ===================== PARENT ENDPOINTS =====================

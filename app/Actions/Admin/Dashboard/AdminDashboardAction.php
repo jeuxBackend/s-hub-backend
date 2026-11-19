@@ -43,7 +43,7 @@ class AdminDashboardAction
                 $institutionQuery->whereIn('id', $institutionIds);
                 $managerQuery->whereHas('institutions', fn($q) => $q->whereIn('id', $institutionIds));
 
-                $user = auth()->user();
+                $user = auth()->user()?->scopeAdmin();
                 $subAdminQuery->where(function ($q) use ($institutionIds, $user) {
                     $q->whereHas('assignedSchools', fn($sq) => $sq->whereIn('id', $institutionIds));
                     if ($user && $user->country) {

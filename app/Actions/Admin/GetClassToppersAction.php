@@ -179,6 +179,9 @@ class GetClassToppersAction
             return null;
         }
 
+        // A sub-sub-admin is scoped exactly like the sub-admin who created them.
+        $admin = $admin->scopeAdmin();
+
         // Sub-admin: strictly scoped to their country schools
         if ($admin->country) {
             $countrySchools = Institution::where('country', $admin->country);

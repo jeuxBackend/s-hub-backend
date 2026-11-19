@@ -12,6 +12,9 @@ enum SubAdminPermission: string
     case Students = 'Students';
     case Reports = 'Reports';
     case Settings = 'Settings';
+    case Categories = 'Categories';
+    case Invoices = 'Invoices';
+    case AcademicAnalytics = 'AcademicAnalytics';
 
     /**
      * Get all permission values as array

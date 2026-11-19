@@ -27,7 +27,7 @@ class SchoolController extends Controller
     public function index(Request $request)
     {
         $data = $request->all();
-        $data['manager_id'] = auth()->id();
+        $data['institution_ids'] = auth()->user()->institutions()->pluck('id')->all();
 
         $schools = $this->getSchoolsAction->handle($data);
         return $this->paginatedResponse(JsonResource::collection($schools), 'Schools retrieved successfully');
@@ -38,7 +38,7 @@ class SchoolController extends Controller
      */
     public function names()
     {
-        $schools = Institution::where('manager_id', auth()->id())
+        $schools = Institution::where(auth()->user()->institutionOwnerColumn(), auth()->id())
             ->select(['id', 'name', 'status'])
             ->orderBy('name')
             ->get();
@@ -75,6 +75,8 @@ class SchoolController extends Controller
         $data['status'] = 'pending';
 
         $school = $this->createSchoolAction->handle($data);
+        app(\App\Services\AdminNotificationService::class)->schoolSubmitted($school);
+
         return $this->successResponse($school, 'School created successfully', 201);
     }
 
@@ -82,7 +84,7 @@ class SchoolController extends Controller
     {
         $school = Institution::with(['manager:id,first_name,sure_name,last_name,email', 'category', 'principal'])
             ->withCount(['students', 'teachers', 'schoolAdmins', 'classrooms'])
-            ->where('manager_id', auth()->id())
+            ->where(auth()->user()->institutionOwnerColumn(), auth()->id())
             ->findOrFail($id);
         return $this->successResponse($school, 'School retrieved successfully');
     }
@@ -93,7 +95,7 @@ class SchoolController extends Controller
      */
     public function classrooms($id)
     {
-        Institution::where('manager_id', auth()->id())->findOrFail($id);
+        Institution::where(auth()->user()->institutionOwnerColumn(), auth()->id())->findOrFail($id);
 
         $classrooms = Classroom::where('institution_id', $id)
             ->select(['id', 'name', 'in_charge_id'])
@@ -111,7 +113,7 @@ class SchoolController extends Controller
      */
     public function classroomSubjects($id)
     {
-        $classroom = Classroom::whereHas('institution', fn ($q) => $q->where('manager_id', auth()->id()))
+        $classroom = Classroom::whereHas('institution', fn ($q) => $q->where(auth()->user()->institutionOwnerColumn(), auth()->id()))
             ->findOrFail($id);
 
         $subjects = Subject::where('classroom_id', $classroom->id)
@@ -124,7 +126,7 @@ class SchoolController extends Controller
 
     public function update(Request $request, $id)
     {
-        Institution::where('manager_id', auth()->id())->findOrFail($id);
+        Institution::where(auth()->user()->institutionOwnerColumn(), auth()->id())->findOrFail($id);
 
         $data = $request->validate([
             'name' => 'sometimes|string|max:255',
@@ -170,7 +172,7 @@ class SchoolController extends Controller
 
     public function destroy($id)
     {
-        Institution::where('manager_id', auth()->id())->findOrFail($id);
+        Institution::where(auth()->user()->institutionOwnerColumn(), auth()->id())->findOrFail($id);
         $this->deleteSchoolAction->handle($id);
         return $this->successResponse(null, 'School deleted successfully');
     }
