@@ -59,6 +59,8 @@ class GetManagerAction
             });
         }
 
+        \App\Support\LocationFilter::apply($query, $data);
+
         return $query->orderBy('first_name', 'desc')->paginate($data['per_page'] ?? 20);
     }
 }

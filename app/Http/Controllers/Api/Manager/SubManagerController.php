@@ -44,6 +44,7 @@ class SubManagerController extends Controller
                 });
             })
             ->when($request->filled('status'), fn ($q) => $q->where('status', $request->input('status')))
+            ->tap(fn ($q) => \App\Support\LocationFilter::apply($q, $request->all()))
             ->orderByDesc('id');
 
         return $this->paginatedResponse(

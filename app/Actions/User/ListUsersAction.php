@@ -28,6 +28,8 @@ class ListUsersAction
             ->when(!empty($filters['email']), fn($q) => $q->where('email', 'like', "%{$filters['email']}%"))
             ->when(!empty($filters['phone']), fn($q) => $q->where('phone_number', 'like', "%{$filters['phone']}%"));
 
+        \App\Support\LocationFilter::apply($query, $filters);
+
         return $query->latest()->get();
     }
 }

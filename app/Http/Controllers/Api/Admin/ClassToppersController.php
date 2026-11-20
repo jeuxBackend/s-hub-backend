@@ -32,7 +32,7 @@ class ClassToppersController extends Controller
     public function index(Request $request, GetClassToppersAction $action)
     {
         try {
-            $validated = $request->validate([
+            $validated = $request->validate(\App\Support\LocationFilter::schoolRules() + [
                 'school_id'      => 'nullable|integer|exists:institutions,id',
                 'institution_id' => 'nullable|integer|exists:institutions,id',
                 'classroom_id'   => 'nullable|integer|exists:classrooms,id',

@@ -78,6 +78,14 @@ class GetClassToppersAction
             $perfQuery->where('sg.term', $filters['term']);
         }
 
+        // Optional location filters: student's state / province / city, and the school's country / region.
+        \App\Support\LocationFilter::applyToStudents($perfQuery, $filters, 's');
+        if (trim((string) ($filters['region'] ?? '')) !== '') {
+            $regionSchools = Institution::query()->select('id');
+            \App\Support\LocationFilter::apply($regionSchools, $filters, ['region']);
+            $perfQuery->whereIn('s.institution_id', $regionSchools);
+        }
+
         $performances = $perfQuery->get();
 
         if ($performances->isEmpty()) {

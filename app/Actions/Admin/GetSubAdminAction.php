@@ -27,6 +27,8 @@ class GetSubAdminAction
             $query->whereJsonContains('region', $data['region']);
         }
 
+        \App\Support\LocationFilter::apply($query, $data);
+
         return $query->orderBy('first_name', 'desc')->get();
     }
 }

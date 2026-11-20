@@ -44,7 +44,7 @@ class StudentController extends Controller
      */
     public function search(Request $request)
     {
-        $data = $request->validate([
+        $data = $request->validate(\App\Support\LocationFilter::rules() + [
             'search' => 'nullable|string|max:255',
             'status' => 'nullable|boolean',
             'gender' => ['nullable', Rule::in(GenderType::values())],
