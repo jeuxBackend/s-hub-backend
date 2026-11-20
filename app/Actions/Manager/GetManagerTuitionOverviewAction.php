@@ -52,6 +52,8 @@ class GetManagerTuitionOverviewAction
             $query->where('institution_id', $data['institution_id']);
         }
 
+        \App\Support\LocationFilter::applyToStudents($query, $data);
+
         return $query->orderBy('first_name')->paginate($data['per_page'] ?? 20);
     }
 }

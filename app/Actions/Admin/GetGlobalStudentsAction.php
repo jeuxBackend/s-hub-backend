@@ -42,6 +42,8 @@ class GetGlobalStudentsAction
             $query->whereIn('institution_id', $data['institution_ids']);
         }
 
+        \App\Support\LocationFilter::applyToStudents($query, $data);
+
         return $query->orderBy('id', 'desc')->get()->map(function (Student $student) {
             $yearMarks = $student->studentGrades->where('type', 'years_marks');
             $perfTotal = $yearMarks->sum('total');

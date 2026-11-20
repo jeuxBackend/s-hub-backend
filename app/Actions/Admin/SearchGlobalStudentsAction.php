@@ -37,6 +37,8 @@ class SearchGlobalStudentsAction
             $query->whereIn('institution_id', $data['institution_ids']);
         }
 
+        \App\Support\LocationFilter::applyToStudents($query, $data);
+
         return $query->orderBy('id', 'desc')->paginate($data['per_page'] ?? 20);
     }
 }

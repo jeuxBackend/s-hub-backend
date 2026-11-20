@@ -102,7 +102,7 @@ class ListTeachersAction
     {
         $requester = auth()->user();
 
-        return User::query()
+        $query = User::query()
             ->whereIn('role', ['teacher', 'school-admin'])
             ->where('institution_id', $requester->institution_id)
             ->when($request->filled('name'), function ($q) use ($request) {
@@ -118,5 +118,9 @@ class ListTeachersAction
             ->when($request->filled('email'), function ($q) use ($request) {
                 $q->where('email', 'like', '%' . $request->email . '%');
             });
+
+        \App\Support\LocationFilter::apply($query, $request->all());
+
+        return $query;
     }
 }

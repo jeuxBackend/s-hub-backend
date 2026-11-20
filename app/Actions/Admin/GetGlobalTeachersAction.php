@@ -43,6 +43,8 @@ class GetGlobalTeachersAction
             $query->whereIn('institution_id', $data['institution_ids']);
         }
 
+        \App\Support\LocationFilter::apply($query, $data);
+
         return $query->orderBy('id', 'desc')->paginate($data['per_page'] ?? 20);
     }
 }

@@ -51,6 +51,8 @@ class GetManagerAcademicStudentsAction
             $query->where('classroom_id', $data['classroom_id']);
         }
 
+        \App\Support\LocationFilter::applyToStudents($query, $data);
+
         if (!empty($data['region'])) {
             $query->whereHas('institution', fn ($q) => $q->where('region', $data['region']));
         }

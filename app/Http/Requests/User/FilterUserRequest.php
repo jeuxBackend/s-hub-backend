@@ -13,7 +13,7 @@ class FilterUserRequest extends FormRequest
 
     public function rules(): array
     {
-        return [
+        return \App\Support\LocationFilter::rules() + [
             'role'    => 'sometimes|string|in:admin,sub_admin,principal,teacher,parent,school_admin',
             'search'  => 'sometimes|string|max:255',
             'status'  => 'sometimes|boolean',

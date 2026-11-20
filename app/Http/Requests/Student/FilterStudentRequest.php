@@ -14,7 +14,7 @@ class FilterStudentRequest extends FormRequest
 
     public function rules(): array
     {
-        return [
+        return \App\Support\LocationFilter::rules() + [
             'student_name'   => ['nullable', 'string'],
             'class_id'       => ['nullable', 'exists:classrooms,id'],
             'tuition_status' => ['nullable', 'in:paid,unpaid,partial'],

@@ -38,6 +38,7 @@ class PrincipalController extends Controller
             ->when($request->filled('email'), fn ($query) => $query->where('email', 'like', '%' . $request->input('email') . '%'))
             ->when($request->filled('institution_id'), fn ($query) => $query->where('institution_id', $request->input('institution_id')))
             ->when($request->has('status'), fn ($query) => $query->where('status', $request->boolean('status')))
+            ->tap(fn ($q) => \App\Support\LocationFilter::apply($q, $request->all()))
             ->with('institution')
             ->orderBy('id', 'desc')
             ->paginate($request->input('per_page', 20));

@@ -45,6 +45,7 @@ class ListSchoolAdminsAction
                 fn($q) =>
                 $q->where('email', 'like', '%' . $request->email . '%')
             )
+            ->tap(fn ($q) => \App\Support\LocationFilter::apply($q, $request->all()))
             ->latest()
             ->paginate($request->get('per_page', 10));
     }

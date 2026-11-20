@@ -180,6 +180,9 @@ class ListStudentsAction
                     })->where('status', $status);
                 });
             });
+
+        // Optional location filters (country of the school; state/province/city of the student)
+        \App\Support\LocationFilter::applyToStudents($query, $filters);
     }
 
     // -------------------------------------------------------------------------

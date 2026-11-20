@@ -31,6 +31,8 @@ class GetSchoolsAction
         if (array_key_exists('is_blocked', $data) && $data['is_blocked'] !== null && $data['is_blocked'] !== '') {
             $query->where('is_blocked', filter_var($data['is_blocked'], FILTER_VALIDATE_BOOLEAN));
         }
+        \App\Support\LocationFilter::applyToInstitutions($query, $data);
+
         if (array_key_exists('institution_ids', $data) && $data['institution_ids'] !== null) {
             $query->whereIn('id', $data['institution_ids']);
         }
