@@ -18,6 +18,7 @@ class SignupRequest extends FormRequest
         $base = [
             'email'            => ['required', 'email', 'unique:users,email'],
             'phone_number'     => ['required', 'unique:users,phone_number'],
+            'country'   => ['nullable', 'string', 'size:2', 'alpha'],
             'state'     => ['nullable', 'string', 'max:100'],
             'province'     => ['nullable', 'string', 'max:100'],
             'city'     => ['nullable', 'string', 'max:100'],

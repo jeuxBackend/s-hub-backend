@@ -69,6 +69,7 @@ class SignupAction
             'nationality'                   => $data['nationality'] ?? null,
             'country_of_birth'              => $data['country_of_birth'] ?? null,
             'primary_language'              => $data['primary_language'] ?? null,
+            'country'                          => $data['country'] ?? null,
             'state'                          => $data['state'] ?? null,
             'province'                       => $data['province'] ?? null,
             'city'                           => $data['city'] ?? null,

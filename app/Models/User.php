@@ -112,6 +112,18 @@ class User extends Authenticatable
     | Accessors
     |--------------------------------------------------------------------------
     */
+    /**
+     * Countries are stored as 2-letter codes (e.g. "gm" -> "GM"), the same way
+     * schools and admin accounts do, so the country filters match. Any other
+     * legacy text is left as it is.
+     */
+    public function setCountryAttribute($value): void
+    {
+        $this->attributes['country'] = is_string($value) && preg_match('/^\s*[A-Za-z]{2}\s*$/', $value)
+            ? strtoupper(trim($value))
+            : $value;
+    }
+
     public function getProfilePictureAttribute($value): string
     {
         if (!$value) {
