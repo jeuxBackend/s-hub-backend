@@ -52,6 +52,18 @@ class Admin extends Authenticatable
         'password_changed_at' => 'datetime',
     ];
 
+    /**
+     * Countries are stored as 2-letter codes ("gm" -> "GM"), like schools and
+     * users, so filters, sub-admin scoping and Stripe all see one format.
+     * Any other legacy text is left as it is.
+     */
+    public function setCountryAttribute($value): void
+    {
+        $this->attributes['country'] = is_string($value) && preg_match('/^\s*[A-Za-z]{2}\s*$/', $value)
+            ? strtoupper(trim($value))
+            : $value;
+    }
+
     public function getNameAttribute()
     {
         return trim($this->first_name . ' ' . $this->last_name . ' ' . $this->sure_name);
