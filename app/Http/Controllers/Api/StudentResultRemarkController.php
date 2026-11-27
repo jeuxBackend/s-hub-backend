@@ -131,8 +131,9 @@ class StudentResultRemarkController extends Controller
         }
 
         if ($user->role === UserRole::Teacher) {
+            // Class teacher OR a teacher of one of its subjects / on its timetable.
             $teachesClass = $student->classroom_id
-                && $student->classroom->teachers()->where('users.id', $user->id)->exists();
+                && $student->classroom->isTaughtBy($user->id);
 
             return $teachesClass ? $student : null;
         }

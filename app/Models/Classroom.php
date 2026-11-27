@@ -41,6 +41,23 @@ class Classroom extends Model
         return $this->hasMany(Student::class);
     }
 
+    /**
+     * Is this teacher assigned to the class in any way: allocated as class
+     * teacher, set as the teacher of one of its subjects (rota requirements),
+     * or placed on its timetable? Same definition the chat contacts use.
+     */
+    public function isTaughtBy(int $teacherId): bool
+    {
+        return $this->teachers()->where('users.id', $teacherId)->exists()
+            || \App\Models\ClassSubjectRequirement::where('classroom_id', $this->id)
+                ->where('is_active', true)
+                ->where('teacher_id', $teacherId)
+                ->exists()
+            || \App\Models\TimetableEntry::where('classroom_id', $this->id)
+                ->where('teacher_id', $teacherId)
+                ->exists();
+    }
+
     public function currentPreregistrations()
     {
         return $this->hasMany(StudentPreregistration::class, 'current_classroom_id');
