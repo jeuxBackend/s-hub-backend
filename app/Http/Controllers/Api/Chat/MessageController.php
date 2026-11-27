@@ -328,9 +328,10 @@ class MessageController extends Controller
             $auth = auth()->user();
             $authId = $auth->id;
 
-            // Authorization: Principals cannot mark messages as read
+            // Principals never mark messages as read. The apps call this whenever a chat
+            // is opened, so answer with a quiet success (nothing is changed) instead of an error.
             if ($auth->role === \App\Enums\UserRole::Principal) {
-                return $this->errorResponse('Principals cannot modify messages.', 403);
+                return $this->successResponse(['marked_read' => 0], 'Messages marked as read');
             }
 
             // Authorization: only participants can mark messages as read
